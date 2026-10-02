@@ -26,7 +26,7 @@ for f in "$SRC"/skills/*/SKILL.md "$SRC"/vendor/*/*/SKILL.md; do
   lic="$(dirname "$d")/LICENSE"
   [[ "$d" == "$SRC"/vendor/* && -f "$lic" ]] && SKILL_LIC[$n]="$lic"
 done
-GLOBAL_DEFAULT=(grilling grill-me domain-modeling grill-with-docs project-readme)
+GLOBAL_DEFAULT=(grilling grill-me domain-modeling grill-with-docs project-readme git-commit)
 
 requires() {
   case "$1" in

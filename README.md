@@ -35,6 +35,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | `modbus` | 1.0.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
+| `git-commit` | 1.0.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
 
 ## skill จากภายนอก (`vendor/`, copy มาตรงๆ ไม่แก้เนื้อหา)
 | skill | ที่มา | ใช้กับ | ต้อง copy คู่กับ |
@@ -48,7 +49,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 
 ## เอาไปใช้ใน VS Code
 **แบบง่าย (ดับเบิลคลิก):**
-- `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme ...) ให้ใช้ได้ทุกโปรเจกต์
+- `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme, git-commit ...) ให้ใช้ได้ทุกโปรเจกต์
 - `install-all-global.bat` — ติดตั้ง **ทุก skill** ให้ใช้ได้ทุกโปรเจกต์
 - `install-to-project.bat` — เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง แล้วพิมพ์หมายเลข skill ที่ต้องการ (หรือพิมพ์ `all` = ทุกตัว)
 
@@ -113,3 +114,6 @@ skill ในแอป Claude ผูกกับบัญชี ไม่ได�
 | arpitg1304 `ros2`, dbwls99706 `ros2-engineering-skills` | บางส่วน — คัด references / ดัดแปลงเข้า `ros2-humble-cpp` 2.0.0 |
 | arpitg1304 `ros2-web-integration` | บางส่วน — ดัดแปลงเข้า `industrial-ui` 1.2.0 (แก้ watchdog teleop และการตั้ง parameter) |
 | github/awesome-copilot `create-readme` | ไม่ใช้ — สั้นมาก (21 บรรทัด), ต้องโหลด README ตัวอย่าง 4 ไฟล์จาก internet ทุกครั้ง, เน้น README โปรเจกต์ open source ไม่ใช่งานเครื่องจักร; ส่วนที่ดี (กระชับ, ไม่ซ้ำกับ LICENSE/CHANGELOG, ใช้ GitHub admonition) จดไว้ใช้ถ้าทำ skill README ของเราเอง |
+| github/awesome-copilot `git-commit` @ 143a3d9 | บางส่วน — ดัดแปลงเข้า `git-commit` 1.0.0: เอาตาราง type ของ Conventional Commits และกฎความปลอดภัยของ git; ที่ไม่เอา: `allowed-tools: Bash` (รัน Bash ทุกคำสั่งได้โดยไม่ถามระหว่างที่ skill ทำงาน), แนะนำ `git add -p` (interactive ใช้ใน Claude Code ไม่ได้), ไม่มีเรื่องระดับการทดสอบและสิ่งที่ห้าม commit (IP/ค่าเครื่องจริง) |
+| mattpocock/skills `git-guardrails-claude-code` @ d81f3a1 | ไม่ใช้ — hook ใช้ `jq` ซึ่งไม่มีบน Windows เครื่องนี้ ทดสอบแล้ว hook ไม่บล็อกอะไรเลยและไม่เตือน, ดักแค่ Bash ไม่ดัก PowerShell tool, บล็อก `git push` ทั้งหมด, จับคำสั่งด้วย regex หลวมจนข้อความใน commit message ก็โดน; ใช้ `permissions` ใน `settings.json` แทน |
+| obra/superpowers `using-git-worktrees` @ 8ca22db | ไม่ใช้ — description กว้างจนทำงานทุกครั้งที่เริ่ม feature, รัน `npm/pip/poetry install` เอง (ต้องใช้ internet, ไม่รองรับ colcon), ROS2 ต้อง build แยกทุก worktree และรันพร้อมกันจะแย่ง `/dev/ttyUSB*`; Claude Code มี worktree ในตัวอยู่แล้ว |

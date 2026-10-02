@@ -43,7 +43,7 @@ $ErrorActionPreference = 'Stop'
 $Source = Split-Path $PSScriptRoot -Parent
 
 # skill ที่ใช้ได้กับทุกโปรเจกต์
-$GlobalDefault = @('grilling', 'grill-me', 'domain-modeling', 'grill-with-docs', 'project-readme')
+$GlobalDefault = @('grilling', 'grill-me', 'domain-modeling', 'grill-with-docs', 'project-readme', 'git-commit')
 
 # skill ที่ต้องใช้คู่กัน
 $Requires = @{
