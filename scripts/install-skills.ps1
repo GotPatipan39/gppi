@@ -20,7 +20,9 @@
 
 .NOTES
   ถ้ารันไม่ได้เพราะ execution policy ให้รันแบบนี้แทน:
-    powershell -ExecutionPolicy Bypass -File D:\ws\mskills\install-skills.ps1
+    powershell -ExecutionPolicy Bypass -File D:\ws\mskills\scripts\install-skills.ps1
+  หา skill จาก skills\<ชื่อ> (ของเราเอง) และ vendor\<ที่มา>\<ชื่อ> (จากภายนอก) — ปลายทางใช้แค่ <ชื่อ>
+  skill จาก vendor จะได้ vendor\<ที่มา>\LICENSE copy ไปเป็น LICENSE ในโฟลเดอร์ skill ด้วย
   skill ที่ต้องใช้คู่กัน (เช่น grill-me ต้องมี grilling) จะถูก copy ให้อัตโนมัติ
   copy ทับของเดิม แต่ไม่ลบไฟล์ที่มีอยู่แล้วในปลายทาง
 #>
@@ -32,12 +34,13 @@ param(
   [string[]]$Skills,
   # เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง และเลือก skill จากเมนู (ใช้กับ install-to-project.bat)
   [switch]$Pick,
-  # ติดตั้งทุก skill ที่มีใน D:\ws\mskills
+  # ติดตั้งทุก skill ที่มีใน skills\ และ vendor\
   [switch]$All
 )
 
 $ErrorActionPreference = 'Stop'
-$Source = $PSScriptRoot
+# root ของ repo (script อยู่ใน scripts\)
+$Source = Split-Path $PSScriptRoot -Parent
 
 # skill ที่ใช้ได้กับทุกโปรเจกต์
 $GlobalDefault = @('grilling', 'grill-me', 'domain-modeling', 'grill-with-docs', 'project-readme')
@@ -48,12 +51,35 @@ $Requires = @{
   'grill-with-docs' = @('grilling', 'domain-modeling')
 }
 
-function Get-AllSkillNames {
-  @(Get-ChildItem -LiteralPath $Source -Directory |
-    Where-Object { -not $_.Name.StartsWith('_') -and (Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md')) } |
-    Sort-Object Name | ForEach-Object { $_.Name })
+# ชื่อ skill → @{ Dir = โฟลเดอร์ต้นทาง; License = LICENSE ของ vendor หรือ $null }
+function Get-SkillMap {
+  $found = @()
+  $own = Join-Path $Source 'skills'
+  if (Test-Path -LiteralPath $own) {
+    $found += @(Get-ChildItem -LiteralPath $own -Directory | ForEach-Object { @{ D = $_; L = $null } })
+  }
+  $vendor = Join-Path $Source 'vendor'
+  if (Test-Path -LiteralPath $vendor) {
+    foreach ($v in (Get-ChildItem -LiteralPath $vendor -Directory)) {
+      $lic = Join-Path $v.FullName 'LICENSE'
+      if (-not (Test-Path -LiteralPath $lic)) { $lic = $null }
+      $found += @(Get-ChildItem -LiteralPath $v.FullName -Directory | ForEach-Object { @{ D = $_; L = $lic } })
+    }
+  }
+  $map = @{}
+  foreach ($f in $found) {
+    $d = $f.D
+    if ($d.Name.StartsWith('_') -or -not (Test-Path -LiteralPath (Join-Path $d.FullName 'SKILL.md'))) { continue }
+    if ($map.ContainsKey($d.Name)) {
+      throw "skill ชื่อซ้ำ: $($d.Name)`n  $($map[$d.Name].Dir)`n  $($d.FullName)"
+    }
+    $map[$d.Name] = @{ Dir = $d.FullName; License = $f.L }
+  }
+  $map
 }
-if ($All) { $Skills = Get-AllSkillNames }
+$SkillMap = Get-SkillMap
+$AllNames = @($SkillMap.Keys | Sort-Object)
+if ($All) { $Skills = $AllNames }
 
 # ---- โหมดเลือกเอง (ดับเบิลคลิก install-to-project.bat) ----
 if ($Pick) {
@@ -68,27 +94,25 @@ if ($Pick) {
     }
     $Project = $dlg.SelectedPath
   }
-  $list = @(Get-ChildItem -LiteralPath $Source -Directory |
-    Where-Object { -not $_.Name.StartsWith('_') -and (Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md')) } |
-    Sort-Object Name)
+  $list = $AllNames
   Write-Host "โปรเจกต์: $Project"
   Write-Host ''
   for ($i = 0; $i -lt $list.Count; $i++) {
-    $v = (Select-String -LiteralPath (Join-Path $list[$i].FullName 'SKILL.md') -Pattern 'เวอร์ชัน\s+([0-9.]+)' -List |
+    $v = (Select-String -LiteralPath (Join-Path $SkillMap[$list[$i]].Dir 'SKILL.md') -Pattern 'เวอร์ชัน\s+([0-9.]+)' -List |
       ForEach-Object { $_.Matches[0].Groups[1].Value })
     $vt = if ($v) { "  ($v)" } else { '' }
-    Write-Host ("  {0,2}. {1}{2}" -f ($i + 1), $list[$i].Name, $vt)
+    Write-Host ("  {0,2}. {1}{2}" -f ($i + 1), $list[$i], $vt)
   }
   Write-Host ''
   $ans = Read-Host 'พิมพ์หมายเลข skill ที่ต้องการ คั่นด้วย , (เช่น 1,4,6) หรือพิมพ์ all เพื่อเลือกทั้งหมด แล้วกด Enter'
   $picked = New-Object System.Collections.Generic.List[string]
-  if ($ans.Trim() -match '^(all|a|ทั้งหมด)$') { foreach ($x in $list) { $picked.Add($x.Name) }; $ans = '' }
+  if ($ans.Trim() -match '^(all|a|ทั้งหมด)$') { foreach ($x in $list) { $picked.Add($x) }; $ans = '' }
   foreach ($tok in ($ans -split '[,\s]+' | Where-Object { $_ })) {
     $n = 0
     if (-not [int]::TryParse($tok, [ref]$n) -or $n -lt 1 -or $n -gt $list.Count) {
       throw "หมายเลขไม่ถูกต้อง: $tok (ต้องอยู่ระหว่าง 1-$($list.Count))"
     }
-    if (-not $picked.Contains($list[$n - 1].Name)) { $picked.Add($list[$n - 1].Name) }
+    if (-not $picked.Contains($list[$n - 1])) { $picked.Add($list[$n - 1]) }
   }
   if ($picked.Count -eq 0) { Write-Host 'ไม่ได้เลือก skill — ยังไม่ได้ติดตั้งอะไร'; return }
   $Skills = $picked.ToArray()
@@ -118,12 +142,9 @@ foreach ($s in $Skills) {
 }
 
 # ---- ตรวจว่ามีครบก่อน copy ----
-$missing = @($toCopy | Where-Object { -not (Test-Path -LiteralPath (Join-Path (Join-Path $Source $_) 'SKILL.md')) })
+$missing = @($toCopy | Where-Object { -not $SkillMap.ContainsKey($_) })
 if ($missing.Count -gt 0) {
-  $available = (Get-ChildItem -LiteralPath $Source -Directory |
-    Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') } |
-    ForEach-Object { $_.Name }) -join ', '
-  throw "ไม่พบ skill: $($missing -join ', ')`nที่มีอยู่: $available"
+  throw "ไม่พบ skill: $($missing -join ', ')`nที่มีอยู่: $($AllNames -join ', ')"
 }
 
 # ---- copy ----
@@ -132,7 +153,8 @@ if ($PSCmdlet.ShouldProcess($Target, 'สร้างโฟลเดอร์'))
   New-Item -ItemType Directory -Force -Path $Target | Out-Null
 }
 foreach ($s in $toCopy) {
-  $src = Join-Path $Source $s
+  $src = $SkillMap[$s].Dir
+  $lic = $SkillMap[$s].License
   $dst = Join-Path $Target $s
   $ver = (Select-String -LiteralPath (Join-Path $src 'SKILL.md') -Pattern 'เวอร์ชัน\s+([0-9.]+)' -List |
     ForEach-Object { $_.Matches[0].Groups[1].Value })
@@ -140,12 +162,13 @@ foreach ($s in $toCopy) {
   if ($PSCmdlet.ShouldProcess($dst, "copy $label")) {
     New-Item -ItemType Directory -Force -Path $dst | Out-Null
     Copy-Item -Path (Join-Path $src '*') -Destination $dst -Recurse -Force
+    if ($lic) { Copy-Item -LiteralPath $lic -Destination (Join-Path $dst 'LICENSE') -Force }
     Write-Host "  ✓ $label"
   }
 }
 # ---- CLAUDE.md ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
 # ใส่เนื้อหาไว้ระหว่าง marker — เนื้อหาอื่นในไฟล์ที่ผู้ใช้เขียนเองจะไม่ถูกแตะ
-$globalSrc = Join-Path $Source 'global-CLAUDE.md'
+$globalSrc = Join-Path (Join-Path $Source 'config') 'global-CLAUDE.md'
 if (-not $Project -and (Test-Path -LiteralPath $globalSrc)) {
   $claudeMd = Join-Path (Split-Path $Target -Parent) 'CLAUDE.md'
   $begin = '<!-- BEGIN claude-skills (จัดการโดย install-skills — อย่าแก้ในบล็อกนี้) -->'

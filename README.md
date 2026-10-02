@@ -7,7 +7,20 @@
 git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 ```
 แล้วดับเบิลคลิก `install-global.bat` — เท่านี้ Claude Code บนเครื่องนั้นก็ใช้ skill ได้ทุกโปรเจกต์
-(clone ไว้ที่ไหนก็ได้ script หา path จากตำแหน่งของตัวเอง; ใน WSL ใช้ `bash <path>/install-skills.sh`)
+(clone ไว้ที่ไหนก็ได้ script หา path จากตำแหน่งของตัวเอง; ใน WSL ใช้ `bash <path>/scripts/install-skills.sh`)
+
+## โครงสร้าง
+```
+mskills/
+├── install-global.bat, install-all-global.bat, install-to-project.bat   ← ดับเบิลคลิก
+├── skills/<ชื่อ>/              ← skill ของเราเอง (แก้ได้)
+├── vendor/<ที่มา>/LICENSE      ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
+│   └── <ชื่อ>/                    (ตอนนี้มี vendor/mattpocock/)
+├── config/global-CLAUDE.md     ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
+└── scripts/install-skills.ps1, install-skills.sh
+```
+script หา skill จากทั้ง `skills/` และ `vendor/*/` แต่ติดตั้งลงปลายทางด้วยชื่อ skill อย่างเดียว (เช่น `~/.claude/skills/grilling`) ชื่อ skill จึงห้ามซ้ำกันข้ามโฟลเดอร์ ถ้าซ้ำ script จะหยุดและแจ้ง
+skill จาก `vendor/` จะได้ `LICENSE` ของที่มานั้น copy ไปไว้ในโฟลเดอร์ skill ที่ติดตั้งด้วย
 
 ## อัปเดต skill
 1. แก้ skill ในโฟลเดอร์นี้ (หรือให้ Claude แก้)
@@ -15,7 +28,7 @@ git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 3. เครื่องอื่น: `git pull` แล้วดับเบิลคลิก install อีกครั้ง; โปรเจกต์ที่ copy skill ไปแล้ว: รัน `install-to-project.bat` ทับ
 4. แอป Claude: อัปโหลด zip ของ skill ที่เปลี่ยน (ดู "ใช้ในแอป Claude")
 
-## skill ของเราเอง
+## skill ของเราเอง (`skills/`)
 | skill | เวอร์ชัน | ใช้กับ |
 |---|---|---|
 | `ros2-humble-cpp` | 3.2.0 | งาน ROS2 Humble + C++ |
@@ -23,10 +36,10 @@ git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
 
-## skill จากภายนอก (copy มาตรงๆ ไม่แก้เนื้อหา)
+## skill จากภายนอก (`vendor/`, copy มาตรงๆ ไม่แก้เนื้อหา)
 | skill | ที่มา | ใช้กับ | ต้อง copy คู่กับ |
 |---|---|---|---|
-| `grilling` | mattpocock/skills (MIT) @ d81f3a1, 2026-09-29 | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง | — |
+| `grilling` | mattpocock/skills (MIT, [`vendor/mattpocock/LICENSE`](vendor/mattpocock/LICENSE)) @ d81f3a1, 2026-09-29 | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง | — |
 | `grill-me` | เหมือนข้างบน | ตัวเรียก `grilling` (พิมพ์ `/grill-me`) | **`grilling`** |
 | `domain-modeling` | เหมือนข้างบน | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) | — |
 | `grill-with-docs` | เหมือนข้างบน | ซักถาม + จด GLOSSARY/ADR ไปพร้อมกัน (พิมพ์ `/grill-with-docs`) | **`grilling`** และ **`domain-modeling`** |
@@ -39,10 +52,10 @@ git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 - `install-all-global.bat` — ติดตั้ง **ทุก skill** ให้ใช้ได้ทุกโปรเจกต์
 - `install-to-project.bat` — เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง แล้วพิมพ์หมายเลข skill ที่ต้องการ (หรือพิมพ์ `all` = ทุกตัว)
 
-**กฎระดับเครื่อง:** `install-global.bat` / `install-all-global.bat` ติดตั้ง [`global-CLAUDE.md`](global-CLAUDE.md) เป็น `~/.claude/CLAUDE.md` ด้วย — Claude Code อ่านไฟล์นี้ **ทุกแชท ทุกโปรเจกต์** จึงรู้ว่างานไหนต้องใช้ skill ไหนโดยไม่ต้องสั่ง
+**กฎระดับเครื่อง:** `install-global.bat` / `install-all-global.bat` ติดตั้ง [`config/global-CLAUDE.md`](config/global-CLAUDE.md) เป็น `~/.claude/CLAUDE.md` ด้วย — Claude Code อ่านไฟล์นี้ **ทุกแชท ทุกโปรเจกต์** จึงรู้ว่างานไหนต้องใช้ skill ไหนโดยไม่ต้องสั่ง
 - ใส่ไว้ในบล็อก `<!-- BEGIN claude-skills -->` … `<!-- END claude-skills -->` — เนื้อหาอื่นที่เขียนเองในไฟล์นั้นไม่ถูกแตะ, รันซ้ำจะแทนที่เฉพาะบล็อก
-- แก้กฎ: แก้ `global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
-- เพิ่ม skill ใหม่: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `global-CLAUDE.md` ด้วย
+- แก้กฎ: แก้ `config/global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
+- เพิ่ม skill ใหม่: สร้างใน `skills/<ชื่อ>/` และเพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `config/global-CLAUDE.md` ด้วย
 
 **แบบสั่งเอง:** ใช้ script — skill ที่ต้องใช้คู่กันจะถูก copy ให้อัตโนมัติ, copy ทับของเดิม (รันซ้ำได้เมื่อ skill อัปเดต)
 
@@ -50,16 +63,16 @@ git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 ```powershell
 cd D:\ws\mskills
 # skill ทั่วไป (grilling, domain-modeling ...) → ใช้ได้ทุกโปรเจกต์
-powershell -ExecutionPolicy Bypass -File .\install-skills.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\install-skills.ps1
 # skill เฉพาะโปรเจกต์
-powershell -ExecutionPolicy Bypass -File .\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills ros2-humble-cpp,modbus,industrial-ui
+powershell -ExecutionPolicy Bypass -File .\scripts\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills ros2-humble-cpp,modbus,industrial-ui
 # ดูก่อนว่าจะ copy อะไร (ยังไม่ copy จริง): เติม -WhatIf
 ```
 
 **WSL:**
 ```bash
-bash /mnt/d/ws/mskills/install-skills.sh                                        # ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
-bash /mnt/d/ws/mskills/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
+bash /mnt/d/ws/mskills/scripts/install-skills.sh                                # ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
+bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
 ```
 เสร็จแล้วใน VS Code: `Ctrl+Shift+P` → **Developer: Reload Window** แล้วพิมพ์ `/` เพื่อดูรายการ skill
 
@@ -76,7 +89,7 @@ skill ในแอป Claude ผูกกับบัญชี ไม่ได�
 
 ## รับ skill จากภายนอก
 ไม่ติดตั้งด้วย `npx skills add` ตรงเข้าโปรเจกต์ — ให้ Claude อ่านก่อนทุกครั้ง แล้วเลือกอย่างใดอย่างหนึ่ง:
-- **copy มาตรงๆ** (ตาราง "skill จากภายนอก") เมื่อเนื้อหาดีและไม่ขัดกับหลักของเรา — บันทึกที่มา, commit/วันที่, license
+- **copy มาตรงๆ** (ตาราง "skill จากภายนอก") เมื่อเนื้อหาดีและไม่ขัดกับหลักของเรา — วางไว้ที่ `vendor/<ที่มา>/<ชื่อ>/` พร้อม `vendor/<ที่มา>/LICENSE` ไฟล์เดียว, บันทึกที่มา, commit/วันที่, license
 - **ดัดแปลงเข้า skill ของเรา** เมื่อดีบางส่วน — บันทึกใน CHANGELOG ว่าเอาอะไรมาจากไหน และไม่เอาอะไรเพราะอะไร
 - **ไม่ใช้** — จดเหตุผลไว้ด้านล่าง กันพิจารณาซ้ำ
 

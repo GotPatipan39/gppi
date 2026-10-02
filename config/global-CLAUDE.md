@@ -1,6 +1,6 @@
 # กฎการทำงานทุกโปรเจกต์
 
-ไฟล์นี้ติดตั้งจาก `global-CLAUDE.md` ใน repo mskills (เครื่องนี้: `{{SKILLS_DIR}}`) — แก้ที่ต้นฉบับ commit แล้วติดตั้งใหม่ ไม่แก้ที่ปลายทาง
+ไฟล์นี้ติดตั้งจาก `config/global-CLAUDE.md` ใน repo mskills (เครื่องนี้: `{{SKILLS_DIR}}`) — แก้ที่ต้นฉบับ commit แล้วติดตั้งใหม่ ไม่แก้ที่ปลายทาง
 ถ้าโปรเจกต์มี `CLAUDE.md` ของตัวเอง และขัดกับไฟล์นี้ ให้ยึดของโปรเจกต์
 
 ## ใช้ skill ตามงาน
@@ -30,4 +30,4 @@
 ## เครื่องที่ใช้
 - dev: Windows 11 + WSL Ubuntu 22.04 (ROS2 Humble) / runtime: mini PC Ubuntu 22.04 — ไม่รัน ROS2 บน Windows
 - โค้ดทำงานร่วมกับทีมบน GitLab
-- skill ทั้งหมดเก็บใน repo `mskills` บน GitHub (private) — เครื่องนี้อยู่ที่ `{{SKILLS_DIR}}`; ถ้าแก้ skill ให้แก้ที่นั่น ไม่แก้สำเนาใน `~/.claude/skills` หรือในโปรเจกต์
+- skill ทั้งหมดเก็บใน repo `mskills` บน GitHub (private) — เครื่องนี้อยู่ที่ `{{SKILLS_DIR}}`; ถ้าแก้ skill ให้แก้ที่นั่น ไม่แก้สำเนาใน `~/.claude/skills` หรือในโปรเจกต์ (skill ของเราอยู่ใน `skills/`; ใน `vendor/` เป็นของภายนอก ห้ามแก้เนื้อหา)
