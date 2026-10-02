@@ -79,8 +79,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-skills.ps1 -Project D
 
 **WSL:**
 ```bash
-bash /mnt/d/ws/mskills/scripts/install-skills.sh                                # ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
+bash /mnt/d/ws/mskills/scripts/install-skills.sh                                # skill ทั่วไป → ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
+bash /mnt/d/ws/mskills/scripts/install-skills.sh --all                          # ทุก skill → ทุกโปรเจกต์ (เหมือน install-all-global.bat)
 bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
+bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet --all
 ```
 เสร็จแล้วใน VS Code: `Ctrl+Shift+P` → **Developer: Reload Window** แล้วพิมพ์ `/` เพื่อดูรายการ skill
 

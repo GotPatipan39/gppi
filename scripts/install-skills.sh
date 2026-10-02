@@ -2,7 +2,9 @@
 # copy skill จาก repo mskills ไปให้ Claude Code ใน WSL / Linux ใช้
 #
 #   scripts/install-skills.sh                                   # skill ทั่วไป → ~/.claude/skills (ทุกโปรเจกต์)
+#   scripts/install-skills.sh --all                             # ทุก skill → ~/.claude/skills (เหมือน install-all-global.bat)
 #   scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui   # เฉพาะโปรเจกต์
+#   scripts/install-skills.sh -p ~/fg-robot-pallet --all        # ทุก skill ลงโปรเจกต์
 #
 # หา skill จาก skills/<ชื่อ> (ของเราเอง) และ vendor/<ที่มา>/<ชื่อ> (จากภายนอก) — ปลายทางใช้แค่ <ชื่อ>
 # skill จาก vendor จะได้ vendor/<ที่มา>/LICENSE copy ไปเป็น LICENSE ในโฟลเดอร์ skill ด้วย
@@ -45,6 +47,10 @@ else
 fi
 
 skills=("$@")
+if [[ "${1:-}" == "--all" ]]; then
+  [[ $# -eq 1 ]] || { echo "--all ใช้คู่กับชื่อ skill ไม่ได้" >&2; exit 1; }
+  mapfile -t skills < <(printf '%s\n' "${!SKILL_DIR[@]}" | sort)
+fi
 [[ ${#skills[@]} -eq 0 ]] && skills=("${GLOBAL_DEFAULT[@]}")
 
 all=()
