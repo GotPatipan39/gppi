@@ -1,0 +1,25 @@
+# Delta ASDA-B3 servo drive (Modbus RTU ผ่าน RS-485)
+
+สัญลักษณ์: ✅ = ผู้ใช้ยืนยันแล้ว, ⚠️ = ความรู้ทั่วไปของตระกูล ASDA ต้องยืนยันกับคู่มือ ASDA-B3 ก่อนใช้ทุกข้อ
+
+**servo ขยับได้แรงและเร็ว — ก่อนเขียน parameter หรือสั่ง servo ON ผ่าน Modbus ทุกครั้ง ให้ยืนยันเลข parameter กับคู่มือ และให้ผู้ใช้เป็นคนสั่งรันเอง**
+
+## Hardware ที่ใช้อยู่
+- ✅ Drive ASD-B3-0221-L, motor ECM-B3M-C20602RS1 (200 W)
+
+## การสื่อสาร
+- ⚠️ ต่อ RS-485 ที่ connector สื่อสารของ drive
+- ⚠️ parameter กลุ่ม P3 ตั้งค่าการสื่อสาร (เช่น P3-00 = station address, P3-01 = baud, P3-02 = protocol/format) — ยืนยันเลขและค่าในคู่มือ
+- ⚠️ ต้องตั้ง communication timeout ของ drive (ถ้ามีใน B3) เพื่อให้ drive หยุดเองเมื่อ master หลุด
+
+## Address ของ parameter
+- ⚠️ ตระกูล ASDA: parameter `Px-yy` อยู่ที่ address ประมาณ `x × 0x100 + yy × 2` (เช่น P1-01 → 0x0102) และ parameter แต่ละตัวเป็น 32 bit (2 register, **low word ก่อน = CDAB**) — **ต้องยืนยันกับตาราง address ในคู่มือ B3 ก่อน**
+- ⚠️ ตัวเลขใน parameter `yy` เป็นเลขฐานสิบในชื่อ แต่ address คำนวณเป็น hex → ระวังสับสน
+
+## EEPROM
+- ⚠️ การเขียน parameter ผ่านการสื่อสารปกติจะบันทึกลง EEPROM ซึ่งมีอายุการเขียนจำกัด ถ้าจะเขียนค่าซ้ำบ่อย (เช่น ปรับ torque limit ระหว่างรัน) ให้ดูในคู่มือว่าจะปิดการบันทึก EEPROM ได้อย่างไร (ตระกูล ASDA ใช้ P2-30)
+
+## งานจับชิ้นงานด้วย torque (โปรเจกต์ gripper)
+- ✅ เป้าหมาย: เดินจนแรงบิดถึงค่าที่ตั้งแล้วหยุด เพื่อจับชิ้นงานหลายขนาด
+- ⚠️ แนวทางทั่วไป: ใช้ torque limit ของ drive (ให้ drive จำกัดแรงเอง ไม่ใช่ master อ่าน torque แล้วสั่งหยุด เพราะ Modbus ช้าเกินไปสำหรับ loop แรง) แล้วตรวจสถานะ "ถึง torque limit" ผ่าน DO หรือ register สถานะ
+- ❓ โหมดควบคุมที่จะใช้ (PR / speed / torque) ให้ถามผู้ใช้

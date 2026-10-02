@@ -1,0 +1,15 @@
+# ไฟล์สำหรับอัปโหลดเข้าแอป Claude (สร้างใหม่ได้ทุกเมื่อ)
+_upload/
+*.zip
+
+# ไฟล์ที่แอป Claude วางไว้ระหว่างคุยกัน
+Claude outputs/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

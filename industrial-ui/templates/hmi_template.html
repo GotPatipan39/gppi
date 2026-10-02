@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HMI Template</title>
+<!--
+  Template: หน้าจอ HMI ไฟล์เดียว — ไม่โหลดอะไรจาก internet
+  - header: ชื่อเครื่อง, mode, สถานะ, การเชื่อมต่อ, เวลา
+  - alarm banner, KPI พร้อมตรวจ stale, interlock, START (ยืนยัน 2 ขั้น), STOP, JOG แบบ hold-to-run + heartbeat
+  - มี simulator ในตัว (SIM = true) และปุ่ม "จำลองหลุดการเชื่อมต่อ" สำหรับทดสอบ
+  ต่อของจริง: เขียน class Transport ใหม่ที่ใช้ WebSocket ให้มี method เดียวกับ SimTransport
+  สี/ขนาด: คัดจาก tokens.css (ไฟล์เดียวจึงใส่ inline) — แก้ที่ tokens.css แล้วคัดมาใหม่
+-->
+<style>
+:root {
+  --font: "UI Thai", Tahoma, "Leelawadee UI", "Noto Sans Thai", sans-serif;
+  --bg: #e4e6e8; --surface: #f4f5f6; --surface-2: #d5d8db; --border: #b4b9be;
+  --text: #1c2024; --text-muted: #555c63; --equip-on: #3d444b; --equip-off: #9aa1a8; --focus: #1f5fbf;
+  --alarm-critical: #c62828; --on-critical: #fff;
+  --alarm-high: #e8590c; --on-high: #1c1c1c;
+  --alarm-medium: #f2c200; --on-medium: #1c1c1c;
+  --alarm-info: #1971c2; --on-info: #fff;
+  --stale: #8a9096;
+  --touch-min: 64px; --gap: 12px; --radius: 6px;
+  --fs-body: 18px; --fs-label: 16px; --fs-value: 32px; --fs-header: 22px;
+}
+:root[data-theme="dark"] {
+  --bg: #1b1e21; --surface: #25292d; --surface-2: #30353a; --border: #474e55;
+  --text: #e6e8ea; --text-muted: #a3aab1; --equip-on: #d0d4d8; --equip-off: #6b737b;
+  --stale: #6f767d; --focus: #6ea8fe;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--text); font: var(--fs-body)/1.4 var(--font);
+  display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh;
+  touch-action: manipulation;
+}
+.num { font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; user-select: none; -webkit-user-select: none; }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* header + alarm ติดบนเสมอ (สถานะต้องเห็นตลอด) */
+.top { position: sticky; top: 0; z-index: 10; }
+header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap);
+  padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border);
+  font-size: var(--fs-header);
+}
+header .title { font-weight: 600; margin-right: auto; }
+.chip { padding: 4px 12px; border-radius: 999px; background: var(--surface-2); white-space: nowrap; }
+.chip b { font-weight: 600; }
+.conn::before { content: "●"; margin-right: 6px; }
+.conn.ok::before { color: var(--equip-on); }
+.conn.bad { background: var(--alarm-critical); color: var(--on-critical); }
+.theme-btn { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); }
+
+/* alarm banner */
+#alarm {
+  display: none; align-items: center; gap: var(--gap); padding: 10px 16px; font-weight: 600;
+}
+#alarm.show { display: flex; }
+#alarm.critical { background: var(--alarm-critical); color: var(--on-critical); }
+#alarm.high { background: var(--alarm-high); color: var(--on-high); }
+#alarm.medium { background: var(--alarm-medium); color: var(--on-medium); }
+#alarm.unack { animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { 50% { filter: brightness(1.25); } }
+@media (prefers-reduced-motion: reduce) { #alarm.unack { animation: none; } }
+#alarm .msg { margin-right: auto; }
+#alarm button { min-height: 48px; padding: 0 16px; border: 2px solid currentColor; background: transparent; border-radius: var(--radius); font-weight: 600; }
+
+/* layout */
+main {
+  display: grid; grid-template-columns: 1fr minmax(260px, 340px); gap: var(--gap); padding: var(--gap);
+}
+@media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.panel h2 { margin: 0 0 10px; font-size: var(--fs-label); color: var(--text-muted); font-weight: 600; }
+
+/* KPI */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--gap); }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.kpi .label { font-size: var(--fs-label); color: var(--text-muted); }
+.kpi .value { font-size: var(--fs-value); font-weight: 600; }
+.kpi .unit { font-size: var(--fs-label); color: var(--text-muted); margin-left: 4px; }
+.kpi .note { font-size: 14px; color: var(--text-muted); min-height: 1.4em; }
+.kpi.high { border: 3px solid var(--alarm-high); }
+.kpi.high .note { color: var(--text); font-weight: 600; }
+.kpi.stale .value { color: var(--stale); text-decoration: line-through; text-decoration-thickness: 2px; }
+.kpi.stale .note::before { content: "⏸ "; }
+
+/* equipment */
+.equip { display: flex; gap: var(--gap); flex-wrap: wrap; margin-top: var(--gap); }
+.eq { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius); border: 2px solid var(--equip-off); }
+.eq .dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--equip-off); }
+.eq.on { border-color: var(--equip-on); }
+.eq.on .dot { background: var(--equip-on); border-color: var(--equip-on); }
+.eq.fault { border-color: var(--alarm-critical); }
+.eq.fault .dot { background: var(--alarm-critical); border-color: var(--alarm-critical); border-radius: 2px; transform: rotate(45deg); }
+.eq.unknown { border-style: dashed; color: var(--stale); }
+
+/* controls */
+.controls { display: grid; gap: var(--gap); align-content: start; }
+.btn {
+  min-height: var(--touch-min); border-radius: var(--radius); border: 2px solid var(--equip-on);
+  background: var(--surface-2); font-size: 20px; font-weight: 600; cursor: pointer;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; border-style: dashed; }
+.btn.stop { background: var(--equip-on); color: var(--surface); min-height: 80px; font-size: 24px; }
+.btn.pending { opacity: .7; }
+.btn.pending::after { content: " …"; }
+.jog-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.btn.jog[aria-pressed="true"] { background: var(--equip-on); color: var(--surface); }
+.spacer { height: 12px; }
+.interlock { list-style: none; margin: 0; padding: 0; font-size: var(--fs-label); }
+.interlock li { padding: 4px 0; }
+.interlock li.ok::before { content: "✓ "; font-weight: 700; }
+.interlock li.bad { font-weight: 600; }
+.interlock li.bad::before { content: "✗ "; color: var(--alarm-critical); font-weight: 700; }
+.hint { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+/* dialog */
+dialog { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); max-width: 440px; width: calc(100% - 32px); }
+dialog::backdrop { background: rgb(0 0 0 / .45); }
+dialog .row { display: flex; gap: var(--gap); margin-top: 16px; }
+dialog .row .btn { flex: 1; }
+
+/* simulator bar */
+.sim { grid-column: 1 / -1; display: flex; gap: var(--gap); flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--text-muted); }
+.sim button { min-height: 40px; padding: 0 12px; border: 1px dashed var(--border); background: transparent; border-radius: var(--radius); }
+</style>
+</head>
+<body>
+<div class="top">
+<header>
+  <span class="title">เครื่องตัวอย่าง #1</span>
+  <span class="chip">MODE: <b id="mode">—</b></span>
+  <span class="chip">สถานะ: <b id="state">—</b></span>
+  <span class="chip conn" id="conn">กำลังเชื่อมต่อ…</span>
+  <span class="chip num" id="clock">--:--:--</span>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="สลับโหมดสว่าง/มืด">◐</button>
+</header>
+
+<div id="alarm" role="alert">
+  <span class="msg" id="alarmMsg"></span>
+  <button type="button" id="ackBtn">รับทราบ</button>
+</div>
+</div>
+
+<main>
+  <section>
+    <div class="kpis" id="kpis"></div>
+    <!-- พื้นที่ภาพรวมกระบวนการ: ใส่ diagram/layout ของเครื่องที่นี่ (SVG inline) -->
+    <div class="panel" style="margin-top: var(--gap)">
+      <h2>อุปกรณ์</h2>
+      <div class="equip" id="equip"></div>
+    </div>
+  </section>
+
+  <aside class="panel controls" aria-label="สั่งงาน">
+    <h2>สั่งงาน</h2>
+    <button class="btn" id="startBtn" type="button">START</button>
+    <button class="btn stop" id="stopBtn" type="button">STOP</button>
+    <p class="hint">ปุ่มนี้คือหยุดปกติ — หยุดฉุกเฉินใช้ปุ่ม E-stop ที่ตัวเครื่อง</p>
+    <button class="btn" id="modeBtn" type="button">เปลี่ยน MODE</button>
+    <div class="spacer"></div>
+    <h2>Manual (กดค้างเพื่อขยับ)</h2>
+    <div class="jog-row">
+      <button class="btn jog" id="jogRev" type="button" aria-pressed="false">◀ ถอย</button>
+      <button class="btn jog" id="jogFwd" type="button" aria-pressed="false">เดินหน้า ▶</button>
+    </div>
+    <p class="hint" id="jogHint"></p>
+    <div class="spacer"></div>
+    <h2>เงื่อนไขพร้อมทำงาน</h2>
+    <ul class="interlock" id="interlock"></ul>
+  </aside>
+
+  <div class="sim" id="simBar">
+    <span>SIMULATOR:</span>
+    <button type="button" id="simDrop">จำลองหลุดการเชื่อมต่อ</button>
+    <button type="button" id="simAlarm">จำลอง alarm</button>
+    <button type="button" id="simAir">จำลองแรงดันลมต่ำ</button>
+  </div>
+</main>
+
+<dialog id="confirm">
+  <h3 id="cTitle" style="margin-top:0"></h3>
+  <p id="cBody"></p>
+  <div class="row">
+    <button class="btn" type="button" id="cNo">ยกเลิก</button>
+    <button class="btn" type="button" id="cYes"></button>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+// ---------------- config ----------------
+const SIM = true;            // false = ใช้ WebSocket จริง (เขียน WsTransport)
+const STALE_MS = 3000;       // ค่าที่ไม่อัปเดตเกินนี้ = stale
+const ACK_TIMEOUT_MS = 2000; // คำสั่งที่ไม่ได้ ack ภายในเวลานี้ = ล้มเหลว
+const JOG_HEARTBEAT_MS = 150;
+
+const KPI_DEFS = [
+  { key: "speed",    label: "ความเร็ว",     unit: "m/s", dp: 2 },
+  { key: "current",  label: "กระแสมอเตอร์", unit: "A",   dp: 1, high: 12 },
+  { key: "air",      label: "แรงดันลม",     unit: "bar", dp: 1, low: 5.0 },
+  { key: "count",    label: "นับชิ้นงาน",   unit: "ชิ้น", dp: 0 },
+];
+const EQUIP_DEFS = [
+  { key: "motor", label: "มอเตอร์ขับ" },
+  { key: "pump",  label: "ปั๊มลม" },
+  { key: "valve", label: "วาล์วหลัก" },
+];
+
+// ---------------- state ----------------
+const S = { connected: false, values: {}, ts: {}, mode: null, state: null, equip: {}, alarm: null, alarmAck: false };
+
+// ---------------- transport (simulator) ----------------
+// interface: onData(cb), onConn(cb), send(cmd) -> Promise<ack>
+class SimTransport {
+  constructor() {
+    this.dataCb = () => {}; this.connCb = () => {};
+    this.up = true; this.running = false; this.jog = 0; this.lastHb = 0;
+    this.mode = "AUTO"; this.airLow = false; this.alarm = null; this.count = 120; this.speed = 0;
+    setTimeout(() => this.connCb(true), 300);
+    setInterval(() => this.tick(), 200);
+  }
+  onData(cb) { this.dataCb = cb; }
+  onConn(cb) { this.connCb = cb; }
+  tick() {
+    // ฝั่ง "เครื่อง": jog หยุดเองถ้า heartbeat หาย > 500 ms
+    if (this.jog && Date.now() - this.lastHb > 500) this.jog = 0;
+    if (!this.up) return;
+    const target = this.running ? 0.6 : this.jog * 0.15;
+    this.speed += (target - this.speed) * 0.3;
+    if (this.running && Math.random() < 0.05) this.count++;
+    this.dataCb({
+      t: Date.now(),
+      values: {
+        speed: Math.abs(this.speed) < 0.005 ? 0 : this.speed,
+        current: 2 + Math.abs(this.speed) * 14 + Math.random() * 0.3,
+        air: this.airLow ? 3.8 + Math.random() * 0.1 : 6.1 + Math.random() * 0.1,
+        count: this.count,
+      },
+      mode: this.mode,
+      state: this.running ? "RUNNING" : this.jog ? "JOG" : "STOPPED",
+      equip: { motor: Math.abs(this.speed) > 0.01 ? "on" : "off", pump: "on", valve: this.airLow ? "fault" : "on" },
+      alarm: this.alarm,
+    });
+  }
+  send(cmd) {
+    return new Promise((resolve, reject) => {
+      if (!this.up) return reject(new Error("ไม่มีการเชื่อมต่อ"));
+      setTimeout(() => {
+        if (!this.up) return reject(new Error("ไม่มีการเชื่อมต่อ"));
+        switch (cmd.name) {
+          case "start": if (this.airLow || this.mode !== "AUTO") return resolve({ ok: false, reason: "เงื่อนไขไม่ครบ" }); this.running = true; break;
+          case "stop": this.running = false; this.jog = 0; break;
+          case "jog": this.jog = cmd.dir; this.lastHb = Date.now(); break;
+          case "jog_hb": this.lastHb = Date.now(); break;
+          case "jog_stop": this.jog = 0; break;
+          case "ack": if (this.alarm) this.alarm.acked = true; break;
+          case "mode": this.running = false; this.jog = 0; this.mode = cmd.value; break;
+        }
+        resolve({ ok: true });
+      }, 120);
+    });
+  }
+  // ปุ่ม simulator
+  toggleUp() { this.up = !this.up; this.connCb(this.up); if (!this.up) { this.running = false; } }
+  toggleAlarm() { this.alarm = this.alarm ? null : { level: "high", text: "กระแสมอเตอร์สูง (12.4 A) — ตรวจโหลด/ความฝืดของล้อ", acked: false }; }
+  toggleAir() { this.airLow = !this.airLow; if (this.airLow) this.running = false; }
+}
+
+const T = new SimTransport();
+
+// ---------------- helpers ----------------
+const $ = (id) => document.getElementById(id);
+function sendCmd(cmd, timeout = ACK_TIMEOUT_MS) {
+  return Promise.race([
+    T.send(cmd),
+    new Promise((_, rej) => setTimeout(() => rej(new Error("ไม่ได้รับการยืนยันจากเครื่อง")), timeout)),
+  ]);
+}
+function confirmDialog(title, body, yesLabel) {
+  return new Promise((resolve) => {
+    const d = $("confirm");
+    $("cTitle").textContent = title; $("cBody").textContent = body;
+    $("cYes").textContent = yesLabel;   // ปุ่มบอกสิ่งที่จะเกิด ใช้คำเดียวกับปุ่มที่กดมา
+    const done = (v) => { d.close(); $("cYes").onclick = $("cNo").onclick = null; resolve(v); };
+    $("cYes").onclick = () => done(true); $("cNo").onclick = () => done(false);
+    d.oncancel = () => done(false);
+    d.showModal(); $("cNo").focus();   // focus ปุ่มที่ปลอดภัยกว่า
+  });
+}
+async function runButton(btn, fn) {
+  if (btn.classList.contains("pending")) return;
+  btn.classList.add("pending"); btn.disabled = true;
+  try {
+    const r = await fn();
+    if (r && r.ok === false) alertInline(`ไม่สำเร็จ: ${r.reason || "เครื่องปฏิเสธคำสั่ง"}`);
+  } catch (e) { alertInline(`ไม่สำเร็จ: ${e.message}`); }
+  finally { btn.classList.remove("pending"); render(); }
+}
+function alertInline(text) { $("jogHint").textContent = text; setTimeout(() => { if ($("jogHint").textContent === text) $("jogHint").textContent = ""; }, 4000); }
+
+// ---------------- build static DOM ----------------
+$("kpis").innerHTML = KPI_DEFS.map((k) =>
+  `<div class="kpi" id="kpi-${k.key}"><div class="label">${k.label}</div>
+   <div><span class="value num">—</span><span class="unit">${k.unit}</span></div><div class="note"></div></div>`).join("");
+$("equip").innerHTML = EQUIP_DEFS.map((e) =>
+  `<div class="eq unknown" id="eq-${e.key}"><span class="dot"></span><span>${e.label}</span><b class="st">?</b></div>`).join("");
+
+// ---------------- data in ----------------
+T.onConn((up) => { S.connected = up; if (!up) stopJog(); render(); });
+T.onData((d) => {
+  for (const [k, v] of Object.entries(d.values)) { S.values[k] = v; S.ts[k] = d.t; }
+  S.mode = d.mode; S.state = d.state; S.equip = d.equip;
+  if (!d.alarm) { S.alarm = null; } else { S.alarm = d.alarm; }
+});
+
+// ---------------- render ----------------
+const EQ_TEXT = { on: "เดิน", off: "หยุด", fault: "ผิดปกติ" };
+function interlocks() {
+  // ค่าที่ stale ห้ามนำมาแสดงเหมือนค่าปัจจุบัน → แสดง "—" และถือว่าไม่ผ่าน
+  const air = isStale("air") ? null : S.values.air;
+  const mode = S.connected ? S.mode : null;
+  return [
+    { ok: S.connected, text: "เชื่อมต่อกับเครื่อง" },
+    { ok: mode === "AUTO", text: `อยู่ใน MODE AUTO (ตอนนี้ ${mode ?? "—"})` },
+    { ok: air != null && air >= 5.0, text: `แรงดันลม ${air != null ? air.toFixed(1) : "—"} bar (ต้อง ≥ 5.0)` },
+    { ok: !(S.alarm && S.alarm.level === "critical"), text: "ไม่มี alarm วิกฤต" },
+  ];
+}
+function isStale(k) { return !S.connected || !S.ts[k] || Date.now() - S.ts[k] > STALE_MS; }
+function render() {
+  const now = new Date();
+  $("clock").textContent = now.toLocaleTimeString("th-TH", { hour12: false });
+  const c = $("conn");
+  c.className = "chip conn " + (S.connected ? "ok" : "bad");
+  c.textContent = S.connected ? "PLC เชื่อมต่อ" : "ขาดการเชื่อมต่อ";
+  $("mode").textContent = S.connected ? (S.mode ?? "—") : "—";
+  $("state").textContent = S.connected ? (S.state ?? "—") : "ไม่ทราบ";
+
+  for (const k of KPI_DEFS) {
+    const el = $("kpi-" + k.key), v = S.values[k.key], stale = isStale(k.key);
+    el.querySelector(".value").textContent = v == null ? "—" : v.toFixed(k.dp);
+    const high = !stale && v != null && ((k.high != null && v > k.high) || (k.low != null && v < k.low));
+    el.className = "kpi" + (stale ? " stale" : high ? " high" : "");
+    el.querySelector(".note").textContent = stale
+      ? (S.ts[k.key] ? `ค่าล่าสุดเมื่อ ${new Date(S.ts[k.key]).toLocaleTimeString("th-TH", { hour12: false })}` : "ยังไม่มีข้อมูล")
+      : high ? (k.low != null && v < k.low ? "ต่ำกว่าเกณฑ์" : "สูงกว่าเกณฑ์") : "";
+  }
+  for (const e of EQUIP_DEFS) {
+    const el = $("eq-" + e.key), st = S.connected ? S.equip[e.key] : undefined;
+    el.className = "eq " + (st ?? "unknown");
+    el.querySelector(".st").textContent = EQ_TEXT[st] ?? "?";
+  }
+
+  const a = $("alarm");
+  if (S.alarm) {
+    a.className = `show ${S.alarm.level}` + (S.alarm.acked ? "" : " unack");
+    $("alarmMsg").textContent = "⚠ " + S.alarm.text + (S.alarm.acked ? " (รับทราบแล้ว)" : "");
+    $("ackBtn").hidden = !!S.alarm.acked;
+  } else { a.className = ""; }
+
+  const il = interlocks(), ready = il.every((i) => i.ok);
+  $("interlock").innerHTML = il.map((i) => `<li class="${i.ok ? "ok" : "bad"}">${i.text}</li>`).join("");
+  const startBtn = $("startBtn");
+  if (!startBtn.classList.contains("pending")) startBtn.disabled = !ready || S.state === "RUNNING";
+  $("stopBtn").disabled = !S.connected;
+  if (!$("modeBtn").classList.contains("pending")) {
+    $("modeBtn").disabled = !S.connected;
+    $("modeBtn").textContent = S.mode === "AUTO" ? "เปลี่ยนเป็น MANUAL" : "เปลี่ยนเป็น AUTO";
+  }
+  const jogOk = S.connected && S.mode === "MANUAL";
+  for (const id of ["jogFwd", "jogRev"]) $(id).disabled = !jogOk;
+  if (!jogOk && !$("jogHint").textContent.startsWith("ไม่สำเร็จ")) $("jogHint").textContent = S.connected ? "ใช้ได้เฉพาะ MODE MANUAL" : "ไม่มีการเชื่อมต่อ";
+  else if (jogOk && $("jogHint").textContent.startsWith("ใช้ได้")) $("jogHint").textContent = "";
+}
+setInterval(render, 250);
+
+// ---------------- commands ----------------
+$("startBtn").onclick = async () => {
+  if (!(await confirmDialog("เริ่มเดินอัตโนมัติ?", "เครื่องจะเริ่มเคลื่อนที่ทันทีและทำงานต่อเนื่องจนกว่าจะกด STOP", "เริ่มเดิน"))) return;
+  runButton($("startBtn"), () => sendCmd({ name: "start" }));
+};
+$("stopBtn").onclick = () => runButton($("stopBtn"), () => sendCmd({ name: "stop" }));  // ไม่ต้องยืนยัน
+$("ackBtn").onclick = () => runButton($("ackBtn"), () => sendCmd({ name: "ack" }));
+
+// JOG: hold-to-run + heartbeat
+let jogTimer = null, jogBtn = null;
+function startJog(btn, dir) {
+  if (btn.disabled || jogTimer) return;
+  jogBtn = btn; btn.setAttribute("aria-pressed", "true");
+  sendCmd({ name: "jog", dir }).catch((e) => { alertInline(`ไม่สำเร็จ: ${e.message}`); stopJog(); });
+  jogTimer = setInterval(() => sendCmd({ name: "jog_hb" }).catch(stopJog), JOG_HEARTBEAT_MS);
+}
+function stopJog() {
+  if (!jogTimer) return;
+  clearInterval(jogTimer); jogTimer = null;
+  if (jogBtn) jogBtn.setAttribute("aria-pressed", "false");
+  jogBtn = null;
+  sendCmd({ name: "jog_stop" }).catch(() => {});   // ถ้าส่งไม่ถึง ฝั่งเครื่องหยุดเองจาก heartbeat timeout
+}
+for (const [id, dir] of [["jogFwd", 1], ["jogRev", -1]]) {
+  const b = $(id);
+  b.addEventListener("pointerdown", (e) => { b.setPointerCapture(e.pointerId); startJog(b, dir); });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, stopJog);
+  b.addEventListener("contextmenu", (e) => e.preventDefault());
+  b.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) startJog(b, dir); });
+  b.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") stopJog(); });
+}
+window.addEventListener("blur", stopJog);
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopJog(); });
+
+// mode
+$("modeBtn").onclick = async () => {
+  const next = S.mode === "AUTO" ? "MANUAL" : "AUTO";
+  if (!(await confirmDialog(`เปลี่ยนเป็น ${next}?`, "เครื่องจะหยุดการทำงานปัจจุบันก่อนเปลี่ยน mode", `เปลี่ยนเป็น ${next}`))) return;
+  runButton($("modeBtn"), () => sendCmd({ name: "mode", value: next }));
+};
+
+// theme + simulator
+$("themeBtn").onclick = () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark";
+};
+if (SIM) {
+  $("simDrop").onclick = () => T.toggleUp();
+  $("simAlarm").onclick = () => T.toggleAlarm();
+  $("simAir").onclick = () => T.toggleAir();
+} else { $("simBar").remove(); }
+</script>
+</body>
+</html>

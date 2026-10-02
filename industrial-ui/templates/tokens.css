@@ -1,0 +1,65 @@
+/* Design tokens สำหรับ industrial UI (แนว ISA-101: พื้นกลาง, สีสดเฉพาะสิ่งผิดปกติ)
+   ใช้ทั้ง web, Node-RED Dashboard 2.0 (theme/ui-template) และเป็นค่าอ้างอิงตั้ง Grafana threshold
+   ค่า alarm ผ่าน contrast ≥ 4.5:1 กับข้อความที่จับคู่ไว้ */
+
+/* font ภาษาไทยแบบ local — วางไฟล์ไว้ในโปรเจกต์ (Noto Sans Thai / Sarabun, OFL) */
+@font-face {
+  font-family: "UI Thai";
+  src: url("./fonts/NotoSansThai-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "UI Thai";
+  src: url("./fonts/NotoSansThai-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --font: "UI Thai", Tahoma, "Leelawadee UI", "Noto Sans Thai", sans-serif;
+
+  /* พื้นและข้อความ (โหมดสว่าง — ห้องสว่าง/tablet) */
+  --bg: #e4e6e8;
+  --surface: #f4f5f6;
+  --surface-2: #d5d8db;
+  --border: #b4b9be;
+  --text: #1c2024;
+  --text-muted: #555c63;
+  --equip-on: #3d444b;        /* อุปกรณ์เดิน (ปกติ) = เทาเข้ม ไม่ใช่เขียว */
+  --equip-off: #9aa1a8;       /* อุปกรณ์หยุด (ปกติ) */
+  --focus: #1f5fbf;
+
+  /* alarm — ใช้เฉพาะสิ่งผิดปกติ (พื้น / ข้อความบนพื้น) */
+  --alarm-critical: #c62828;  --on-critical: #ffffff;
+  --alarm-high: #e8590c;      --on-high: #1c1c1c;
+  --alarm-medium: #f2c200;    --on-medium: #1c1c1c;
+  --alarm-info: #1971c2;      --on-info: #ffffff;
+
+  --stale: #8a9096;           /* ค่าที่ไม่อัปเดต */
+
+  /* ขนาด */
+  --touch-min: 64px;          /* touch panel (ถุงมือ) — tablet ใช้ 48px */
+  --gap: 12px;
+  --radius: 6px;
+  --fs-body: 18px;
+  --fs-label: 16px;
+  --fs-value: 32px;           /* ค่าหลัก */
+  --fs-header: 22px;
+}
+
+/* โหมดมืด — ห้องควบคุม/จอใหญ่ */
+:root[data-theme="dark"] {
+  --bg: #1b1e21;
+  --surface: #25292d;
+  --surface-2: #30353a;
+  --border: #474e55;
+  --text: #e6e8ea;
+  --text-muted: #a3aab1;
+  --equip-on: #d0d4d8;
+  --equip-off: #6b737b;
+  --stale: #6f767d;
+  --focus: #6ea8fe;
+}
+
+.num { font-variant-numeric: tabular-nums; }
