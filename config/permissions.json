@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git branch -D *)",
+      "Bash(git checkout -- *)",
+      "Bash(git checkout . *)",
+      "Bash(git restore *)",
+      "Bash(git -C * push *)",
+      "Bash(git -C * reset --hard *)",
+      "Bash(git -C * clean *)",
+      "Bash(git -C * branch -D *)",
+      "Bash(git -C * restore *)",
+      "PowerShell(git push *)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git branch -D *)",
+      "PowerShell(git checkout -- *)",
+      "PowerShell(git checkout . *)",
+      "PowerShell(git restore *)",
+      "PowerShell(git -C * push *)",
+      "PowerShell(git -C * reset --hard *)",
+      "PowerShell(git -C * clean *)",
+      "PowerShell(git -C * branch -D *)",
+      "PowerShell(git -C * restore *)"
+    ]
+  }
+}

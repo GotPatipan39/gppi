@@ -93,6 +93,36 @@ open(dst, "w", encoding="utf-8").write(new)
 print(f"  ✓ CLAUDE.md ({how}) — {dst}")
 PY
 fi
+# permissions ระดับเครื่อง — เพิ่มกฎใน config/permissions.json ที่ settings.json ยังไม่มี, ไม่ลบ/แก้ค่าอื่น
+if [[ -z "$project" && -f "$SRC/config/permissions.json" ]]; then
+  python3 - "$SRC/config/permissions.json" "$HOME/.claude/settings.json" <<'PY'
+import sys, os, json
+src, dst = sys.argv[1], sys.argv[2]
+want = json.load(open(src, encoding="utf-8-sig")).get("permissions", {})
+cur = {}
+if os.path.exists(dst):
+    try:
+        text = open(dst, encoding="utf-8-sig").read()
+        cur = json.loads(text) if text.strip() else {}
+    except ValueError:
+        print(f"  ! settings.json อ่านไม่ได้ (JSON ไม่ถูกต้อง) — ข้าม ไม่แตะไฟล์: {dst}", file=sys.stderr)
+        sys.exit(0)
+perms = cur.setdefault("permissions", {})
+added = 0
+for kind in ("allow", "ask", "deny"):
+    have = perms.get(kind, [])
+    new = [r for r in want.get(kind, []) if r not in have]
+    if new:
+        perms[kind] = have + new
+        added += len(new)
+if added == 0:
+    print("  ✓ settings.json (กฎครบแล้ว ไม่ได้แก้ไฟล์)")
+else:
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    open(dst, "w", encoding="utf-8").write(json.dumps(cur, indent=2, ensure_ascii=False) + "\n")
+    print(f"  ✓ settings.json (เพิ่มกฎ {added} ข้อ) — {dst}")
+PY
+fi
 
 echo
 echo "เสร็จแล้ว — reload VS Code แล้วพิมพ์ / เพื่อดูรายการ skill"

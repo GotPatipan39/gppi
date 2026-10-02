@@ -17,6 +17,7 @@ mskills/
 ├── vendor/<ที่มา>/LICENSE      ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
 │   └── <ชื่อ>/                    (ตอนนี้มี vendor/mattpocock/)
 ├── config/global-CLAUDE.md     ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
+├── config/permissions.json     ← กฎขอยืนยันคำสั่ง git อันตราย (รวมเข้า ~/.claude/settings.json)
 └── scripts/install-skills.ps1, install-skills.sh
 ```
 script หา skill จากทั้ง `skills/` และ `vendor/*/` แต่ติดตั้งลงปลายทางด้วยชื่อ skill อย่างเดียว (เช่น `~/.claude/skills/grilling`) ชื่อ skill จึงห้ามซ้ำกันข้ามโฟลเดอร์ ถ้าซ้ำ script จะหยุดและแจ้ง
@@ -57,6 +58,12 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 - ใส่ไว้ในบล็อก `<!-- BEGIN claude-skills -->` … `<!-- END claude-skills -->` — เนื้อหาอื่นที่เขียนเองในไฟล์นั้นไม่ถูกแตะ, รันซ้ำจะแทนที่เฉพาะบล็อก
 - แก้กฎ: แก้ `config/global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
 - เพิ่ม skill ใหม่: สร้างใน `skills/<ชื่อ>/` และเพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `config/global-CLAUDE.md` ด้วย
+
+**กฎขอยืนยันคำสั่ง:** `install-global.bat` / `install-all-global.bat` เอากฎใน [`config/permissions.json`](config/permissions.json) ไปรวมเข้า `~/.claude/settings.json` — ตอนนี้เป็นกฎ `ask` ให้ Claude Code เด้งกล่องขอยืนยันก่อน `git push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` (ทั้ง Bash และ PowerShell tool)
+- **เพิ่มอย่างเดียว ไม่ลบ** — กฎที่ settings.json มีอยู่แล้ว และค่าอื่นในไฟล์ (model, hooks ...) ไม่ถูกแตะ; รันซ้ำไม่เพิ่มกฎซ้ำ; ไม่มีกฎใหม่ = ไม่เขียนไฟล์
+- ลบกฎออกจาก `permissions.json` แล้ว เครื่องที่ติดตั้งไปแล้วยังมีกฎนั้นอยู่ — ต้องลบเองใน `~/.claude/settings.json` ของเครื่องนั้น (ตั้งใจ: ไม่ให้ script ลบกฎที่ตั้งเองบนเครื่อง)
+- settings.json ที่ JSON เสีย → script ข้าม ไม่แตะไฟล์ และเตือน
+- ใช้ `ask` ไม่ใช่ hook บล็อก: hook แบบ mattpocock ต้องใช้ `jq` (Windows ไม่มี) และดักแค่ Bash — ดูตาราง "ตรวจแล้ว" ด้านล่าง
 
 **แบบสั่งเอง:** ใช้ script — skill ที่ต้องใช้คู่กันจะถูก copy ให้อัตโนมัติ, copy ทับของเดิม (รันซ้ำได้เมื่อ skill อัปเดต)
 

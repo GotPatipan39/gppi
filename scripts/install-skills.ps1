@@ -193,6 +193,43 @@ if (-not $Project -and (Test-Path -LiteralPath $globalSrc)) {
   }
 }
 
+# ---- permissions ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
+# เพิ่มกฎใน config\permissions.json ที่ settings.json ยังไม่มี — ไม่ลบ/แก้ค่าอื่น, ไม่มีอะไรใหม่ = ไม่เขียนไฟล์
+$permSrc = Join-Path (Join-Path $Source 'config') 'permissions.json'
+if (-not $Project -and (Test-Path -LiteralPath $permSrc)) {
+  $settingsPath = Join-Path (Split-Path $Target -Parent) 'settings.json'
+  $want = ([System.IO.File]::ReadAllText($permSrc, [System.Text.Encoding]::UTF8) | ConvertFrom-Json).permissions
+  $cur = $null
+  if (Test-Path -LiteralPath $settingsPath) {
+    try { $cur = [System.IO.File]::ReadAllText($settingsPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json }
+    catch { Write-Warning "settings.json อ่านไม่ได้ (JSON ไม่ถูกต้อง) — ข้าม ไม่แตะไฟล์: $settingsPath"; $cur = 'invalid' }
+  }
+  if ($cur -ne 'invalid') {
+    if ($null -eq $cur) { $cur = New-Object PSObject }
+    if (-not $cur.PSObject.Properties['permissions']) { $cur | Add-Member -NotePropertyName permissions -NotePropertyValue (New-Object PSObject) }
+    $added = 0
+    foreach ($kind in @('allow', 'ask', 'deny')) {
+      if (-not $want.PSObject.Properties[$kind]) { continue }
+      $have = @()
+      if ($cur.permissions.PSObject.Properties[$kind]) { $have = @($cur.permissions.$kind) }
+      # -cnotcontains: กฎแยกตัวพิมพ์เล็ก/ใหญ่ (branch -D ≠ branch -d)
+      $new = @($want.$kind | Where-Object { $have -cnotcontains $_ })
+      if ($new.Count -eq 0) { continue }
+      $added += $new.Count
+      $merged = @($have) + $new
+      if ($cur.permissions.PSObject.Properties[$kind]) { $cur.permissions.$kind = $merged }
+      else { $cur.permissions | Add-Member -NotePropertyName $kind -NotePropertyValue $merged }
+    }
+    if ($added -eq 0) {
+      Write-Host "  ✓ settings.json (กฎครบแล้ว ไม่ได้แก้ไฟล์)"
+    } elseif ($PSCmdlet.ShouldProcess($settingsPath, "settings.json: เพิ่มกฎ $added ข้อ")) {
+      $json = ConvertTo-Json -InputObject $cur -Depth 50
+      [System.IO.File]::WriteAllText($settingsPath, $json + "`n", (New-Object System.Text.UTF8Encoding($false)))
+      Write-Host "  ✓ settings.json (เพิ่มกฎ $added ข้อ) — $settingsPath"
+    }
+  }
+}
+
 if (-not $WhatIfPreference) {
   Write-Host ""
   Write-Host "เสร็จแล้ว — ใน VS Code กด Ctrl+Shift+P > Developer: Reload Window แล้วพิมพ์ / เพื่อดูรายการ skill"
