@@ -37,6 +37,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
 | `git-commit` | 1.0.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
+| `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 
 ## skill จากภายนอก (`vendor/`, copy มาตรงๆ ไม่แก้เนื้อหา)
 | skill | ที่มา | ใช้กับ | ต้อง copy คู่กับ |
@@ -50,7 +51,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 
 ## เอาไปใช้ใน VS Code
 **แบบง่าย (ดับเบิลคลิก):**
-- `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme, git-commit ...) ให้ใช้ได้ทุกโปรเจกต์
+- `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme, git-commit, tdd ...) ให้ใช้ได้ทุกโปรเจกต์
 - `install-all-global.bat` — ติดตั้ง **ทุก skill** ให้ใช้ได้ทุกโปรเจกต์
 - `install-to-project.bat` — เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง แล้วพิมพ์หมายเลข skill ที่ต้องการ (หรือพิมพ์ `all` = ทุกตัว)
 
@@ -127,3 +128,4 @@ skill ในแอป Claude ผูกกับบัญชี ไม่ได�
 | mattpocock/skills `git-guardrails-claude-code` @ d81f3a1 | ไม่ใช้ — hook ใช้ `jq` ซึ่งไม่มีบน Windows เครื่องนี้ ทดสอบแล้ว hook ไม่บล็อกอะไรเลยและไม่เตือน, ดักแค่ Bash ไม่ดัก PowerShell tool, บล็อก `git push` ทั้งหมด, จับคำสั่งด้วย regex หลวมจนข้อความใน commit message ก็โดน; ใช้ `permissions` ใน `settings.json` แทน |
 | anthropics/skills `skill-creator` @ 8a1541c (Apache-2.0) | ไม่ใช้ — ไม่ copy เข้า repo: มีฉบับที่ซิงก์จากบัญชี claude.ai (`anthropic-skills:skill-creator`) ในเครื่องอยู่แล้ว เรียกใช้ได้เมื่อต้องการ; หลักการเขียน skill (อธิบายเหตุผลแทน MUST, SKILL.md < 500 บรรทัด, แยก references, สัมภาษณ์ก่อนเขียน) เราทำอยู่แล้ว; description แบบ "pushy" ขัดข้อ 4; `run_loop.py` ปรับ description ใช้บน Windows ไม่ได้ (`select()` บน pipe → นับทุก query เป็นไม่ trigger โดยไม่ error, ไม่ระบุ encoding → พังกับภาษาไทย cp874) และต้องมี `claude` CLI + เรียก `claude -p` ราว 360 ครั้งต่อ skill; viewer โหลด Google Fonts/SheetJS จาก CDN และ kill ทุก process บน port 3117; ส่วนที่มีประโยชน์ (รันเทียบมี/ไม่มี skill ด้วย subagent) ทำได้โดยไม่ต้องติดตั้งอะไร |
 | obra/superpowers `using-git-worktrees` @ 8ca22db | ไม่ใช้ — description กว้างจนทำงานทุกครั้งที่เริ่ม feature, รัน `npm/pip/poetry install` เอง (ต้องใช้ internet, ไม่รองรับ colcon), ROS2 ต้อง build แยกทุก worktree และรันพร้อมกันจะแย่ง `/dev/ttyUSB*`; Claude Code มี worktree ในตัวอยู่แล้ว |
+| mattpocock/skills `tdd` @ 3f59913 (MIT) | บางส่วน — ดัดแปลงเป็น `tdd` 1.0.0 ของเรา: เอาการตกลง seam ก่อนเขียน test, anti-pattern (tautological, ผูกกับ implementation, horizontal slicing), mock เฉพาะขอบระบบ; ไม่ copy ตรงๆ เพราะเรียก skill `codebase-design` และ `code-review` ของเขาที่เราไม่มี (`code-review` จะไปชนกับ `/code-review` ของ Claude Code), ตัวอย่างเป็น TypeScript/checkout ทั้งหมด, ไม่พูดถึง hardware; ใส่ refactor กลับเข้าลูป |

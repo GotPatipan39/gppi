@@ -13,6 +13,7 @@
 | หน้าจอ HMI, dashboard, หน้า config, Node-RED Dashboard, Grafana, Web UI ↔ ROS2 | `industrial-ui` |
 | เขียน/แก้/ตรวจ README, หรือแก้โค้ดที่ทำให้สิ่งที่ README อธิบายไว้เปลี่ยน | `project-readme` |
 | commit, release / ออกเวอร์ชัน, tag | `git-commit` |
+| เขียน logic ใหม่หรือแก้บั๊กที่ test ได้ (แปลงค่า register/scale, คำนวณ, state machine, parser, alarm/interlock, timeout) | `tdd` (ถามก่อนถ้าไม่แน่ใจว่าคุ้มทำแบบ TDD) |
 | วางแผน/ออกแบบสิ่งใหม่ที่ยังมีเรื่องต้องตัดสินใจหลายข้อ | `grilling` (ถามผู้ใช้ก่อนว่าจะให้ grill ไหม) |
 | การตัดสินใจที่ย้อนกลับยาก + คนอ่านทีหลังจะสงสัย + มีทางเลือกจริง | `domain-modeling` (เสนอจด ADR) |
 
