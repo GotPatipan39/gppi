@@ -27,7 +27,7 @@ latency/copy constraints require a different path.
 
 ```cpp
 #include <image_transport/image_transport.hpp>
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>  // Humble มีแค่ .h — .hpp เป็นของรุ่นหลัง
 #include <opencv2/opencv.hpp>
 
 class CameraDriver : public rclcpp::Node
@@ -77,7 +77,7 @@ private:
 
 ```cpp
 #include <image_transport/image_transport.hpp>
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>  // Humble มีแค่ .h — .hpp เป็นของรุ่นหลัง
 
 class ImageProcessor : public rclcpp::Node
 {
@@ -118,7 +118,7 @@ ros2 param set /camera_driver /camera/image/compressed/png_level 3
 ### ROS message ↔ OpenCV conversion
 
 ```cpp
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>  // Humble มีแค่ .h — .hpp เป็นของรุ่นหลัง
 
 // ROS Image → OpenCV Mat (zero-copy if possible)
 void callback(const sensor_msgs::msg::Image::ConstSharedPtr & msg)
@@ -184,7 +184,7 @@ normally serialize data.
 ```cpp
 #include <rclcpp/type_adapter.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>  // Humble มีแค่ .h — .hpp เป็นของรุ่นหลัง
 
 template<>
 struct rclcpp::TypeAdapter<cv::Mat, sensor_msgs::msg::Image>

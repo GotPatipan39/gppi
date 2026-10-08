@@ -33,7 +33,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 ## skill ของเราเอง (`skills/`)
 | skill | เวอร์ชัน | ใช้กับ |
 |---|---|---|
-| `ros2-humble-cpp` | 3.2.0 | งาน ROS2 Humble + C++ |
+| `ros2-humble-cpp` | 3.2.1 | งาน ROS2 Humble + C++ |
 | `modbus` | 1.0.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |

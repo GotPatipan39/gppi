@@ -1,5 +1,9 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.2.1 — 2026-10-08
+- แก้ `references/perception.md`: `#include <cv_bridge/cv_bridge.hpp>` → `cv_bridge.h` ทั้ง 4 จุด — Humble มีแค่ `.h` (ตรวจจาก branch `humble` ของ ros-perception/vision_opencv) ตัวอย่างเดิม build ไม่ผ่านบน Humble
+- งานภาพ (กล้อง, calibration, หาตำแหน่ง/วัดขนาด/QR) อยู่ใน skill `opencv` — ไฟล์นี้คงไว้แค่ส่วนต่อเข้า ROS2
+
 ## 3.2.0 — 2026-10-02
 - ตาราง reference ชี้งาน Web UI ↔ ROS2 ไปที่ skill `industrial-ui` (platforms/ros2-bridge.md)
 
