@@ -166,6 +166,25 @@ foreach ($s in $toCopy) {
     Write-Host "  ✓ $label"
   }
 }
+
+# ---- subagent (agents\*.md) → ~\.claude\agents (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
+$agentSrc = Join-Path $Source 'agents'
+if (-not $Project -and (Test-Path -LiteralPath $agentSrc)) {
+  $agentDst = Join-Path (Split-Path $Target -Parent) 'agents'
+  if ($PSCmdlet.ShouldProcess($agentDst, 'สร้างโฟลเดอร์')) {
+    New-Item -ItemType Directory -Force -Path $agentDst | Out-Null
+  }
+  foreach ($a in (Get-ChildItem -LiteralPath $agentSrc -Filter '*.md' -File)) {
+    $ver = (Select-String -LiteralPath $a.FullName -Pattern 'เวอร์ชัน\s+([0-9.]+)' -List |
+      ForEach-Object { $_.Matches[0].Groups[1].Value })
+    $label = if ($ver) { "agent $($a.BaseName) ($ver)" } else { "agent $($a.BaseName)" }
+    if ($PSCmdlet.ShouldProcess((Join-Path $agentDst $a.Name), "copy $label")) {
+      Copy-Item -LiteralPath $a.FullName -Destination $agentDst -Force
+      Write-Host "  ✓ $label"
+    }
+  }
+}
+
 # ---- CLAUDE.md ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
 # ใส่เนื้อหาไว้ระหว่าง marker — เนื้อหาอื่นในไฟล์ที่ผู้ใช้เขียนเองจะไม่ถูกแตะ
 $globalSrc = Join-Path (Join-Path $Source 'config') 'global-CLAUDE.md'

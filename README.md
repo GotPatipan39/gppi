@@ -16,6 +16,7 @@ mskills/
 ├── skills/<ชื่อ>/              ← skill ของเราเอง (แก้ได้)
 ├── vendor/<ที่มา>/LICENSE      ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
 │   └── <ชื่อ>/                    (ตอนนี้มี vendor/mattpocock/)
+├── agents/<ชื่อ>.md            ← subagent ของเราเอง (ติดตั้งไป ~/.claude/agents/)
 ├── config/global-CLAUDE.md     ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
 ├── config/permissions.json     ← กฎขอยืนยันคำสั่ง git อันตราย (รวมเข้า ~/.claude/settings.json)
 └── scripts/install-skills.ps1, install-skills.sh
@@ -36,8 +37,19 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | `modbus` | 1.0.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
-| `git-commit` | 1.0.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
+| `git-commit` | 1.1.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
 | `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
+
+## subagent ของเรา (`agents/`)
+Claude อีกตัวที่ Claude หลักส่งงานไปให้ทำ — มี context แยก (ไม่เห็นแชท) และจำกัด tool ได้ เหมาะกับงานตรวจที่ต้องการมุมมองคนนอก
+
+| subagent | เวอร์ชัน | ใช้กับ | ถูกเรียกจาก |
+|---|---|---|---|
+| `safety-reviewer` | 1.0.0 | ตรวจ diff ก่อน commit ในโปรเจกต์ที่คุมเครื่องจักร: เกณฑ์ความปลอดภัยที่ถูกลด, ค่า hardware ที่เปลี่ยน, คำสั่งขยับที่ไม่มีเงื่อนไข, ตอนสื่อสารล้มเหลว, test ที่ถูกแก้ให้ผ่าน — อ่านอย่างเดียว | skill `git-commit` (ขั้นตอนที่ 2) หรือสั่งเอง: "ให้ safety-reviewer ตรวจ" / พิมพ์ `@` แล้วเลือก |
+
+- ติดตั้งเฉพาะแบบทุกโปรเจกต์ (`install-global.bat`, `install-all-global.bat`, `install-skills.sh` ที่ไม่มี `-p`) ไปที่ `~/.claude/agents/` — `install-to-project.bat` ไม่ติดตั้ง agent
+- เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตารางนี้ และเขียนเหตุผลใน commit message
+- Bash ของ `safety-reviewer` จำกัดแค่ด้วยคำสั่งในไฟล์ agent (อ่าน git อย่างเดียว) ไม่ใช่ด้วยระบบ — `permissions` ใน `settings.json` ยังมีผลกับ subagent ตามปกติ
 
 ## skill จากภายนอก (`vendor/`, copy มาตรงๆ ไม่แก้เนื้อหา)
 | skill | ที่มา | ใช้กับ | ต้อง copy คู่กับ |

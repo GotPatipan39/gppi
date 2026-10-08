@@ -78,6 +78,16 @@ for s in "${all[@]}"; do
   ver="$(grep -oP 'เวอร์ชัน\s+\K[0-9.]+' "$src/SKILL.md" | head -1 || true)"
   echo "  ✓ $s${ver:+ ($ver)}"
 done
+# subagent (agents/*.md) → ~/.claude/agents (เฉพาะการติดตั้งแบบทุกโปรเจกต์)
+if [[ -z "$project" && -d "$SRC/agents" ]]; then
+  mkdir -p "$HOME/.claude/agents"
+  for a in "$SRC"/agents/*.md; do
+    [[ -f "$a" ]] || continue
+    cp "$a" "$HOME/.claude/agents/"
+    ver="$(grep -oP 'เวอร์ชัน\s+\K[0-9.]+' "$a" | head -1 || true)"
+    echo "  ✓ agent $(basename "$a" .md)${ver:+ ($ver)}"
+  done
+fi
 # CLAUDE.md ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) — ใส่ไว้ระหว่าง marker, เนื้อหาอื่นไม่ถูกแตะ
 if [[ -z "$project" && -f "$SRC/config/global-CLAUDE.md" ]]; then
   python3 - "$SRC/config/global-CLAUDE.md" "$HOME/.claude/CLAUDE.md" "$SRC" <<'PY'
