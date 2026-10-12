@@ -1,0 +1,7 @@
+{
+  "name": "mskills",
+  "description": "Skills and a safety-review subagent for machine, robot and IoT work: ROS2 Humble, Modbus, OpenCV, industrial UI, TDD, commits",
+  "author": { "name": "GotPatipan39" },
+  "repository": "https://github.com/GotPatipan39/mskills",
+  "skills": ["./skills", "./vendor/mattpocock"]
+}

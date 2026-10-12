@@ -15,6 +15,10 @@
   .\install-skills.ps1 -All
 
 .EXAMPLE
+  # 4) เครื่องที่ใช้ plugin mskills: ติดตั้งแค่ CLAUDE.md + permissions (skill/agent มาจาก plugin)
+  .\install-skills.ps1 -ConfigOnly
+
+.EXAMPLE
   # ดูว่าจะ copy อะไรโดยยังไม่ copy จริง
   .\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills modbus -WhatIf
 
@@ -35,7 +39,9 @@ param(
   # เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง และเลือก skill จากเมนู (ใช้กับ install-to-project.bat)
   [switch]$Pick,
   # ติดตั้งทุก skill ที่มีใน skills\ และ vendor\
-  [switch]$All
+  [switch]$All,
+  # ติดตั้งแค่ CLAUDE.md + permissions — สำหรับเครื่องที่ได้ skill/agent จาก plugin mskills แล้ว
+  [switch]$ConfigOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -147,10 +153,31 @@ if ($missing.Count -gt 0) {
   throw "ไม่พบ skill: $($missing -join ', ')`nที่มีอยู่: $($AllNames -join ', ')"
 }
 
+# ---- โหมด plugin: ไม่ copy skill/agent แต่เตือนถ้ามีสำเนาเก่าค้าง (ตัวเก่าจะบังตัวใน plugin โดยไม่มีคำเตือน) ----
+if ($ConfigOnly) {
+  if ($Project -or $Pick -or $All -or $PSBoundParameters.ContainsKey('Skills')) {
+    throw '-ConfigOnly ใช้คู่กับ -Project / -Pick / -All / -Skills ไม่ได้'
+  }
+  $toCopy.Clear()
+  Write-Host 'โหมด -ConfigOnly: ติดตั้งแค่ CLAUDE.md + permissions (skill/agent มาจาก plugin mskills)'
+  $stale = @($AllNames | Where-Object { Test-Path -LiteralPath (Join-Path $Target $_) })
+  $staleAgents = @()
+  $agentDir = Join-Path (Split-Path $Target -Parent) 'agents'
+  if (Test-Path -LiteralPath (Join-Path $Source 'agents')) {
+    $staleAgents = @(Get-ChildItem -LiteralPath (Join-Path $Source 'agents') -Filter '*.md' -File |
+      Where-Object { Test-Path -LiteralPath (Join-Path $agentDir $_.Name) } | ForEach-Object { $_.BaseName })
+  }
+  if ($stale.Count -gt 0 -or $staleAgents.Count -gt 0) {
+    Write-Warning ("มีสำเนาเก่าจาก installer ค้างอยู่ จะบังตัวใน plugin: skill [" + ($stale -join ', ') + '] agent [' + ($staleAgents -join ', ') + "]`n  ย้ายออกจาก $Target และ $agentDir ก่อนใช้ plugin")
+  }
+}
+
 # ---- copy ----
-Write-Host "ปลายทาง: $Target"
-if ($PSCmdlet.ShouldProcess($Target, 'สร้างโฟลเดอร์')) {
-  New-Item -ItemType Directory -Force -Path $Target | Out-Null
+if (-not $ConfigOnly) {
+  Write-Host "ปลายทาง: $Target"
+  if ($PSCmdlet.ShouldProcess($Target, 'สร้างโฟลเดอร์')) {
+    New-Item -ItemType Directory -Force -Path $Target | Out-Null
+  }
 }
 foreach ($s in $toCopy) {
   $src = $SkillMap[$s].Dir
@@ -169,7 +196,7 @@ foreach ($s in $toCopy) {
 
 # ---- subagent (agents\*.md) → ~\.claude\agents (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
 $agentSrc = Join-Path $Source 'agents'
-if (-not $Project -and (Test-Path -LiteralPath $agentSrc)) {
+if (-not $Project -and -not $ConfigOnly -and (Test-Path -LiteralPath $agentSrc)) {
   $agentDst = Join-Path (Split-Path $Target -Parent) 'agents'
   if ($PSCmdlet.ShouldProcess($agentDst, 'สร้างโฟลเดอร์')) {
     New-Item -ItemType Directory -Force -Path $agentDst | Out-Null

@@ -5,6 +5,7 @@
 #   scripts/install-skills.sh --all                             # ทุก skill → ~/.claude/skills (เหมือน install-all-global.bat)
 #   scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui   # เฉพาะโปรเจกต์
 #   scripts/install-skills.sh -p ~/fg-robot-pallet --all        # ทุก skill ลงโปรเจกต์
+#   scripts/install-skills.sh --config-only                     # เครื่องที่ใช้ plugin mskills: แค่ CLAUDE.md + permissions
 #
 # หา skill จาก skills/<ชื่อ> (ของเราเอง) และ vendor/<ที่มา>/<ชื่อ> (จากภายนอก) — ปลายทางใช้แค่ <ชื่อ>
 # skill จาก vendor จะได้ vendor/<ที่มา>/LICENSE copy ไปเป็น LICENSE ในโฟลเดอร์ skill ด้วย
@@ -37,6 +38,12 @@ requires() {
   esac
 }
 
+config_only=""
+if [[ "${1:-}" == "--config-only" ]]; then
+  [[ $# -eq 1 ]] || { echo "--config-only ใช้คู่กับ -p หรือชื่อ skill ไม่ได้" >&2; exit 1; }
+  config_only=1; shift
+fi
+
 project=""
 if [[ "${1:-}" == "-p" ]]; then
   project="${2:?ต้องใส่ path โปรเจกต์หลัง -p}"; shift 2
@@ -68,9 +75,22 @@ if [[ ${#missing[@]} -gt 0 ]]; then
   exit 1
 fi
 
-echo "ปลายทาง: $target"
-mkdir -p "$target"
-for s in "${all[@]}"; do
+# โหมด plugin: ไม่ copy skill/agent แต่เตือนถ้ามีสำเนาเก่าค้าง (ตัวเก่าจะบังตัวใน plugin โดยไม่มีคำเตือน)
+if [[ -n "$config_only" ]]; then
+  all=()
+  echo "โหมด --config-only: ติดตั้งแค่ CLAUDE.md + permissions (skill/agent มาจาก plugin mskills)"
+  stale=(); for n in "${!SKILL_DIR[@]}"; do [[ -e "$target/$n" ]] && stale+=("$n"); done
+  for a in "$SRC"/agents/*.md; do [[ -f "$a" && -e "$HOME/.claude/agents/$(basename "$a")" ]] && stale+=("agent:$(basename "$a" .md)"); done
+  if [[ ${#stale[@]} -gt 0 ]]; then
+    echo "  ! มีสำเนาเก่าจาก installer ค้างอยู่ จะบังตัวใน plugin: ${stale[*]}" >&2
+    echo "    ย้ายออกจาก $target และ $HOME/.claude/agents ก่อนใช้ plugin" >&2
+  fi
+else
+  echo "ปลายทาง: $target"
+  mkdir -p "$target"
+fi
+for s in "${all[@]:-}"; do
+  [[ -z "$s" ]] && continue
   src="${SKILL_DIR[$s]}"
   mkdir -p "$target/$s"
   cp -r "$src/." "$target/$s/"
@@ -79,7 +99,7 @@ for s in "${all[@]}"; do
   echo "  ✓ $s${ver:+ ($ver)}"
 done
 # subagent (agents/*.md) → ~/.claude/agents (เฉพาะการติดตั้งแบบทุกโปรเจกต์)
-if [[ -z "$project" && -d "$SRC/agents" ]]; then
+if [[ -z "$project" && -z "$config_only" && -d "$SRC/agents" ]]; then
   mkdir -p "$HOME/.claude/agents"
   for a in "$SRC"/agents/*.md; do
     [[ -f "$a" ]] || continue

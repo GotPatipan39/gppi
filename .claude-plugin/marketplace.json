@@ -1,0 +1,11 @@
+{
+  "name": "mskills",
+  "owner": { "name": "GotPatipan39" },
+  "plugins": [
+    {
+      "name": "mskills",
+      "source": "./",
+      "description": "Skills and a safety-review subagent for machine, robot and IoT work"
+    }
+  ]
+}

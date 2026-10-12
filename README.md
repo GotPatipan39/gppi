@@ -37,7 +37,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | `modbus` | 1.1.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
-| `git-commit` | 1.1.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
+| `git-commit` | 1.1.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
 | `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 
@@ -103,6 +103,22 @@ bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet --all
 
 ข้อมูลเฉพาะโปรเจกต์ (address map, hardware, กฎเฉพาะเครื่อง) ให้เขียนใน `CLAUDE.md` ที่ root ของโปรเจกต์ ไม่ใส่ใน skill
 การตัดสินใจสำคัญของโปรเจกต์ (ย้อนกลับยาก + คนอ่านทีหลังจะสงสัย + มีทางเลือกจริง) จดเป็น ADR ใน `docs/adr/` ของโปรเจกต์
+
+### แบบ plugin (ทดลองใช้ทีละเครื่อง)
+plugin ส่ง skill ทั้งหมด + `safety-reviewer`; installer ยังติดตั้ง CLAUDE.md + permissions (plugin ส่ง 2 อย่างนี้ไม่ได้) — ผลทดสอบและเหตุผลอยู่ใน [docs/plugin-evaluation.md](docs/plugin-evaluation.md)
+
+ตั้งเครื่อง (ครั้งเดียว):
+1. ย้าย skill/agent ของ mskills ที่ installer เคย copy ไว้ออกจาก `~/.claude/skills/` และ `~/.claude/agents/` — ถ้ายังอยู่ ตัวเก่าจะบังตัวใน plugin โดยไม่มีคำเตือน (installer ข้อ 2 จะเตือนถ้ายังมี)
+2. ติดตั้งกฎ: `install-skills.ps1 -ConfigOnly` (Windows) / `install-skills.sh --config-only` (Linux)
+3. ติดตั้ง plugin (git ในเครื่องต้องเข้า repo private ได้; เครื่องที่ใช้ HTTPS ตั้ง `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` ก่อน):
+   ```bash
+   claude plugin marketplace add GotPatipan39/mskills
+   claude plugin install mskills@mskills
+   ```
+
+อัปเดต (หลัง push): `claude plugin marketplace update mskills && claude plugin update mskills@mskills` แล้วเปิด session ใหม่ — auto-update ของ Claude Code ยังไม่เห็นผลในการทดสอบ; ถ้าตาราง skill/กฎใน `config/` เปลี่ยน ให้รันข้อ 2 ซ้ำด้วย
+- ชื่อใน plugin มี prefix: skill แสดงเป็น `mskills:tdd` (พิมพ์ `/tdd` และตารางที่ใช้ชื่อสั้นยังใช้ได้), agent ต้องใช้ `mskills:safety-reviewer`
+- ถอยกลับ: `claude plugin uninstall mskills@mskills` แล้วรัน `install-all-global.bat` / `install-skills.sh --all`
 
 ## ใช้ในแอป Claude
 skill ในแอป Claude ผูกกับบัญชี ไม่ได้อ่านจากโฟลเดอร์นี้ — ต้องอัปโหลดเองในหน้า Skills (`+ Add`)
