@@ -34,12 +34,12 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | skill | เวอร์ชัน | ใช้กับ |
 |---|---|---|
 | `ros2-humble-cpp` | 3.2.1 | งาน ROS2 Humble + C++ |
-| `modbus` | 1.0.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
+| `modbus` | 1.1.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
 | `git-commit` | 1.1.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
 | `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
-| `opencv` | 1.0.0 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
+| `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 
 ## subagent ของเรา (`agents/`)
 Claude อีกตัวที่ Claude หลักส่งงานไปให้ทำ — มี context แยก (ไม่เห็นแชท) และจำกัด tool ได้ เหมาะกับงานตรวจที่ต้องการมุมมองคนนอก

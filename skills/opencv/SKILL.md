@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ หรือ debu
 
 # OpenCV สำหรับงาน machine vision
 
-> เวอร์ชัน 1.0.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.0.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 งาน vision ที่หน้างานต่างจากตัวอย่างใน tutorial ตรงที่ **ผลของมันไปสั่งเครื่อง** — นับผิดคือส่งของขาด, ตำแหน่งผิดคือ robot ชน, กล้องหลุดแล้วรายงานว่า "ไม่มีของเสีย" คือปล่อยของเสียออกไป
 skill นี้เน้นสิ่งที่ทำให้ระบบ vision เชื่อถือได้ ไม่ใช่รายการ function ของ OpenCV
@@ -17,6 +17,8 @@ skill นี้เน้นสิ่งที่ทำให้ระบบ visi
 | ต่อเข้า ROS2 (`cv_bridge`, `image_transport`, QoS) | skill `ros2-humble-cpp` → `references/perception.md` |
 | ส่งผลไป PLC | skill `modbus` |
 | แสดงผล/ภาพบน HMI | skill `industrial-ui` |
+
+**เขียนหรือแก้ logic ประมวลผลภาพ** (นับ, วัด, ตัดสิน OK/NG, แปลง pixel → mm/พิกัด robot, ตรวจรูปแบบรหัส) → **โหลด skill `tdd` ด้วยตอนนี้เลย** ก่อนแก้โค้ด — test ด้วยชุดภาพที่เซฟไว้พร้อม label (ข้อ 3) ไม่ใช่ลองกับกล้องจริงแล้วดูด้วยตา
 
 ## 0. เช็คสภาพแวดล้อมก่อนเขียนโค้ด
 Ubuntu 22.04 + ROS2 Humble ใช้ **OpenCV ของระบบ 4.5.4** (`libopencv-dev`, `python3-opencv` จาก apt) ซึ่ง `cv_bridge` ถูก build มากับตัวนี้
