@@ -22,7 +22,17 @@
 | ขอตรวจความปลอดภัยโดยไม่บอกชื่อ agent | Claude เลือก `mskills:safety-reviewer` เอง |
 | ขออนุมัติตอน skill เปิดไฟล์ประกอบ (`modbus/devices/me231.md`) | ถูกขออนุมัติ **ทั้งแบบเดิมและ plugin** (3/3 ทั้งคู่) — ไม่ใช่ปัญหาของ plugin |
 
-ค่าใช้จ่ายรวมทุกรอบประมาณ $13
+### ติดตั้งจาก marketplace จริง (branch `plugin-trial`, plugin ทดลอง `mtrial`)
+| เรื่อง | ผล |
+|---|---|
+| `marketplace add GotPatipan39/mskills#plugin-trial` (repo private) บน Windows | ได้ — ต้องตั้ง `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` เพราะเครื่องนี้ใช้ git ผ่าน HTTPS; ใช้ credential ที่ git มีอยู่ ไม่ต้องใส่ token เพิ่ม |
+| ไม่ใส่ `version` ใน `plugin.json` | เวอร์ชัน = commit (`9c443419724c`) — ตรงกับ docs; ที่ skill plugin-dev บอกว่า "ถือเป็น 0.1.0" เก่าแล้ว |
+| skill + hook จาก plugin ที่ติดตั้ง | ทำงาน (cache อยู่ที่ `~/.claude/plugins/cache/<marketplace>/<plugin>/<commit>`) |
+| push commit ใหม่ แล้วเปิด session ใหม่ (ไม่เปิด auto-update) | ยังได้ของเก่า — ตามคาด |
+| เปิด `autoUpdate: true` ใน `extraKnownMarketplaces` แล้วเปิด session ใหม่ทันที (`-p` 3 ครั้ง + แชทใน VS Code 1 ครั้ง) | **ยังได้ของเก่า** — marketplace ไม่ได้ดึงจาก GitHub เลยในช่วงไม่กี่นาที; รอบการเช็คยังไม่รู้ |
+| `claude plugin marketplace update` + `claude plugin update` | ได้ของใหม่ใน session ถัดไป ("Restart to apply changes") |
+
+ค่าใช้จ่ายรวมทุกรอบประมาณ $14
 
 บทเรียน: skill ความรู้ (`modbus`, `opencv`) ถูกโหลดแน่นอนกว่า skill วิธีทำงาน (`tdd`) เมื่องานต้องใช้คู่กัน — ใส่คำสั่ง "โหลด `tdd` ด้วย" ไว้ใน skill ความรู้ตรงๆ ได้ผลกว่าพึ่งตารางอย่างเดียว
 
@@ -34,7 +44,7 @@
 - ป้องกันกฎความปลอดภัยหายเงียบ (hook ไม่รัน) และแก้ผิดแล้วไปถึงทุกเครื่อง (เครื่องหน้างานติดตาม branch/tag ที่ทดสอบแล้ว)
 
 ## ยังไม่ได้ทดสอบ
-- ติดตั้งจาก marketplace จริง (repo private) และ auto-update — รวมถึงข้อขัดแย้งว่าไม่ใส่ `version` แล้ว "ติดตาม commit" (docs) หรือ "ถือเป็น 0.1.0" (skill plugin-dev)
+- auto-update เช็คบ่อยแค่ไหน (ไม่ได้ผลภายในไม่กี่นาที) — ถ้าช้าเกินไป ทางสำรองคือสั่ง `claude plugin marketplace update` + `plugin update` เอง (ยังสั้นกว่า `git pull` + install แต่ไม่ใช่อัตโนมัติ)
 - hook บน Ubuntu
 - repo เดียวเป็นทั้ง marketplace และ plugin
 
