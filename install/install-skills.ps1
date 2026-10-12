@@ -24,7 +24,7 @@
 
 .NOTES
   ถ้ารันไม่ได้เพราะ execution policy ให้รันแบบนี้แทน:
-    powershell -ExecutionPolicy Bypass -File D:\ws\mskills\scripts\install-skills.ps1
+    powershell -ExecutionPolicy Bypass -File D:\ws\mskills\install\install-skills.ps1
   หา skill จาก skills\<ชื่อ> (ของเราเอง) และ vendor\<ที่มา>\<ชื่อ> (จากภายนอก) — ปลายทางใช้แค่ <ชื่อ>
   skill จาก vendor จะได้ vendor\<ที่มา>\LICENSE copy ไปเป็น LICENSE ในโฟลเดอร์ skill ด้วย
   skill ที่ต้องใช้คู่กัน (เช่น grill-me ต้องมี grilling) จะถูก copy ให้อัตโนมัติ
@@ -45,7 +45,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-# root ของ repo (script อยู่ใน scripts\)
+# root ของ repo (script อยู่ใน install\)
 $Source = Split-Path $PSScriptRoot -Parent
 
 # skill ที่ใช้ได้กับทุกโปรเจกต์
@@ -214,7 +214,7 @@ if (-not $Project -and -not $ConfigOnly -and (Test-Path -LiteralPath $agentSrc))
 
 # ---- CLAUDE.md ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
 # ใส่เนื้อหาไว้ระหว่าง marker — เนื้อหาอื่นในไฟล์ที่ผู้ใช้เขียนเองจะไม่ถูกแตะ
-$globalSrc = Join-Path (Join-Path $Source 'config') 'global-CLAUDE.md'
+$globalSrc = Join-Path $PSScriptRoot 'global-CLAUDE.md'
 if (-not $Project -and (Test-Path -LiteralPath $globalSrc)) {
   $claudeMd = Join-Path (Split-Path $Target -Parent) 'CLAUDE.md'
   $begin = '<!-- BEGIN claude-skills (จัดการโดย install-skills — อย่าแก้ในบล็อกนี้) -->'
@@ -240,8 +240,8 @@ if (-not $Project -and (Test-Path -LiteralPath $globalSrc)) {
 }
 
 # ---- permissions ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) ----
-# เพิ่มกฎใน config\permissions.json ที่ settings.json ยังไม่มี — ไม่ลบ/แก้ค่าอื่น, ไม่มีอะไรใหม่ = ไม่เขียนไฟล์
-$permSrc = Join-Path (Join-Path $Source 'config') 'permissions.json'
+# เพิ่มกฎใน install\permissions.json ที่ settings.json ยังไม่มี — ไม่ลบ/แก้ค่าอื่น, ไม่มีอะไรใหม่ = ไม่เขียนไฟล์
+$permSrc = Join-Path $PSScriptRoot 'permissions.json'
 if (-not $Project -and (Test-Path -LiteralPath $permSrc)) {
   $settingsPath = Join-Path (Split-Path $Target -Parent) 'settings.json'
   $want = ([System.IO.File]::ReadAllText($permSrc, [System.Text.Encoding]::UTF8) | ConvertFrom-Json).permissions

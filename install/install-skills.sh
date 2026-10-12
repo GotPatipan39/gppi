@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # copy skill จาก repo mskills ไปให้ Claude Code ใน WSL / Linux ใช้
 #
-#   scripts/install-skills.sh                                   # skill ทั่วไป → ~/.claude/skills (ทุกโปรเจกต์)
-#   scripts/install-skills.sh --all                             # ทุก skill → ~/.claude/skills (เหมือน install-all-global.bat)
-#   scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui   # เฉพาะโปรเจกต์
-#   scripts/install-skills.sh -p ~/fg-robot-pallet --all        # ทุก skill ลงโปรเจกต์
-#   scripts/install-skills.sh --config-only                     # เครื่องที่ใช้ plugin mskills: แค่ CLAUDE.md + permissions
+#   install/install-skills.sh                                   # skill ทั่วไป → ~/.claude/skills (ทุกโปรเจกต์)
+#   install/install-skills.sh --all                             # ทุก skill → ~/.claude/skills (เหมือน install-all-global.bat)
+#   install/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui   # เฉพาะโปรเจกต์
+#   install/install-skills.sh -p ~/fg-robot-pallet --all        # ทุก skill ลงโปรเจกต์
+#   install/install-skills.sh --config-only                     # เครื่องที่ใช้ plugin mskills: แค่ CLAUDE.md + permissions
 #
 # หา skill จาก skills/<ชื่อ> (ของเราเอง) และ vendor/<ที่มา>/<ชื่อ> (จากภายนอก) — ปลายทางใช้แค่ <ชื่อ>
 # skill จาก vendor จะได้ vendor/<ที่มา>/LICENSE copy ไปเป็น LICENSE ในโฟลเดอร์ skill ด้วย
@@ -13,7 +13,7 @@
 # copy ทับของเดิม แต่ไม่ลบไฟล์ที่มีอยู่แล้วในปลายทาง
 set -euo pipefail
 
-# root ของ repo (script อยู่ใน scripts/)
+# root ของ repo (script อยู่ใน install/)
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ชื่อ skill → โฟลเดอร์ต้นทาง / LICENSE ของ vendor
@@ -109,8 +109,8 @@ if [[ -z "$project" && -z "$config_only" && -d "$SRC/agents" ]]; then
   done
 fi
 # CLAUDE.md ระดับเครื่อง (เฉพาะการติดตั้งแบบทุกโปรเจกต์) — ใส่ไว้ระหว่าง marker, เนื้อหาอื่นไม่ถูกแตะ
-if [[ -z "$project" && -f "$SRC/config/global-CLAUDE.md" ]]; then
-  python3 - "$SRC/config/global-CLAUDE.md" "$HOME/.claude/CLAUDE.md" "$SRC" <<'PY'
+if [[ -z "$project" && -f "$SRC/install/global-CLAUDE.md" ]]; then
+  python3 - "$SRC/install/global-CLAUDE.md" "$HOME/.claude/CLAUDE.md" "$SRC" <<'PY'
 import sys, os
 src, dst, skills_dir = sys.argv[1], sys.argv[2], sys.argv[3]
 begin = "<!-- BEGIN claude-skills (จัดการโดย install-skills — อย่าแก้ในบล็อกนี้) -->"
@@ -129,9 +129,9 @@ open(dst, "w", encoding="utf-8").write(new)
 print(f"  ✓ CLAUDE.md ({how}) — {dst}")
 PY
 fi
-# permissions ระดับเครื่อง — เพิ่มกฎใน config/permissions.json ที่ settings.json ยังไม่มี, ไม่ลบ/แก้ค่าอื่น
-if [[ -z "$project" && -f "$SRC/config/permissions.json" ]]; then
-  python3 - "$SRC/config/permissions.json" "$HOME/.claude/settings.json" <<'PY'
+# permissions ระดับเครื่อง — เพิ่มกฎใน install/permissions.json ที่ settings.json ยังไม่มี, ไม่ลบ/แก้ค่าอื่น
+if [[ -z "$project" && -f "$SRC/install/permissions.json" ]]; then
+  python3 - "$SRC/install/permissions.json" "$HOME/.claude/settings.json" <<'PY'
 import sys, os, json
 src, dst = sys.argv[1], sys.argv[2]
 want = json.load(open(src, encoding="utf-8-sig")).get("permissions", {})

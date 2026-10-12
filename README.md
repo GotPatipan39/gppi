@@ -6,21 +6,27 @@
 ```powershell
 git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
 ```
-แล้วดับเบิลคลิก `install-global.bat` — เท่านี้ Claude Code บนเครื่องนั้นก็ใช้ skill ได้ทุกโปรเจกต์
-(clone ไว้ที่ไหนก็ได้ script หา path จากตำแหน่งของตัวเอง; ใน WSL ใช้ `bash <path>/scripts/install-skills.sh`)
+แล้วดับเบิลคลิก `install\install-global.bat` — เท่านี้ Claude Code บนเครื่องนั้นก็ใช้ skill ได้ทุกโปรเจกต์
+(clone ไว้ที่ไหนก็ได้ script หา path จากตำแหน่งของตัวเอง; ใน WSL/Linux ใช้ `bash <path>/install/install-skills.sh`)
+หรือติดตั้งเป็น plugin — ดู "แบบ plugin" ด้านล่าง
 
 ## โครงสร้าง
 ```
 mskills/
-├── install-global.bat, install-all-global.bat, install-to-project.bat   ← ดับเบิลคลิก
-├── skills/<ชื่อ>/              ← skill ของเราเอง (แก้ได้)
-├── vendor/<ที่มา>/LICENSE      ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
-│   └── <ชื่อ>/                    (ตอนนี้มี vendor/mattpocock/)
-├── agents/<ชื่อ>.md            ← subagent ของเราเอง (ติดตั้งไป ~/.claude/agents/)
-├── config/global-CLAUDE.md     ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
-├── config/permissions.json     ← กฎขอยืนยันคำสั่ง git อันตราย (รวมเข้า ~/.claude/settings.json)
-└── scripts/install-skills.ps1, install-skills.sh
+├── .claude-plugin/              ← plugin + marketplace (ใช้ skills/, vendor/, agents/ ตรงๆ)
+├── skills/<ชื่อ>/               ← skill ของเราเอง (แก้ได้)
+├── vendor/<ที่มา>/LICENSE       ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
+│   └── <ชื่อ>/                     (ตอนนี้มี vendor/mattpocock/)
+├── agents/<ชื่อ>.md             ← subagent ของเราเอง
+├── install/                     ← ทุกอย่างที่ใช้ติดตั้ง
+│   ├── install-global.bat, install-all-global.bat, install-to-project.bat   ← ดับเบิลคลิก
+│   ├── install-skills.ps1, install-skills.sh
+│   ├── global-CLAUDE.md         ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
+│   └── permissions.json         ← กฎขอยืนยันคำสั่ง git อันตราย (รวมเข้า ~/.claude/settings.json)
+├── docs/                        ← ผลทดสอบ/บันทึกการตัดสินใจของ repo นี้
+└── README.md
 ```
+**ของที่ Claude ใช้** (`skills/`, `vendor/`, `agents/`) แยกจาก **ของที่ใช้ติดตั้ง** (`install/`)
 script หา skill จากทั้ง `skills/` และ `vendor/*/` แต่ติดตั้งลงปลายทางด้วยชื่อ skill อย่างเดียว (เช่น `~/.claude/skills/grilling`) ชื่อ skill จึงห้ามซ้ำกันข้ามโฟลเดอร์ ถ้าซ้ำ script จะหยุดและแจ้ง
 skill จาก `vendor/` จะได้ `LICENSE` ของที่มานั้น copy ไปไว้ในโฟลเดอร์ skill ที่ติดตั้งด้วย
 
@@ -37,7 +43,7 @@ skill จาก `vendor/` จะได้ `LICENSE` ของที่มาน�
 | `modbus` | 1.1.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
-| `git-commit` | 1.1.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
+| `git-commit` | 1.1.2 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
 | `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 
@@ -64,17 +70,17 @@ Claude อีกตัวที่ Claude หลักส่งงานไป�
 `grill-me` และ `grill-with-docs` เป็นแค่ตัวเรียก — ถ้า copy ไปโดยไม่มีตัวที่มันเรียก จะใช้ไม่ได้
 
 ## เอาไปใช้ใน VS Code
-**แบบง่าย (ดับเบิลคลิก):**
+**แบบง่าย (ดับเบิลคลิกในโฟลเดอร์ `install/`):**
 - `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme, git-commit, tdd ...) ให้ใช้ได้ทุกโปรเจกต์
 - `install-all-global.bat` — ติดตั้ง **ทุก skill** ให้ใช้ได้ทุกโปรเจกต์
 - `install-to-project.bat` — เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง แล้วพิมพ์หมายเลข skill ที่ต้องการ (หรือพิมพ์ `all` = ทุกตัว)
 
-**กฎระดับเครื่อง:** `install-global.bat` / `install-all-global.bat` ติดตั้ง [`config/global-CLAUDE.md`](config/global-CLAUDE.md) เป็น `~/.claude/CLAUDE.md` ด้วย — Claude Code อ่านไฟล์นี้ **ทุกแชท ทุกโปรเจกต์** จึงรู้ว่างานไหนต้องใช้ skill ไหนโดยไม่ต้องสั่ง
+**กฎระดับเครื่อง:** `install-global.bat` / `install-all-global.bat` ติดตั้ง [`install/global-CLAUDE.md`](install/global-CLAUDE.md) เป็น `~/.claude/CLAUDE.md` ด้วย — Claude Code อ่านไฟล์นี้ **ทุกแชท ทุกโปรเจกต์** จึงรู้ว่างานไหนต้องใช้ skill ไหนโดยไม่ต้องสั่ง
 - ใส่ไว้ในบล็อก `<!-- BEGIN claude-skills -->` … `<!-- END claude-skills -->` — เนื้อหาอื่นที่เขียนเองในไฟล์นั้นไม่ถูกแตะ, รันซ้ำจะแทนที่เฉพาะบล็อก
-- แก้กฎ: แก้ `config/global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
-- เพิ่ม skill ใหม่: สร้างใน `skills/<ชื่อ>/` และเพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `config/global-CLAUDE.md` ด้วย
+- แก้กฎ: แก้ `install/global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
+- เพิ่ม skill ใหม่: สร้างใน `skills/<ชื่อ>/` และเพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `install/global-CLAUDE.md` ด้วย
 
-**กฎขอยืนยันคำสั่ง:** `install-global.bat` / `install-all-global.bat` เอากฎใน [`config/permissions.json`](config/permissions.json) ไปรวมเข้า `~/.claude/settings.json` — ตอนนี้เป็นกฎ `ask` ให้ Claude Code เด้งกล่องขอยืนยันก่อน `git push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` (ทั้ง Bash และ PowerShell tool)
+**กฎขอยืนยันคำสั่ง:** `install-global.bat` / `install-all-global.bat` เอากฎใน [`install/permissions.json`](install/permissions.json) ไปรวมเข้า `~/.claude/settings.json` — ตอนนี้เป็นกฎ `ask` ให้ Claude Code เด้งกล่องขอยืนยันก่อน `git push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` (ทั้ง Bash และ PowerShell tool)
 - **เพิ่มอย่างเดียว ไม่ลบ** — กฎที่ settings.json มีอยู่แล้ว และค่าอื่นในไฟล์ (model, hooks ...) ไม่ถูกแตะ; รันซ้ำไม่เพิ่มกฎซ้ำ; ไม่มีกฎใหม่ = ไม่เขียนไฟล์
 - ลบกฎออกจาก `permissions.json` แล้ว เครื่องที่ติดตั้งไปแล้วยังมีกฎนั้นอยู่ — ต้องลบเองใน `~/.claude/settings.json` ของเครื่องนั้น (ตั้งใจ: ไม่ให้ script ลบกฎที่ตั้งเองบนเครื่อง)
 - settings.json ที่ JSON เสีย → script ข้าม ไม่แตะไฟล์ และเตือน
@@ -86,18 +92,18 @@ Claude อีกตัวที่ Claude หลักส่งงานไป�
 ```powershell
 cd D:\ws\mskills
 # skill ทั่วไป (grilling, domain-modeling ...) → ใช้ได้ทุกโปรเจกต์
-powershell -ExecutionPolicy Bypass -File .\scripts\install-skills.ps1
+powershell -ExecutionPolicy Bypass -File .\install\install-skills.ps1
 # skill เฉพาะโปรเจกต์
-powershell -ExecutionPolicy Bypass -File .\scripts\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills ros2-humble-cpp,modbus,industrial-ui
+powershell -ExecutionPolicy Bypass -File .\install\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills ros2-humble-cpp,modbus,industrial-ui
 # ดูก่อนว่าจะ copy อะไร (ยังไม่ copy จริง): เติม -WhatIf
 ```
 
 **WSL:**
 ```bash
-bash /mnt/d/ws/mskills/scripts/install-skills.sh                                # skill ทั่วไป → ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
-bash /mnt/d/ws/mskills/scripts/install-skills.sh --all                          # ทุก skill → ทุกโปรเจกต์ (เหมือน install-all-global.bat)
-bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
-bash /mnt/d/ws/mskills/scripts/install-skills.sh -p ~/fg-robot-pallet --all
+bash /mnt/d/ws/mskills/install/install-skills.sh                                # skill ทั่วไป → ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
+bash /mnt/d/ws/mskills/install/install-skills.sh --all                          # ทุก skill → ทุกโปรเจกต์ (เหมือน install-all-global.bat)
+bash /mnt/d/ws/mskills/install/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
+bash /mnt/d/ws/mskills/install/install-skills.sh -p ~/fg-robot-pallet --all
 ```
 เสร็จแล้วใน VS Code: `Ctrl+Shift+P` → **Developer: Reload Window** แล้วพิมพ์ `/` เพื่อดูรายการ skill
 
@@ -116,7 +122,7 @@ plugin ส่ง skill ทั้งหมด + `safety-reviewer`; installer ย�
    claude plugin install mskills@mskills
    ```
 
-อัปเดต (หลัง push): `claude plugin marketplace update mskills && claude plugin update mskills@mskills` แล้วเปิด session ใหม่ — auto-update ของ Claude Code ยังไม่เห็นผลในการทดสอบ; ถ้าตาราง skill/กฎใน `config/` เปลี่ยน ให้รันข้อ 2 ซ้ำด้วย
+อัปเดต (หลัง push): `claude plugin marketplace update mskills && claude plugin update mskills@mskills` แล้วเปิด session ใหม่ — auto-update ของ Claude Code ยังไม่เห็นผลในการทดสอบ; ถ้า `install/global-CLAUDE.md` หรือ `install/permissions.json` เปลี่ยน ให้รันข้อ 2 ซ้ำด้วย
 - ชื่อใน plugin มี prefix: skill แสดงเป็น `mskills:tdd` (พิมพ์ `/tdd` และตารางที่ใช้ชื่อสั้นยังใช้ได้), agent ต้องใช้ `mskills:safety-reviewer`
 - ถอยกลับ: `claude plugin uninstall mskills@mskills` แล้วรัน `install-all-global.bat` / `install-skills.sh --all`
 

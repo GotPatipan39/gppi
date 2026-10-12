@@ -37,7 +37,7 @@
 บทเรียน: skill ความรู้ (`modbus`, `opencv`) ถูกโหลดแน่นอนกว่า skill วิธีทำงาน (`tdd`) เมื่องานต้องใช้คู่กัน — ใส่คำสั่ง "โหลด `tdd` ด้วย" ไว้ใน skill ความรู้ตรงๆ ได้ผลกว่าพึ่งตารางอย่างเดียว
 
 ## ถ้าจะย้าย ต้องทำ
-- ส่ง `config/global-CLAUDE.md` เป็น `rules.md` ผ่าน hook `SessionStart` (`cat "${CLAUDE_PLUGIN_ROOT}/rules.md"`, quote path, ใส่ `timeout`) แล้ว**ลบบล็อกเดิมใน `~/.claude/CLAUDE.md`** ไม่ให้มีกฎ 2 ชุด
+- ส่ง `install/global-CLAUDE.md` เป็น `rules.md` ผ่าน hook `SessionStart` (`cat "${CLAUDE_PLUGIN_ROOT}/rules.md"`, quote path, ใส่ `timeout`) แล้ว**ลบบล็อกเดิมใน `~/.claude/CLAUDE.md`** ไม่ให้มีกฎ 2 ชุด
 - แก้ `git-commit` ให้เรียก `mskills:safety-reviewer`
 - ลบ skill/agent ของ mskills ที่ installer เคย copy ไว้ใน `~/.claude/` ออก**ทุกเครื่อง** และให้ installer เลิก copy
 - permissions (`ask` ก่อน `git push` ฯลฯ) — plugin ส่งไม่ได้: ใส่ `.claude/settings.json` ของแต่ละโปรเจกต์ หรือ script ตั้งเครื่องครั้งเดียว
@@ -49,6 +49,6 @@
 - repo เดียวเป็นทั้ง marketplace และ plugin
 
 ## ไม่เกี่ยวกับ plugin แต่เจอระหว่างทดสอบ
-- skill ที่ต้องเปิดไฟล์ประกอบ (`references/`, `devices/`) ถูกขออนุมัติทุกครั้ง เพราะไฟล์อยู่นอกโปรเจกต์ — ถ้าใช้จริงแล้วรำคาญ พิจารณาเพิ่มกฎ allow ให้ Read ใน `~/.claude/skills/**` ใน `config/permissions.json`
+- skill ที่ต้องเปิดไฟล์ประกอบ (`references/`, `devices/`) ถูกขออนุมัติทุกครั้ง เพราะไฟล์อยู่นอกโปรเจกต์ — ถ้าใช้จริงแล้วรำคาญ พิจารณาเพิ่มกฎ allow ให้ Read ใน `~/.claude/skills/**` ใน `install/permissions.json`
 
 ชุดทดสอบ (script + log) อยู่ใน scratchpad ของ session นี้ ไม่ได้เก็บเข้า repo
