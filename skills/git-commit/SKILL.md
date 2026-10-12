@@ -5,7 +5,7 @@ description: ใช้เมื่อจะ commit หรือออก release
 
 # Git commit และ release
 
-> เวอร์ชัน 1.1.1 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.2 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ถ้า `CLAUDE.md` ของโปรเจกต์กำหนดรูปแบบ commit ไว้ต่างจากนี้ ให้ยึดของโปรเจกต์
 
@@ -140,7 +140,7 @@ skill แต่ละตัวมีเวอร์ชันของตัว�
 - แก้บรรทัด `> เวอร์ชัน X.Y.Z` ใน `SKILL.md`, เพิ่มหัวข้อใน `CHANGELOG.md` ของ skill นั้น และแก้เลขในตาราง skill ของ `README.md`
 - commit: `<skill> vX.Y.Z: <สรุป>` เช่น `modbus v1.1.0: add ME231 energy registers`
 - commit อื่นใน mskills ใช้รูปแบบ commit ทั่วไปข้างบน
-- เสร็จแล้วรันติดตั้งใหม่ (`scripts/install-skills.ps1 -All`) ให้ `~/.claude/skills` ตรงกับ repo
+- เสร็จแล้วรันติดตั้งใหม่ (`install/install-skills.ps1 -All`; เครื่องที่ใช้ plugin: `claude plugin marketplace update mskills && claude plugin update mskills@mskills`) ให้ skill ที่ใช้อยู่ตรงกับ repo
 
 ## สรุปให้ผู้ใช้หลัง commit/release
 - commit hash + บรรทัดแรก (หลาย commit → เป็นรายการ)

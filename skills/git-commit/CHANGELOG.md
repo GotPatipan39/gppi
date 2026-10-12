@@ -1,5 +1,8 @@
 # CHANGELOG — git-commit
 
+## 1.1.2 — 2026-10-12
+- ข้อยกเว้น repo mskills: installer ย้ายไป `install/install-skills.ps1`; เพิ่มคำสั่งอัปเดตสำหรับเครื่องที่ใช้ plugin
+
 ## 1.1.1 — 2026-10-12
 - เรียกตัวตรวจได้ทั้ง `safety-reviewer` (ติดตั้งด้วย installer) และ `mskills:safety-reviewer` (ติดตั้งเป็น plugin) — ทดสอบแล้วว่า agent ใน plugin เรียกด้วยชื่อสั้นไม่ได้ ได้ error "not found" แล้วอาจตกไปข้อ "ไม่มีตัวตรวจ → ตรวจเอง" ซึ่งข้ามตัวตรวจแยกไปเงียบๆ
 
