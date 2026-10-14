@@ -20,5 +20,5 @@ docs รับประกันเฉพาะ hook: "A hook's `"ask"` also for
 - **hook เขียนด้วย bash/PowerShell**: ไม่ต้องมี node แต่ต้องเขียน logic สองชุดให้ตรงกัน และ Windows ที่ไม่มี Git Bash ใช้ bash ไม่ได้
 
 ## Consequences
-- ยังไม่ได้ทดสอบ `bypassPermissions` — docs ไม่ได้บอกว่า hook `ask` มีผลในโหมดนั้น
+- ทดสอบแล้ว 2026-10-14: hook `ask` ถามคนได้ทั้งใน auto และ `bypassPermissions` (docs ไม่ได้ยืนยันโหมดหลัง — ถ้า Claude Code รุ่นใหม่เปลี่ยน ต้องทดสอบซ้ำ)
 - ไม่จับ wrapper script และโค้ดที่สั่งเครื่องจากข้างใน (เหมือนเดิม) — พึ่ง `rules.md` และ `safety-reviewer`

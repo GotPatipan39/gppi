@@ -52,3 +52,25 @@
 - skill ที่ต้องเปิดไฟล์ประกอบ (`references/`, `devices/`) ถูกขออนุมัติทุกครั้ง เพราะไฟล์อยู่นอกโปรเจกต์ — ถ้าใช้จริงแล้วรำคาญ พิจารณาเพิ่มกฎ allow ให้ Read ใน `~/.claude/skills/**` ใน `install/permissions.json`
 
 ชุดทดสอบ (script + log) อยู่ใน scratchpad ของ session นี้ ไม่ได้เก็บเข้า repo
+
+## ตัวกันคำสั่ง (gppi 0.1.0)
+ทดสอบ 2026-10-14 บน Windows 11, Claude Code 2.1.296, node 24.21.0, plugin ติดตั้งจาก marketplace แบบโฟลเดอร์ในเครื่อง (`D:\ws\gppi`) — ทุกเคสกด No ยกเว้นที่ระบุ; WSL ยังไม่มี ROS2 จึงไม่มี message ถูกส่งจริงในทุกเคส
+ตรวจผลจาก log ของ session (`~/.claude/projects/<project>/<session>.jsonl`: `permission-mode`, `permissionDecision`, `hook_success`) ไม่ใช่จากคำบอกของ Claude ใน session นั้น — Claude มองไม่เห็น prompt ฝั่งผู้ใช้และเดาผิดได้
+
+| surface / mode | คำสั่ง | ผล |
+|---|---|---|
+| VS Code ext, mode ปกติ | `ros2 topic list` | ไม่ถูกตัวกันถาม ✅ |
+| VS Code ext, mode ปกติ | `ros2 topic pub ...` | ถาม ไม่มีปุ่ม "allow ถาวร" ✅ — **ไม่แสดงเหตุผล "gppi: ..."** |
+| VS Code ext, มี allow rule `Bash(git commit *)` | `git commit --dry-run -m "... ros2 topic pub ..."` | ถามทับ allow rule ✅ |
+| CLI, auto (ก่อนมี hook — mod อย่างเดียว) | `wsl -- bash -lc '... ros2 topic pub --once ...'` | ❌ **รันโดยไม่ถาม** — `{"decision":"accept","reasonType":"classifier"}` → เพิ่ม PreToolUse hook ([ADR-0003](adr/0003-guard-hook-plus-mod.md)) |
+| CLI, auto (มี hook) | เหมือนข้างบน (2 session) | ถาม "Hook PreToolUse:Bash requires confirmation ... gppi: ..." ✅ |
+| CLI, auto (มี hook) | tool PowerShell: `ros2 topic pub ...` | ถาม "Hook PreToolUse:PowerShell ..." ✅ |
+| CLI, `bypassPermissions` | `wsl -- bash -lc '... ros2 topic pub ...'` | hook ตอบ ask → prompt ขึ้น → ผู้ใช้กด **Yes** (ตั้งใจ) → `"source":"user_temporary"` ✅ ถามได้แม้ใน bypass |
+| hook command ใน Git Bash, ไม่มี node ใน PATH | — | exit 2 + ข้อความ "gppi: ตัวกันคำสั่ง ... รันไม่ได้" (fail-closed) ✅ |
+
+ข้อสังเกต:
+- **ค่าเริ่มต้นของ CLI คือ auto mode** โดยไม่ได้ตั้งไว้ที่ไหน — เครื่องทีมที่ติดตั้งใหม่น่าจะเหมือนกัน
+- prompt ตั้งตัวเลือกเริ่มต้นไว้ที่ "1. Yes" — กด Enter = อนุญาต
+- Claude ใน session ทดสอบโหลด `gppi:ros2-humble-cpp` เอง, ไปรันใน WSL (ไม่รัน ROS2 บน Windows), ตั้ง `ROS_LOCALHOST_ONLY=1` และเติม `--once` เอง — กฎใน `rules.md` ทำงาน
+
+ยังไม่ได้ทดสอบ: VS Code ใน auto mode, CLI ใน WSL (ยังไม่มี node ≥ 22.18), Windows ที่ไม่มี Git Bash, Desktop app
