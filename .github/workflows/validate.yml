@@ -1,0 +1,24 @@
+name: validate
+
+# ตรวจ manifest และ test ของตัวกันคำสั่งทุก PR / push ขึ้น main
+# ตัวกันอยู่บน API ของ mod ที่ยังใหม่ — ถ้า Claude Code เปลี่ยน API จนตัวกันหยุดทำงาน test ควรแดงที่นี่ก่อนถึงเครื่องทีม
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # pin เวอร์ชันที่ test ผ่านในเครื่อง dev; ขยับเมื่อทดสอบเวอร์ชันใหม่แล้ว
+      - run: npm install -g @anthropic-ai/claude-code@2.1.296
+      - run: claude plugin validate . --strict
+      - run: claude plugin test .
