@@ -1,5 +1,8 @@
 # CHANGELOG — opencv
 
+## 1.0.2 — 2026-10-14
+- `references/tasks.md`: BarcodeDetector ของ 4.5.x (contrib) กับ 4.8+ API ต่างกัน (`detectAndDecode` + `BarcodeType` vs `detectAndDecodeWithType`) — ตัวอย่างจาก internet ส่วนใหญ่ใช้กับ 4.5.4 ของ Humble ไม่ได้
+
 ## 1.0.1 — 2026-10-12
 - เขียน/แก้ logic ประมวลผลภาพ → สั่งให้โหลด `tdd` ด้วยทันที (เหตุผลเดียวกับ `modbus` 1.1.0: skill ความรู้ถูกโหลดแต่ `tdd` หลุด)
 

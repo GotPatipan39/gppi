@@ -58,6 +58,7 @@ else:
 ```
 - หลาย QR ในภาพเดียว: `detectAndDecodeMulti`
 - barcode 1D: 4.5.4 ไม่มี `BarcodeDetector` ใน main module — เช็ค `hasattr(cv2, "barcode_BarcodeDetector")` (contrib) ก่อน; ไม่มีให้ใช้ zbar (`libzbar0` + `python3-pyzbar`, C++ `libzbar-dev` จาก apt)
+  - API ต่างกันตามรุ่น: 4.5.x (contrib) `detectAndDecode` คืนชนิด barcode (`BarcodeType`) มาด้วย; 4.8+ ย้ายเข้า main และเปลี่ยนเป็น `detectAndDecodeWithType` — ตัวอย่างจาก internet ส่วนใหญ่เป็นแบบ 4.8+ ใช้กับ 4.5.4 ของ Humble ไม่ได้ (https://docs.opencv.org/4.5.4/dc/df7/classcv_1_1barcode_1_1BarcodeDetector.html)
 - Data Matrix: zbar อ่านไม่ได้ — ใช้ libdmtx (`pylibdmtx`) หรือ SDK ของกล้อง
 - **ตรวจรูปแบบข้อมูลที่อ่านได้** (ความยาว, prefix, regex, check digit ตาม config) — อ่านได้แต่รูปแบบผิด = NG ไม่ใช่ OK
 - อ่านไม่ออกบ่อย: แก้ที่แสง/ความละเอียด/มุมกล้องก่อน แล้วค่อยลอง preprocess (crop ROI, ขยายภาพ, threshold)
