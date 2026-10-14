@@ -5,7 +5,7 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
 
 # Modbus RTU / TCP
 
-> เวอร์ชัน 1.1.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ข้อมูลเฉพาะโปรเจกต์ (address map, slave ID ที่ตั้งไว้, ผังระบบ) อยู่ใน `CLAUDE.md` ของโปรเจกต์นั้น ให้อ่านก่อนเสมอ ถ้าขัดกับไฟล์ใน skill นี้ ให้ยึดของโปรเจกต์
 
@@ -42,7 +42,7 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
 | 4xxxx (40001–) | Holding register | FC03 / FC06, FC16 | เลขในเอกสาร − 40001 |
 
 - library ทุกตัว (libmodbus, pymodbus, node-red-contrib-modbus) ใช้ address แบบ **0-based**
-- ถ้า datasheet เขียนเป็น hex หรือเลขธรรมดา (เช่น `0x0011`, `1000`) ส่วนใหญ่เป็น 0-based อยู่แล้ว แต่ถ้าอ่านได้ค่าที่ดูผิดและคลาดไป 1 ช่อง ให้ลอง ±1
+- ถ้า datasheet เขียนเป็น hex หรือเลขธรรมดา (เช่น `0x0011`, `1000`) ส่วนใหญ่เป็น 0-based อยู่แล้ว แต่ถ้าอ่านได้ค่าที่ดูผิดและคลาดไป 1 ช่อง ให้ลอง ±1 **ด้วยการอ่านเท่านั้น** — ห้ามลองด้วยการเขียน (address ข้างเคียงอาจเป็นคำสั่งอื่นของเครื่อง)
 - ข้อมูล 32-bit ใช้ 2 register ติดกัน
 
 ## Data type และ word order
@@ -92,5 +92,7 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
   mbpoll -m rtu -b 9600 -P none -a 80 -r 18 -c 1 /dev/ttyUSB0  # RTU
   ```
   ระวัง: `mbpoll -r` นับ register เริ่มที่ 1 ส่วนในโค้ดเริ่มที่ 0 (ใช้ `-0` ถ้าอยากให้เริ่มที่ 0)
+  - **RTU: ถามผู้ใช้ก่อนเปิด serial port ทุกครั้ง แม้แค่อ่าน** — ถ้ามี master ตัวอื่น (PLC, ROS2 node, Node-RED) ใช้ bus อยู่ คำสั่งจะชนกันบนสาย RS-485 และ port อาจถูกจองอยู่ (ตัวกันของ gppi ถามก่อนรันอยู่แล้ว แต่ Claude ต้องบอกเหตุผลให้ผู้ใช้ตัดสินใจได้)
+  - `mbpoll` ที่มีค่าต่อท้าย (เช่น `... /dev/ttyUSB0 123`) คือ **การเขียน** — ทำเฉพาะเมื่อผู้ใช้สั่งค่านั้นชัดเจน
 - Windows: Modbus Poll, QModMaster
 - ไม่มีอุปกรณ์: `python3 tools/modbus_sim.py --port 5020 --hr 0=100 1=-90`

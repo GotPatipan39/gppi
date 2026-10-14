@@ -84,7 +84,7 @@ claude plugin install gppi@gppi
 | skill | เวอร์ชัน | ใช้กับ |
 |---|---|---|
 | `ros2-humble-cpp` | 3.2.2 | งาน ROS2 Humble + C++ |
-| `modbus` | 1.1.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
+| `modbus` | 1.1.1 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
 | `industrial-ui` | 1.2.1 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |

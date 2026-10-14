@@ -8,7 +8,8 @@ pip install "pymodbus>=3.10,<4"      # ตัวอย่างข้างล�
 ```
 pymodbus เปลี่ยน API บ่อย (เช่น `slave=` เปลี่ยนเป็น `device_id=` ใน 3.10, datastore เปลี่ยนใหญ่ใน v4) — ถ้าโค้ดใช้ไม่ได้ ให้เช็กเวอร์ชันก่อน `python3 -c "import pymodbus; print(pymodbus.__version__)"`
 
-## อ่าน/เขียน (ทดสอบแล้ว)
+## อ่าน (ทดสอบแล้ว)
+IP, port, address และ device ID ในตัวอย่างเป็นค่าสมมติ — ใช้ค่าจาก CLAUDE.md/คู่มือของโปรเจกต์ ห้ามเดา
 ```python
 from pymodbus.client import ModbusTcpClient          # RTU: ModbusSerialClient(port="/dev/ttyUSB0", baudrate=9600)
 
@@ -21,10 +22,14 @@ if rr.isError():
 else:
     v = c.convert_from_registers(rr.registers, c.DATATYPE.FLOAT32)                   # ABCD
     n = c.convert_from_registers(rr.registers, c.DATATYPE.INT32, word_order="little") # CDAB (Mitsubishi)
+c.close()
+```
 
+## เขียน (ทดสอบแล้ว)
+> ⚠ **คำสั่งเขียนสั่งเครื่องได้จริง** (`write_coil(0, True)` อาจเปิด output/มอเตอร์) — Claude รันเองได้เฉพาะเมื่อผู้ใช้สั่งให้เขียนค่านั้นชัดเจนในข้อความนั้น และต้องรู้ว่า address นั้นคืออะไรบนเครื่องจริง (ตาม rules.md)
+```python
 c.write_registers(10, c.convert_to_registers(-90, c.DATATYPE.INT16), device_id=1)
 c.write_coil(0, True, device_id=1)
-c.close()
 ```
 - `DATATYPE` มี `INT16, UINT16, INT32, UINT32, FLOAT32, INT64, FLOAT64, STRING, BITS`
 - `word_order="big"` = ABCD (ค่าเริ่มต้น), `"little"` = CDAB

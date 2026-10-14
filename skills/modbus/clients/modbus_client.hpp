@@ -1,6 +1,7 @@
 // Template: ตัวห่อ libmodbus สำหรับ Modbus TCP (ใช้กับ FX5UC)
 // - ไม่ throw ออกไปนอก class: ทุกฟังก์ชันคืน bool, ข้อความ error อยู่ใน last_error()
 // - reconnect แบบมีช่วงพัก (เรียก ensure_connected() ทุกรอบ timer ได้เลย)
+// - อุปกรณ์ตอบ exception (address/ค่าผิด ฯลฯ) = connection ยังดี ไม่ตัด; error อื่น (timeout, CRC, สายหลุด) = ตัดแล้วต่อใหม่
 // - helper แปลง int16 (ค่าติดลบ) และ 32-bit แบบ Mitsubishi (low word ก่อน)
 #pragma once
 
@@ -15,8 +16,10 @@
 class ModbusTcpClient
 {
 public:
-  ModbusTcpClient(std::string ip, int port, double timeout_s = 0.2, double retry_s = 1.0)
-  : ip_(std::move(ip)), port_(port), timeout_s_(timeout_s), retry_s_(retry_s) {}
+  // unit_id: ตั้งเฉพาะเมื่อปลายทางต้องใช้ (เช่น gateway TCP→RTU ใช้ unit ID เลือกอุปกรณ์บน RS-485)
+  //          -1 = ไม่ตั้ง ใช้ค่าเริ่มต้นของ libmodbus (0xFF) — ห้ามเดาค่า ให้ดูจากคู่มือ/CLAUDE.md ของโปรเจกต์
+  ModbusTcpClient(std::string ip, int port, double timeout_s = 0.2, double retry_s = 1.0, int unit_id = -1)
+  : ip_(std::move(ip)), port_(port), timeout_s_(timeout_s), retry_s_(retry_s), unit_id_(unit_id) {}
 
   ~ModbusTcpClient() {disconnect();}
   ModbusTcpClient(const ModbusTcpClient &) = delete;
@@ -24,6 +27,8 @@ public:
 
   bool connected() const {return ctx_ != nullptr;}
   const std::string & last_error() const {return last_error_;}
+  // true = คำสั่งล่าสุดล้มเหลวเพราะอุปกรณ์ตอบ exception (เช่น illegal data address) — แก้ address/ค่า ไม่ใช่ปัญหาสาย
+  bool last_was_device_exception() const {return last_device_exception_;}
 
   // เรียกได้ทุกรอบ: ถ้ายังต่ออยู่คืน true, ถ้าหลุดจะลองต่อใหม่ไม่ถี่กว่า retry_s
   bool ensure_connected()
@@ -35,6 +40,12 @@ public:
 
     ctx_ = modbus_new_tcp(ip_.c_str(), port_);
     if (!ctx_) {return fail("modbus_new_tcp");}
+    if (unit_id_ >= 0 && modbus_set_slave(ctx_, unit_id_) == -1) {
+      bool r = fail("set unit id " + std::to_string(unit_id_));
+      modbus_free(ctx_);
+      ctx_ = nullptr;
+      return r;
+    }
     auto sec = static_cast<uint32_t>(timeout_s_);
     auto usec = static_cast<uint32_t>((timeout_s_ - sec) * 1e6);
     modbus_set_response_timeout(ctx_, sec, usec);
@@ -104,18 +115,28 @@ public:
 private:
   bool fail(const std::string & what)
   {
+    last_device_exception_ = false;
     last_error_ = what + ": " + modbus_strerror(errno);
     return false;
   }
   bool fail_nc()
   {
+    last_device_exception_ = false;
     last_error_ = "not connected";
     return false;
   }
-  // error ระหว่างใช้งาน: ปิดการเชื่อมต่อ เพื่อให้ ensure_connected() ต่อใหม่รอบหน้า
+  // error ระหว่างใช้งาน:
+  // - อุปกรณ์ตอบ exception (EMBXILFUN..EMBXGTAR) → connection ยังดี คงไว้ (ตัดทิ้งจะ reconnect วนทุกรอบ และปน "address ผิด" กับ "สายหลุด")
+  // - อย่างอื่น (timeout, CRC/ข้อมูลตอบกลับผิดรูป, socket error) → ปิด ให้ ensure_connected() ต่อใหม่รอบหน้า
+  //   ข้อมูลตอบกลับผิดรูปอาจแปลว่า stream เลื่อนแล้ว — ต่อใหม่ปลอดภัยกว่าอ่านต่อ
   bool drop(const std::string & what)
   {
+    const int err = errno;
     fail(what);
+    if (err >= EMBXILFUN && err <= EMBXGTAR) {
+      last_device_exception_ = true;
+      return false;
+    }
     disconnect();
     return false;
   }
@@ -123,6 +144,8 @@ private:
   std::string ip_;
   int port_;
   double timeout_s_, retry_s_;
+  int unit_id_;
+  bool last_device_exception_{false};
   modbus_t * ctx_{nullptr};
   std::string last_error_;
   std::chrono::steady_clock::time_point last_attempt_{};
