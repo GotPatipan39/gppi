@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { isRiskyGit, isMachineCommand } from './gppi'
+import { isRiskyGit, isMachineCommand, preToolUseDecision } from './gppi'
 
 const RISKY = [
   'git push',
@@ -224,6 +224,32 @@ test('Node-RED: ถามการ deploy flow', () => {
 
 test('Node-RED: ไม่ถามการอ่าน flow', () => {
   for (const c of NODERED_READ) expect([c, isMachineCommand(c)]).toEqual([c, false])
+})
+
+// PreToolUse hook — ทางเดียวที่ docs รับประกันว่าบังคับถามคนได้ใน auto mode (mod tool.check ถูก classifier อนุมัติแทน)
+const hookInput = (tool_name: string, command: unknown) =>
+  ({ hook_event_name: 'PreToolUse', tool_name, tool_input: { command } })
+
+test('PreToolUse: คำสั่งเครื่องจักร → ask พร้อมเหตุผล', () => {
+  for (const tool of ['Bash', 'PowerShell']) {
+    const out = preToolUseDecision(hookInput(tool, 'wsl -- bash -lc "ros2 topic pub /test std_msgs/msg/String {}"')) as any
+    expect(out.hookSpecificOutput.hookEventName).toBe('PreToolUse')
+    expect(out.hookSpecificOutput.permissionDecision).toBe('ask')
+    expect(out.hookSpecificOutput.permissionDecisionReason).toContain('เครื่องจักร')
+  }
+})
+
+test('PreToolUse: git ที่ย้อนกลับยาก → ask', () => {
+  const out = preToolUseDecision(hookInput('Bash', 'git push origin main')) as any
+  expect(out.hookSpecificOutput.permissionDecision).toBe('ask')
+  expect(out.hookSpecificOutput.permissionDecisionReason).toContain('git')
+})
+
+test('PreToolUse: คำสั่งอื่น/tool อื่น/input แปลก → ไม่ตัดสิน (ปล่อยให้ระบบ permission ปกติ)', () => {
+  expect(preToolUseDecision(hookInput('Bash', 'ros2 topic echo /odom'))).toBeUndefined()
+  expect(preToolUseDecision(hookInput('Read', 'ros2 topic pub /x'))).toBeUndefined()
+  expect(preToolUseDecision(hookInput('Bash', 42))).toBeUndefined()
+  expect(preToolUseDecision(null)).toBeUndefined()
 })
 
 test('Bash/PowerShell: git push → ask, git status → ตามเดิม', async ($, on) => {

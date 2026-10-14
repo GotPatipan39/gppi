@@ -17,8 +17,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.18.0   # ขั้นต่ำที่ README บอก (รุ่นแรกที่รัน .ts ได้เองโดยไม่ใส่ flag) — ทดสอบที่ขั้นต่ำ
       # pin เวอร์ชันที่ test ผ่านในเครื่อง dev; ขยับเมื่อทดสอบเวอร์ชันใหม่แล้ว
       - run: npm install -g @anthropic-ai/claude-code@2.1.296
       - run: claude plugin validate . --strict
       - run: claude plugin test .
+      # PreToolUse hook รันด้วย node จริง (ไม่ใช่ runtime ของ claude plugin test) — ตรวจว่า node รุ่นขั้นต่ำรัน .ts ได้และตอบ ask
+      - name: PreToolUse hook answers ask under node
+        run: |
+          echo '{"tool_name":"Bash","tool_input":{"command":"ros2 topic pub /test std_msgs/msg/String {}"}}' \
+            | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'
+          out=$(echo '{"tool_name":"Bash","tool_input":{"command":"ros2 topic list"}}' | node hooks/pretooluse.ts)
+          test -z "$out"
+          echo 'not json' | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'

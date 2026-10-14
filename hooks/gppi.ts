@@ -63,18 +63,36 @@ const opensBusDevice = (command: string): boolean =>
 export const isMachineCommand = (command: string): boolean =>
   MACHINE.some(r => r.test(command)) || deploysNodeRed(command) || opensBusDevice(command)
 
+const GUARDED_TOOLS = ['Bash', 'PowerShell']
+
+// เหตุผลที่ต้องถาม หรือ undefined ถ้าไม่ต้องถาม — ใช้ทั้ง mod และ PreToolUse hook
+export const askReason = (command: string): string | undefined =>
+  isMachineCommand(command) ? 'gppi: คำสั่งนี้อาจทำให้เครื่องจักรขยับหรือแย่ง bus ต้องให้ผู้ใช้ยืนยัน'
+  : isRiskyGit(command) ? 'gppi: คำสั่ง git ที่ย้อนกลับยาก ต้องให้ผู้ใช้ยืนยัน'
+  : undefined
+
+// คำตอบของ PreToolUse hook (hooks/pretooluse.ts) — hook `ask` บังคับถามคนแม้ใน auto mode ซึ่ง mod `tool.check` ทำไม่ได้
+// undefined = ไม่ตัดสิน ปล่อยให้ระบบ permission ปกติ (ไม่ตอบ allow เด็ดขาด เพราะจะข้าม prompt)
+export const preToolUseDecision = (input: unknown): object | undefined => {
+  const { tool_name, tool_input } = (input ?? {}) as { tool_name?: unknown; tool_input?: { command?: unknown } }
+  const command = tool_input?.command
+  if (typeof tool_name !== 'string' || !GUARDED_TOOLS.includes(tool_name) || typeof command !== 'string') return undefined
+  const reason = askReason(command)
+  return reason && {
+    hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: reason },
+  }
+}
+
 export const register: Register = on => {
+  // literal แทน GUARDED_TOOLS เพื่อให้ `claude plugin validate` อ่าน filter ออก — แก้ต้องแก้ทั้งสองที่ (และ matcher ใน hooks.json)
   for (const tool of ['Bash', 'PowerShell']) {
     on('tool.check', { tool }, async ($, e, next) => {
       const verdict = await next(e)
       if (verdict.decision === 'deny') return verdict
       const command = (e.input as { command?: unknown }).command
       if (typeof command !== 'string') return verdict
-      if (isMachineCommand(command))
-        return { decision: 'ask', reason: 'gppi: คำสั่งนี้อาจทำให้เครื่องจักรขยับหรือแย่ง bus ต้องให้ผู้ใช้ยืนยัน' }
-      if (isRiskyGit(command))
-        return { decision: 'ask', reason: 'gppi: คำสั่ง git ที่ย้อนกลับยาก ต้องให้ผู้ใช้ยืนยัน' }
-      return verdict
+      const reason = askReason(command)
+      return reason ? { decision: 'ask', reason } : verdict
     }).catch(() => ({ decision: 'ask', reason: 'gppi: ตัวตรวจคำสั่งทำงานผิดพลาด จึงขอให้ผู้ใช้ยืนยันแทน' }))
   }
 }

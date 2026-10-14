@@ -1,4 +1,10 @@
+---
+status: superseded by ADR-0003
+---
+
 # ตัวกันคำสั่งเป็น mod (`tool.check`) ไม่ใช่ PreToolUse hook
+
+> ถูกแทนด้วย [ADR-0003](0003-guard-hook-plus-mod.md) — ทดสอบแล้วพบว่าใน auto mode classifier อนุมัติ `ask` ของ mod แทนคนโดยไม่ถาม ข้อ 2 ข้างล่าง ("ตัดสินเป็นลำดับสุดท้าย") จึงไม่ได้ช่วยในโหมดนั้น
 
 ตัวกันคำสั่งเครื่องจักรและคำสั่ง git ที่ย้อนกลับยากอยู่ใน `hooks/gppi.ts` ซึ่งเป็น hooks module (mod) ที่ตอบ `ask` ใน event `tool.check` ไม่ได้เป็น command hook แบบ `PreToolUse`
 ทั้งสองแบบบังคับให้ถามทับ `allow` rule ของผู้ใช้ได้เหมือนกัน — เหตุผลที่เลือก mod คือ:

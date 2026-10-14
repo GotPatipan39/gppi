@@ -3,7 +3,7 @@
 **G**ot **P**atipan **p**lugin — Claude Code plugin ของทีมสำหรับงานเครื่องจักร, robot และ IoT รวม skill (ROS2 Humble, Modbus, OpenCV, industrial UI, TDD, commit, README), subagent `safety-reviewer`, กฎการทำงานทุกโปรเจกต์ และตัวกันที่ให้ Claude ถามก่อนรันคำสั่งที่อาจทำให้เครื่องจักรขยับ — ติดตั้งครั้งเดียวแล้วได้ทั้งชุด อัปเดตจาก repo นี้ที่เดียว
 
 > [!IMPORTANT]
-> ตัวกันคำสั่งทำงานเฉพาะใน Claude Code (CLI, VS Code, JetBrains, Desktop แบบ Windows) ที่ติดตั้ง gppi แล้ว — **Desktop ที่เปิด session แบบ WSL, claude.ai/code (cloud) และแชทบน claude.ai ไม่มีตัวกัน** ห้ามใช้ที่เหล่านั้นกับงานที่ต่อเครื่องจริง ดู [ความปลอดภัย](#ความปลอดภัย)
+> ตัวกันคำสั่งทำงานเฉพาะใน Claude Code (CLI, VS Code, JetBrains, Desktop แบบ Windows) ที่ติดตั้ง gppi แล้ว — **Desktop ที่เปิด session แบบ WSL, claude.ai/code (cloud) และแชทบน claude.ai ไม่มีตัวกัน** ห้ามใช้ที่เหล่านั้นกับงานที่ต่อเครื่องจริง — และต้องมี **node 22.18 ขึ้นไป** ทุกเครื่อง ไม่อย่างนั้น Claude จะรันคำสั่ง shell ไม่ได้เลย (ตั้งใจ ดู [ติดตั้ง](#ติดตั้ง)) ดู [ความปลอดภัย](#ความปลอดภัย)
 
 ## ความปลอดภัย
 gppi มีสามชั้นที่ช่วยกัน ไม่มีชั้นไหนจับได้ครบเพียงชั้นเดียว:
@@ -11,7 +11,7 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 | ชั้น | อยู่ที่ | ทำอะไร |
 |---|---|---|
 | กฎ | [`rules.md`](rules.md) ฉีดเข้าทุก session ผ่าน hook `SessionStart` | ห้ามรันคำสั่งที่ทำให้เครื่องขยับถ้าผู้ใช้ไม่ได้สั่ง, ห้ามเดาค่า hardware, ห้ามลดเกณฑ์ความปลอดภัยเพื่อให้ test ผ่าน, ROS2 local เท่านั้น |
-| ตัวกันคำสั่ง | [`hooks/gppi.ts`](hooks/gppi.ts) (mod, event `tool.check`) | หยุด **ถาม** ก่อนรันคำสั่งในรายการข้างล่าง ทั้ง Bash และ PowerShell — ถามทับ `allow` rule ที่ตั้งเองด้วย |
+| ตัวกันคำสั่ง | [`hooks/gppi.ts`](hooks/gppi.ts) ผ่านสองทาง: PreToolUse hook ([`hooks/pretooluse.ts`](hooks/pretooluse.ts), รันด้วย node) และ mod (`tool.check`) | หยุด **ถาม** ก่อนรันคำสั่งในรายการข้างล่าง ทั้ง Bash และ PowerShell — ถามทับ `allow` rule ที่ตั้งเองด้วย; hook ทำให้ถามได้แม้ใน auto mode ([ADR-0003](docs/adr/0003-guard-hook-plus-mod.md)) |
 | ตัวตรวจ diff | [`agents/safety-reviewer.md`](agents/safety-reviewer.md) | skill `git-commit` เรียกให้ตรวจก่อน commit ในโปรเจกต์ที่คุมเครื่อง |
 
 คำสั่งที่ตัวกันถามก่อนรัน:
@@ -23,6 +23,12 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 
 ตั้งใจให้เป็นแบบนี้:
 - **ถาม ไม่บล็อก** — งานทดสอบเครื่องหน้างานต้องรันคำสั่งพวกนี้จริง คนกดยืนยันได้
+- **ใน VS Code จะไม่เห็นข้อความเหตุผล "gppi: ..."** (CLI เห็น) — ในการทดสอบ prompt ที่ตัวกันถาม **ไม่มีปุ่ม "Yes, allow ... for this project"** แต่ prompt ปกติบางแบบก็อาจไม่มีปุ่มนี้ จึงใช้แยกแบบแน่นอนไม่ได้ — อ่านคำสั่งก่อนกดทุกครั้ง
+- **ตัวกันรันไม่ได้ = บล็อกคำสั่ง shell ทั้งหมด** (fail-closed) — ถ้า node ไม่มี/เก่า/ไม่อยู่ใน PATH ของ hook Claude จะได้ข้อความ "gppi: ตัวกันคำสั่ง ... รันไม่ได้" และรัน Bash/PowerShell ไม่ได้จนกว่าจะแก้ ตั้งใจให้เห็นปัญหาตั้งแต่วันแรก ดีกว่าตัวกันพังเงียบๆ แล้วไปเจอตอนต่อเครื่องจริง
+  - ข้อยกเว้นที่ยังปล่อยผ่าน (ตัวกันเหลือแค่ mod ซึ่ง **ไม่กันใน auto mode**):
+    - Windows ที่ **ไม่มี Git Bash** — hook รันด้วย PowerShell ซึ่งคำสั่งบล็อกแบบ bash (`|| { ...; exit 2; }`) ไม่ทำงาน (ทั้ง 5.1 และ 7; อ่านจาก syntax ยังไม่ได้ทดสอบ) — ติดตั้ง Git for Windows ทุกเครื่อง
+    - hook ทำงานเกิน timeout 30 วินาที (เช่น antivirus สแกน node ตอนเปิดครั้งแรก) — Claude Code นับเป็น error ที่ไม่บล็อก
+- **ยังไม่ได้ทดสอบ `--permission-mode bypassPermissions`** — docs ไม่ได้บอกว่าตัวกันมีผลในโหมดนั้น ห้ามใช้ bypass กับโปรเจกต์ที่ต่อเครื่อง
 - **ไม่ยกเว้นงาน simulator** — จากบรรทัดคำสั่งแยกไม่ออกว่า `ros2 launch` ต่อ driver จริงหรือไม่
 - **เปิด bus = ถาม แม้แค่อ่าน** — เปิด RS-485 ที่ระบบใช้อยู่จะชนกับ master ตัวเดิมบน bus
 - **จับทุกตำแหน่งในบรรทัด** — จาก Windows มักรันผ่าน `wsl -- bash -lc "... ros2 launch ..."`; ถามเกินบ้าง (เช่น `grep "ros2 launch"`) ดีกว่าหลุด
@@ -32,7 +38,11 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 > ตัวกัน **ไม่จับ**: wrapper script (`./bringup.sh`, `make run`), โค้ดที่สั่งเครื่องจากข้างใน script (python/node ที่เขียน register เอง), การเรียกผ่าน `$(which ros2)` หรือแยกคำด้วย quote — กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
 
 ## ติดตั้ง
-ต้องมี **Claude Code 2.1.287 ขึ้นไป** (mod ต้องใช้เวอร์ชันนี้; ดูด้วย `claude --version`)
+ต้องมีในทุกฝั่งที่ใช้ Claude Code (Windows และ WSL แยกกัน):
+- **Claude Code 2.1.287 ขึ้นไป** — mod ต้องใช้เวอร์ชันนี้ (`claude --version`)
+- **node 22.18 ขึ้นไป** ที่ hook มองเห็น — ใช้รัน PreToolUse hook; ไม่มี → Claude รันคำสั่ง shell ไม่ได้เลย (fail-closed)
+  - Ubuntu/WSL: ติดตั้งจาก NodeSource (`/usr/bin/node` อยู่ใน PATH ทุก shell) — apt ของ 22.04 ให้ node 12 ซึ่งเก่าเกิน; ถ้าใช้ `nvm` ต้องให้ node อยู่ใน PATH ของ shell ที่ไม่ใช่ interactive ด้วย (nvm ตั้ง PATH ใน `.bashrc`)
+- **Windows: Git for Windows** — ให้ hook รันด้วย Git Bash (ดูข้อยกเว้นใน [ความปลอดภัย](#ความปลอดภัย))
 
 1. ให้ git ในเครื่องเข้า repo นี้ได้ (repo เป็น private) — Claude Code รัน git แบบไม่ถามรหัส จึงต้องตั้ง credential ไว้ก่อน
    - Windows: `gh auth login` แล้ว `gh auth setup-git`
@@ -46,6 +56,7 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
    หรือในแชท: `/plugin install gppi --marketplace GotPatipan39/gppi`
 3. เปิด auto-update: `/plugin` → Marketplaces → `gppi` → Enable auto-update — **ปิดอยู่เป็นค่าเริ่มต้น** สำหรับ marketplace ที่ไม่ใช่ของ Anthropic ถ้าไม่เปิดจะไม่ได้ของใหม่
 4. เปิดแชทใหม่ (VS Code: `Ctrl+Shift+P` → **Developer: Reload Window**)
+5. ตรวจว่าตัวกันทำงาน — สั่ง Claude ว่า `รัน ros2 topic pub /test std_msgs/msg/String "{}"` ต้อง **ถาม** แล้วกด **No** (ถ้าได้ข้อความ "ตัวกันคำสั่ง ... รันไม่ได้" แปลว่า node ยังไม่พร้อม)
 
 > [!IMPORTANT]
 > Windows กับ WSL มี `~/.claude` แยกกัน — ถ้าใช้ Claude Code ทั้งสองฝั่ง ต้องทำขั้น 1–4 **ทั้งสองฝั่ง**
@@ -110,7 +121,7 @@ gppi/
 ├── .claude-plugin/        ← plugin.json (ชื่อ + เวอร์ชัน) + marketplace.json
 ├── skills/<ชื่อ>/         ← skill ทั้งหมด; มีไฟล์ LICENSE = มาจากภายนอก ห้ามแก้เนื้อหา
 ├── agents/<ชื่อ>.md       ← subagent
-├── hooks/                 ← hooks.json (กฎผ่าน SessionStart) + gppi.ts (ตัวกันคำสั่ง) + gppi.test.ts
+├── hooks/                 ← hooks.json (SessionStart + PreToolUse) + gppi.ts (logic ตัวกัน + mod) + pretooluse.ts (hook) + gppi.test.ts
 ├── rules.md               ← กฎทุกโปรเจกต์ที่ Claude อ่านทุก session
 ├── templates/             ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์
 ├── docs/                  ← ผลทดสอบ + docs/adr/ (การตัดสินใจของ repo นี้)
@@ -137,7 +148,7 @@ gppi/
 
 ## การตัดสินใจ
 - [ADR-0001](docs/adr/0001-single-team-plugin.md) — plugin ก้อนเดียว ไม่แยกตามโดเมน เพื่อให้กฎความปลอดภัยติดไปทุกเครื่อง
-- [ADR-0002](docs/adr/0002-guard-as-mod.md) — ตัวกันคำสั่งเป็น mod ไม่ใช่ PreToolUse hook เพราะไม่ต้องมี runtime ในเครื่องและตัดสินเป็นลำดับสุดท้าย
+- [ADR-0003](docs/adr/0003-guard-hook-plus-mod.md) — ตัวกันคำสั่งเป็น PreToolUse hook (node) ซ้อนกับ mod เพราะใน auto mode `ask` ของ mod ถูก classifier อนุมัติแทนคน (แทน [ADR-0002](docs/adr/0002-guard-as-mod.md))
 
 ## รับ skill จากภายนอก
 ไม่ติดตั้งด้วย `npx skills add` หรือ `/plugin install` ของคนอื่นตรงๆ — ให้ Claude อ่านก่อนทุกครั้ง แล้วเลือกอย่างใดอย่างหนึ่ง:
