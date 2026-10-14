@@ -6,7 +6,7 @@
 ```bash
 pip install "pymodbus>=3.10,<4"      # ตัวอย่างข้างล่างทดสอบกับ 3.15
 ```
-pymodbus เปลี่ยน API บ่อย (เช่น `slave=` เปลี่ยนเป็น `device_id=` ใน 3.10, datastore เปลี่ยนใหญ่ใน v4) — ถ้าโค้ดใช้ไม่ได้ ให้เช็กเวอร์ชันก่อน `python3 -c "import pymodbus; print(pymodbus.__version__)"`
+pymodbus เปลี่ยน API บ่อย (เช่น `slave=` เปลี่ยนเป็น `device_id=` ใน 3.10, datastore แบบเดิมถูก deprecate ตั้งแต่ 3.13 แทนด้วย SimData — ล่าสุดที่ตรวจ 3.16.1, 2026-10) — ถ้าโค้ดใช้ไม่ได้ ให้เช็กเวอร์ชันก่อน `python3 -c "import pymodbus; print(pymodbus.__version__)"`
 
 ## อ่าน (ทดสอบแล้ว)
 IP, port, address และ device ID ในตัวอย่างเป็นค่าสมมติ — ใช้ค่าจาก CLAUDE.md/คู่มือของโปรเจกต์ ห้ามเดา

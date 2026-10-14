@@ -1,5 +1,11 @@
 # CHANGELOG — modbus
 
+## 1.1.2 — 2026-10-14
+ข้อมูลล้าสมัย (จากรีวิว กลุ่ม 2)
+- pymodbus: datastore แบบเดิม deprecated ตั้งแต่ 3.13 (SimData) — `tools/modbus_sim.py` บอกวิธี pin ถ้ารุ่นใหม่รันไม่ได้
+- `devices/delta-asda-b3.md`: B3 มี P3-04 = communication timeout (ยัง ⚠️ ยืนยันหน่วย); ค่า P2-30 แบบไม่บันทึก EEPROM หายเมื่อปิดไฟ
+- `devices/me231.md`: ตัดสูตร `1000 + 2k` ที่ชวนให้คำนวณ address เองทั้งที่ยังไม่รู้ลำดับค่า
+
 ## 1.1.1 — 2026-10-14
 จากรีวิว docs/reviews/2026-10-14-skills.md
 - `clients/modbus_client.hpp`: เดิมตัด TCP ทุกครั้งที่อ่าน/เขียนไม่สำเร็จ รวมตอนอุปกรณ์ตอบ exception (address ผิด) ทั้งที่ connection ยังดี → reconnect วนทุกรอบ และแยกไม่ออกว่า "address ผิด" หรือ "สายหลุด" — ตอนนี้ exception จากอุปกรณ์ (`EMBXILFUN..EMBXGTAR`) ไม่ตัด + มี `last_was_device_exception()`; error อื่นยังตัดแล้วต่อใหม่เหมือนเดิม — ทดสอบกับ libmodbus 3.1.6 + Modbus TCP server จำลองบน localhost (ไม่ใช่ PLC จริง): exception ไม่ตัดสาย, server เห็นการเชื่อมต่อครั้งเดียว (แก้โค้ดก่อนเขียน test — ไม่ได้เห็น test แดงกับโค้ดเดิม)

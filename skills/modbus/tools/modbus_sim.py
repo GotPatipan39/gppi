@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Modbus TCP simulator สำหรับทดสอบโค้ดโดยไม่ต้องต่อ PLC/อุปกรณ์จริง
 
-ติดตั้ง:  pip install "pymodbus>=3.10,<4"   (ทดสอบกับ 3.15 — v4 จะเปลี่ยน API ของ datastore)
+ติดตั้ง:  pip install "pymodbus>=3.10,<4"   (ทดสอบกับ 3.15)
+          datastore แบบที่ไฟล์นี้ใช้ถูก deprecate ตั้งแต่ 3.13 (แทนด้วย SimData) และกำลังถูกถอด —
+          script ซ่อน DeprecationWarning ไว้ ถ้ารุ่นใหม่รันไม่ได้ให้ pin "pymodbus>=3.10,<3.16" หรือย้ายไป SimData
+          (https://raw.githubusercontent.com/pymodbus-dev/pymodbus/dev/API_changes.rst)
 รัน:      python3 modbus_sim.py --port 5020
           python3 modbus_sim.py --port 5020 --hr 0=100 1=-90 10=1234
 
