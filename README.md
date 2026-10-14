@@ -109,6 +109,7 @@ gppi/
 ├── rules.md          ← กฎการทำงานที่ Claude อ่านทุก session
 ├── templates/        ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์
 ├── docs/             ← INSTALL, GUARD, MAINTAINING, ADR, ผลทดสอบ
+├── evals/            ← eval ว่า Claude เลือก skill ถูกไหม (claude plugin eval)
 ├── THIRD_PARTY_NOTICES.md ← license ของส่วนที่ดัดแปลงจากภายนอก
 └── CHANGELOG.md      ← อะไรเปลี่ยนในแต่ละเวอร์ชัน
 ```
