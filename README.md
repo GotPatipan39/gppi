@@ -93,7 +93,7 @@ claude plugin install gppi@gppi
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
 
-`grilling` และ `domain-modeling` มาจาก mattpocock/skills (MIT) @ d81f3a1 แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว
+`grilling` และ `domain-modeling` มาจาก mattpocock/skills (MIT) @ 49dd158 (2026-10-09) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว
 
 | subagent | เวอร์ชัน | ใช้กับ | เรียกอย่างไร |
 |---|---|---|---|
