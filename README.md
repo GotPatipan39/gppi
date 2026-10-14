@@ -18,7 +18,13 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 - **ROS2**: `topic pub`, `service call`, `action send_goal`, `launch`, `run`, `param set/load`, `lifecycle set`, `control switch_controllers/set_controller_state/load_controller`, `bag play`, `component load`
 - **service**: `systemctl start/stop/restart/reload/kill/isolate`, `enable/disable/mask --now`, `service ... restart`, `pm2 start/stop/restart/reload/delete/resurrect`, `pm2-runtime`
 - **bus**: `mbpoll`, `modpoll`, serial terminal (`minicom`, `picocom`, `tio`, `miniterm`, ...) และคำสั่งใดก็ตามที่แตะ `/dev/<device>` ที่ไม่ใช่ device ทั่วไป (`null`, กล้อง, disk) — รวม symlink ของ udev อย่าง `/dev/motor_controller`; ยกเว้น `ls`, `udevadm`, `dmesg`, `stat`, `readlink`, `test`
-- **Node-RED**: deploy flow (POST/PUT ไปที่ `/flow(s)`)
+- **Node-RED**: deploy flow (POST/PUT ไปที่ `/flow(s)`), กด inject (`/inject/<id>`), เปิด runtime (`node-red`, `npx node-red`, `node-red-start/restart/stop`)
+- **container** (docker, podman, nerdctl): `compose up/start/restart/stop/down/kill/run`, `run/start/restart/stop/kill/pause`, `rm -f` — ดู `ps/logs/exec/build` ไม่ถาม
+- **python ที่สั่ง bus ในบรรทัดคำสั่ง** (`python`/`py` ที่มีโค้ดอยู่ในคำสั่งเอง: `-c`, heredoc, pipe): `pymodbus`, `minimalmodbus`, `pyModbusTCP`, `Serial(`, `write_register/coil`
+- **หยุด process / เครื่อง**: `pkill`, `killall`, `reboot`, `shutdown`, `poweroff`, `halt`, `init 0/6`, `systemctl reboot/poweroff`, `wsl --shutdown/-t` และฝั่ง Windows `taskkill`, `Stop-Process`, `Start/Stop/Restart-Service`, `sc`/`nssm stop/start/restart`, `Restart/Stop-Computer` — driver ที่หยุดกลางคำสั่งโดยไม่มี watchdog ทำให้เครื่องค้างค่าสุดท้าย (`kill <pid>` ไม่ถาม)
+  - คำที่เป็นภาษาธรรมดาด้วย (`shutdown`, `halt`, `node-red`) ถามเฉพาะตอนอยู่ตำแหน่งคำสั่ง — รวมหลัง `sudo`, `ssh host`, `wsl --`, `cmd /c`, `powershell -Command`, `do`/`then`, `xargs` — ไม่ถามตอนอยู่กลางประโยค (`git commit -m "fix safe shutdown"`, `grep -rn shutdown`, topic `/halt`)
+  - **ถามเกินโดยตั้งใจ**: คำเหล่านี้ที่อยู่ต้น quote (`grep "shutdown"`, `-m "halt motion ..."`) เพราะต้องจับ `bash -lc "sudo reboot"` ที่หน้าตาเหมือนกัน
+- **COM port ฝั่ง Windows**: `usbipd attach/detach` (ดึง USB-RS485 ไป/กลับ WSL), `mode COM<n>`
 - **git ที่ย้อนกลับยาก**: `push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore`
 
 ตั้งใจให้เป็นแบบนี้:
@@ -36,7 +42,7 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 - ไม่ผ่อน `deny` ที่ระบบตัดสินไว้แล้ว และถ้าตัวกันเองทำงานผิดพลาดจะ **ถาม** แทนการปล่อยผ่าน
 
 > [!WARNING]
-> ตัวกัน **ไม่จับ**: wrapper script (`./bringup.sh`, `make run`), โค้ดที่สั่งเครื่องจากข้างใน script (python/node ที่เขียน register เอง), การเรียกผ่าน `$(which ros2)` หรือแยกคำด้วย quote — กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
+> ตัวกัน **ไม่จับ**: wrapper script (`./bringup.sh`, `make run`), โค้ดที่สั่งเครื่องจากข้างใน script ที่เป็นไฟล์ (`python write_plc.py`, node ที่เขียน register เอง), `kill <pid>`, alias/function ของ shell, `bash -c reboot` ที่ไม่มี quote, `doas -u x ...`, docker ที่มี global option ซึ่งไม่อยู่ในรายการ (`--tlscacert ca.pem run`), `nerdctl compose`, การเรียกผ่าน `$(which ros2)` หรือแยกคำด้วย quote — กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
 
 ## ติดตั้ง
 ต้องมีในทุกฝั่งที่ใช้ Claude Code (Windows และ WSL แยกกัน):

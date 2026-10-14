@@ -226,6 +226,165 @@ test('Node-RED: ไม่ถามการอ่าน flow', () => {
   for (const c of NODERED_READ) expect([c, isMachineCommand(c)]).toEqual([c, false])
 })
 
+// ขยายขอบเขต (Q23): container ที่รัน driver, Node-RED runtime/inject, python -c ที่สั่ง bus, หยุด process/เครื่อง, แย่ง COM ฝั่ง Windows
+const MORE_MOVE = [
+  'docker compose up -d',
+  'docker compose restart driver',
+  'docker-compose up',
+  'docker compose down',
+  'docker run --device /dev/ttyUSB0 robot/driver',
+  'docker restart node-red',
+  'docker stop plc-bridge',
+  'curl -X POST http://localhost:1880/inject/a1b2c3',
+  'node-red',
+  'npx node-red -u ~/.node-red',
+  'node-red-restart',
+  "wsl -- bash -lc 'node-red-start'",
+  'python3 -c "from pymodbus.client import ModbusTcpClient; c=ModbusTcpClient(\'192.168.1.10\'); c.write_coil(0, True)"',
+  'python -c "import minimalmodbus; i=minimalmodbus.Instrument(\'/dev/ttyUSB0\', 1)"',
+  "python3 - <<'EOF'\nimport serial\ns = serial.Serial('COM3', 9600)\nEOF",
+  'pkill -f driver_node',
+  'killall node-red',
+  'sudo reboot',
+  'ssh robot@minipc sudo shutdown -h now',
+  'sudo poweroff',
+  'sudo systemctl reboot',
+  'Restart-Computer -Force',
+  'usbipd attach --wsl --busid 1-4',
+  'usbipd detach --busid 1-4',
+  'mode COM3 BAUD=9600 PARITY=n DATA=8',
+  // รอบตรวจที่ 3
+  'docker compose -f bringup.yml up -d',
+  'docker compose -p robot --project-directory /opt/robot restart',
+  'docker -H ssh://robot@minipc start driver',
+  'podman run --device /dev/ttyUSB0 robot/driver',
+  'docker rm -f driver',
+  "python3 <<'EOF'\nfrom pymodbus.client import ModbusTcpClient\nEOF",
+  'echo "import minimalmodbus" | python3',
+  'py -3 -c "from pyModbusTCP.client import ModbusClient; ModbusClient(host=\'192.168.1.10\').write_single_coil(0, True)"',
+  'python -c "from serial import Serial; Serial(\'COM3\', 9600)"',
+  'wsl --shutdown',
+  'wsl -t Ubuntu-22.04',
+  'sudo -u nodered node-red',
+  '/usr/bin/node-red',
+  'nohup node-red > nr.log 2>&1',
+  'shutdown /r /t 0',
+  'sudo init 6',
+  'taskkill /F /IM node.exe',
+  'Stop-Process -Name node -Force',
+  'Restart-Service NodeRED',
+  // รอบตรวจที่ 4: prefix ที่รันคำสั่งต่อ
+  'ssh -p 2222 robot@minipc sudo reboot',
+  'ssh -i key.pem robot@minipc sudo shutdown -h now',
+  'ssh -o StrictHostKeyChecking=no robot@minipc pkill -f driver',
+  'wsl -- sudo reboot',
+  'wsl -d Ubuntu-22.04 -- pkill -f driver_node',
+  'wsl -e pkill -f driver_node',
+  'cmd /c shutdown /r /t 0',
+  'powershell -Command shutdown /r',
+  'shutdown.exe /r /t 0',
+  'C:\\Windows\\System32\\shutdown.exe /r /t 0',
+  'for h in pc1 pc2; do ssh $h sudo reboot; done',
+  'if true; then pkill -f driver_node; fi',
+  'echo driver | xargs pkill -f',
+  'setsid node-red',
+  'timeout -s KILL 5 pkill -f driver_node',
+  "Start-Process shutdown -ArgumentList '/r /t 0'",
+  'sudo reboot; echo done',
+  'pkill -f driver&& echo stopped',
+  'node-red|tee nr.log',
+  // รอบตรวจที่ 5: คำว่า exec/logs/build/config ที่ไม่ใช่คำสั่งย่อยของ docker
+  'docker compose -f config/robot.yml up -d',
+  'docker compose -f build.yml up',
+  'docker run --name exec-test robot/driver',
+  'docker run -v logs:/data robot/driver',
+  'docker start logs-collector',
+  'docker --context minipc run -d nodered/node-red',
+  'docker.exe run -d nodered/node-red',
+]
+
+test('ไม่ช้าผิดปกติกับ option ซ้ำๆ (ช้าเกิน timeout = hook ปล่อยผ่าน)', () => {
+  const inputs = [
+    'ssh ' + '-pa '.repeat(30) + 'h echo x',
+    'sudo ' + '-u '.repeat(40) + 'x',
+    'timeout ' + '-s '.repeat(40) + 'x',
+    'docker ' + '-H '.repeat(40) + 'ps',
+    'docker compose ' + '-f '.repeat(40) + 'ps',
+    'wsl ' + '-d '.repeat(40) + 'x',
+    'docker compose ' + '--file=a.yml '.repeat(30) + 'ps',
+    'docker ' + '--context=x '.repeat(30) + 'ps',
+  ]
+  for (const c of inputs) {
+    const t = performance.now()
+    isMachineCommand(c)
+    expect([c.slice(0, 12), performance.now() - t < 200]).toEqual([c.slice(0, 12), true])
+  }
+})
+
+test('deploy Node-RED ที่ส่ง flow JSON ขนาดใหญ่ในบรรทัด: ยังถาม และไม่ช้า', () => {
+  const c = "curl -X POST http://localhost:1880/flows -d '" + '{"a":"b","c":"/x/y"},'.repeat(20000) + "'"
+  const t = performance.now()
+  const asked = isMachineCommand(c)
+  expect([asked, performance.now() - t < 1000]).toEqual([true, true])
+})
+
+const MORE_READ = [
+  'docker ps',
+  'docker logs -f driver',
+  'docker compose ps',
+  'docker exec driver cat /etc/os-release',
+  'docker build -t robot/driver .',
+  'pm2 logs node-red --lines 20',
+  'cd ~/.node-red && ls',
+  'node-red-admin list',
+  'pip install pymodbus',
+  'grep -rn pymodbus src/',
+  'python -c "print(1)"',
+  'python3 test_scale.py',
+  'ps aux | grep driver',
+  'kill 12345',
+  'usbipd list',
+  'mode con',
+  'curl http://localhost:1880/inject/a1b2c3',
+  // รอบตรวจที่ 3: คำว่า shutdown/halt/reboot ที่ไม่ใช่ตัวคำสั่ง — ทีม robot ใช้คำพวกนี้บ่อย ถ้าถามทุกครั้งคนจะกดผ่านโดยไม่อ่าน
+  'git commit -m "fix safe shutdown sequence"',
+  'git commit -m "add halt on e-stop"',
+  'grep -rn shutdown src/',
+  'vim docs/shutdown.md',
+  'git log --grep=reboot',
+  'ros2 topic echo /halt',
+  'npm install node-red-contrib-modbus',
+  'python3 -m pytest tests/test_pymodbus_scale.py',
+  'docker ps --filter status=running',
+  'wsl -l -v',
+  'Get-Service NodeRED',
+  // รอบตรวจที่ 4: docker ที่ไม่เปิด/หยุด container
+  'docker exec ctr npm run build',
+  'docker exec node-red npm start',
+  'docker build --target run .',
+  'docker logs run-1',
+  'docker compose exec driver npm start',
+]
+
+// ถามเกินโดยตั้งใจ: quote นับเป็นตำแหน่งคำสั่ง (ต้องจับ bash -lc "sudo reboot") จึงถาม grep ที่ใส่ quote ด้วย
+const OVER_ASK_ON_PURPOSE = [
+  'grep -rn "shutdown" src/',
+  'git commit -m "halt motion on e-stop"',
+  'bash -lc "sudo reboot"',
+]
+
+test('ถามเกินโดยตั้งใจ: คำว่า shutdown/halt/reboot ที่อยู่ต้น quote', () => {
+  for (const c of OVER_ASK_ON_PURPOSE) expect([c, isMachineCommand(c)]).toEqual([c, true])
+})
+
+test('ขยาย: ถาม docker/Node-RED runtime/python -c bus/หยุด process/แย่ง COM', () => {
+  for (const c of MORE_MOVE) expect([c, isMachineCommand(c)]).toEqual([c, true])
+})
+
+test('ขยาย: ไม่ถามคำสั่งดูข้อมูลในกลุ่มเดียวกัน', () => {
+  for (const c of MORE_READ) expect([c, isMachineCommand(c)]).toEqual([c, false])
+})
+
 // PreToolUse hook — ทางเดียวที่ docs รับประกันว่าบังคับถามคนได้ใน auto mode (mod tool.check ถูก classifier อนุมัติแทน)
 const hookInput = (tool_name: string, command: unknown) =>
   ({ hook_event_name: 'PreToolUse', tool_name, tool_input: { command } })
