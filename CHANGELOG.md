@@ -3,6 +3,12 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.1 — 2026-10-14
+Tested: unit test (23 pass) + ใช้งานจริงบน Windows 11 (VS Code, CLI) และ WSL Ubuntu 22.04 (CLI)
+- แก้: คำสั่งที่ตัวกันถามขึ้นคำเตือน "gppi tried to reword a PreToolUse hook's ask" ทุกครั้ง — ตัวกันยังถามถูกต้องอยู่แล้ว แค่ไม่มีคำเตือนนี้อีก
+- เพิ่ม: คู่มือติดตั้งทีละขั้น [docs/INSTALL.md](docs/INSTALL.md) ทั้ง Windows และ WSL พร้อมตารางปัญหาที่เจอบ่อย
+- WSL ที่เคยใช้ installer ของ mskills: skill เก่าใน `~/.claude/skills` บัง skill ของ gppi — ดู INSTALL.md ส่วน WSL ขั้น 4
+
 ## v0.1.0 — 2026-10-14
 Tested: unit test (22 pass, CI ผ่าน) + ใช้งานจริงบน Windows 11 (Claude Code 2.1.296 — VS Code extension และ CLI ใน mode ปกติ/auto/bypassPermissions) — **ยังไม่ได้ทดสอบบน WSL/Ubuntu**
 
