@@ -22,8 +22,8 @@ export const register: Register = on => {
       if (verdict.decision === 'deny') return verdict
       const command = (e.input as { command?: unknown }).command
       return typeof command === 'string' && isRiskyGit(command)
-        ? { decision: 'ask', reason: 'mskills: คำสั่ง git ที่ย้อนกลับยาก ต้องให้ผู้ใช้ยืนยัน' }
+        ? { decision: 'ask', reason: 'gppi: คำสั่ง git ที่ย้อนกลับยาก ต้องให้ผู้ใช้ยืนยัน' }
         : verdict
-    }).catch(() => ({ decision: 'ask', reason: 'mskills: ตัวตรวจคำสั่ง git ทำงานผิดพลาด จึงขอให้ผู้ใช้ยืนยันแทน' }))
+    }).catch(() => ({ decision: 'ask', reason: 'gppi: ตัวตรวจคำสั่ง git ทำงานผิดพลาด จึงขอให้ผู้ใช้ยืนยันแทน' }))
   }
 }

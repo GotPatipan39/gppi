@@ -1,5 +1,5 @@
 {
-  "modules": ["./mskills.ts"],
+  "modules": ["./gppi.ts"],
   "hooks": {
     "SessionStart": [
       {

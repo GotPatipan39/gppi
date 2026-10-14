@@ -5,7 +5,7 @@ description: ใช้เมื่อจะ commit หรือออก release
 
 # Git commit และ release
 
-> เวอร์ชัน 1.1.2 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ถ้า `CLAUDE.md` ของโปรเจกต์กำหนดรูปแบบ commit ไว้ต่างจากนี้ ให้ยึดของโปรเจกต์
 
@@ -32,10 +32,10 @@ stage ทีละไฟล์ด้วย `git add <path>` — ไม่ใช�
 
 **โปรเจกต์ที่คุมเครื่องจักร** (มีโค้ด Modbus/PLC/serial/servo/ROS2 driver หรือ Node-RED ที่สั่งอุปกรณ์) และ diff แตะโค้ดหรือ config ที่ไม่ใช่แค่เอกสาร/หน้าตา:
 หลัง stage แล้ว เรียก subagent `safety-reviewer` ส่ง path โปรเจกต์ + ช่วงที่ตรวจ (`staged`) — คนที่เขียนโค้ดตรวจงานตัวเองมักไม่เห็นสิ่งที่ตัวเองตั้งใจแก้ ตัวตรวจที่ไม่เห็นแชทจะอ่านแบบคนนอก
-- ชื่อ agent ขึ้นกับวิธีติดตั้ง: installer → `safety-reviewer`, plugin → `mskills:safety-reviewer` (ชื่อสั้นเรียก agent ใน plugin ไม่ได้) — ดูชื่อที่มีจริงในรายการ agent แล้วใช้ตัวที่มี; ได้ error "not found" ให้ลองอีกชื่อก่อนสรุปว่าไม่มี
+- เรียกด้วยชื่อเต็ม `gppi:safety-reviewer` — ชื่อสั้น `safety-reviewer` เรียก agent ใน plugin ไม่ได้ (ได้ error "not found" แล้วอาจตกไปข้อ "ไม่มีตัวตรวจ" ซึ่งข้ามตัวตรวจแยกไปเงียบๆ)
 - ผลมี 🔴 → แสดงให้ผู้ใช้ทั้งหมด หยุดรอคำตอบ ไม่ commit ต่อเอง; 🟡 → แสดงให้ผู้ใช้ แล้วถามว่าจะ commit ต่อไหม
 - ผู้ใช้ยืนยันว่าตั้งใจ → เขียนเหตุผลใน body ของ commit
-- ไม่มีทั้งสองชื่อในเครื่อง → ตรวจเองตามตารางข้างบน และบอกผู้ใช้ว่าไม่ได้ผ่านตัวตรวจแยก
+- ไม่มี agent นี้ในรายการ agent ของเครื่อง → ตรวจเองตามตารางข้างบน และบอกผู้ใช้ว่าไม่ได้ผ่านตัวตรวจแยก
 
 ### 3. diff ปนกันหลายเรื่อง → เสนอการแยก ให้ผู้ใช้ยืนยันก่อน
 หนึ่ง commit = หนึ่งเรื่อง เพื่อให้ revert ทีละเรื่องได้ เช่น แก้ bug Modbus + เปลี่ยนสีปุ่ม = 2 commit
@@ -135,12 +135,17 @@ git log --format='%h %ad %s' --date=short -E --grep='^v[0-9]+\.[0-9]+\.[0-9]+' #
 7. `git tag -a v1.4.0 -m "v1.4.0"`
 8. ถามว่าจะ push ไหม — ถ้าใช่: `git push origin <branch>` และ `git push origin v1.4.0` (ไม่ push tag = tag อยู่แค่เครื่องนี้)
 
-## ข้อยกเว้น: repo mskills
-skill แต่ละตัวมีเวอร์ชันของตัวเอง — **release ราย skill, ไม่มี git tag**
-- แก้บรรทัด `> เวอร์ชัน X.Y.Z` ใน `SKILL.md`, เพิ่มหัวข้อใน `CHANGELOG.md` ของ skill นั้น และแก้เลขในตาราง skill ของ `README.md`
-- commit: `<skill> vX.Y.Z: <สรุป>` เช่น `modbus v1.1.0: add ME231 energy registers`
-- commit อื่นใน mskills ใช้รูปแบบ commit ทั่วไปข้างบน
-- เสร็จแล้วรันติดตั้งใหม่ (`install/install-skills.ps1 -All`; เครื่องที่ใช้ plugin: `claude plugin marketplace update mskills && claude plugin update mskills@mskills`) ให้ skill ที่ใช้อยู่ตรงกับ repo
+## ข้อยกเว้น: repo gppi (plugin ของทีม)
+มีเวอร์ชันสองชั้น: **ราย skill** (บันทึกว่า skill นั้นเปลี่ยนอะไร) และ **ทั้ง plugin** (สิ่งที่ทีมได้รับ)
+- แก้ skill: แก้บรรทัด `> เวอร์ชัน X.Y.Z` ใน `SKILL.md`, เพิ่มหัวข้อใน `CHANGELOG.md` ของ skill นั้น และแก้เลขในตาราง skill ของ `README.md` — commit: `<skill> vX.Y.Z: <สรุป>` เช่น `modbus v1.1.0: add ME231 energy registers` (ไม่มี git tag)
+- commit อื่นใช้รูปแบบ commit ทั่วไปข้างบน
+- **release plugin** (เมื่อผู้ใช้สั่งเท่านั้น) — ทีมได้ของใหม่ก็ต่อเมื่อเลขนี้เปลี่ยน แก้ skill แล้วไม่ release = ไม่มีใครได้:
+  1. เลขอยู่ที่ `.claude-plugin/plugin.json` (`"version"`) ที่เดียว — ไม่ใส่ใน `marketplace.json`
+  2. เพิ่มหัวข้อใน `CHANGELOG.md` ที่ root (รูปแบบเดียวกับขั้นตอน release ข้างบน; บอกด้วยว่า skill ไหนขึ้นเป็นเวอร์ชันอะไร)
+  3. รัน `claude plugin validate . --strict` และ `claude plugin test .` ต้องผ่านก่อน
+  4. commit `vX.Y.Z: <สรุป>` แล้วสร้าง tag ด้วย `claude plugin tag .` (ได้ tag `gppi--vX.Y.Z` และตรวจว่า plugin.json กับ marketplace ตรงกัน) — ใช้แทน `git tag -a vX.Y.Z`
+  5. ถามว่าจะ push ไหม — push ทั้ง branch และ tag
+- เครื่องที่ติดตั้งไว้อัปเดตด้วย `claude plugin marketplace update gppi && claude plugin update gppi@gppi` (หรือเปิด auto-update ของ marketplace ใน `/plugin`)
 
 ## สรุปให้ผู้ใช้หลัง commit/release
 - commit hash + บรรทัดแรก (หลาย commit → เป็นรายการ)

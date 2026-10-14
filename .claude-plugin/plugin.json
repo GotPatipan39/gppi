@@ -1,7 +1,8 @@
 {
-  "name": "mskills",
-  "description": "Skills and a safety-review subagent for machine, robot and IoT work: ROS2 Humble, Modbus, OpenCV, industrial UI, TDD, commits",
+  "name": "gppi",
+  "version": "0.1.0",
+  "description": "Skills, rules and a safety guard for machine, robot and IoT work: ROS2 Humble, Modbus, OpenCV, industrial UI, TDD, commits",
   "author": { "name": "GotPatipan39" },
-  "repository": "https://github.com/GotPatipan39/mskills",
+  "repository": "https://github.com/GotPatipan39/gppi",
   "skills": ["./skills", "./vendor/mattpocock"]
 }

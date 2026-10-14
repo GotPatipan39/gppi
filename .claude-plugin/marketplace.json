@@ -1,11 +1,12 @@
 {
-  "name": "mskills",
+  "name": "gppi",
   "owner": { "name": "GotPatipan39" },
+  "description": "Team plugin for machine, robot and IoT work",
   "plugins": [
     {
-      "name": "mskills",
+      "name": "gppi",
       "source": "./",
-      "description": "Skills and a safety-review subagent for machine, robot and IoT work"
+      "description": "Skills, rules and a safety guard for machine, robot and IoT work"
     }
   ]
 }

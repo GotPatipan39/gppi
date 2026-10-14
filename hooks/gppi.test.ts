@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { isRiskyGit } from './mskills'
+import { isRiskyGit } from './gppi'
 
 const RISKY = [
   'git push',

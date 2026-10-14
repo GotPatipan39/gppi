@@ -1,5 +1,9 @@
 # CHANGELOG — git-commit
 
+## 1.2.0 — 2026-10-14
+- ย้ายจาก mskills มาเป็น plugin `gppi`: เรียกตัวตรวจด้วย `gppi:safety-reviewer` ชื่อเดียว (เลิกใช้ installer แล้ว)
+- ข้อยกเว้นของ repo gppi: เพิ่มการ release ทั้ง plugin — เลขใน `plugin.json`, CHANGELOG ที่ root, validate/test ก่อน, tag ด้วย `claude plugin tag`
+
 ## 1.1.2 — 2026-10-12
 - ข้อยกเว้น repo mskills: installer ย้ายไป `install/install-skills.ps1`; เพิ่มคำสั่งอัปเดตสำหรับเครื่องที่ใช้ plugin
 
