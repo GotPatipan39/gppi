@@ -1,5 +1,10 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.4.0 — 2026-10-14
+- เพิ่ม `references/odometry.md` (เขียนเอง ไม่ได้มาจาก upstream): ใช้ `diff_drive_controller` ถ้ามี ros2_control, integrate encoder แบบ midpoint, counter wrap 16/32-bit, ปฏิเสธ step ที่เร็วเกินจริง (drive reset) แล้ว re-base, ไม่ integrate ข้ามช่วงที่อ่านไม่ได้, reject ติดกันหลายรอบ = odometry เสีย → ERROR + หยุด publish (ไม่ปล่อย pose ค้างแบบเงียบ), อ่านทุก counter ใน request เดียว, quadrature ×4, `publish_tf` เมื่อมี EKF, calibration ที่ผู้ใช้เป็นคนรัน (แก้ radius ก่อนแล้วค่อยวัด separation) — โค้ดและ gtest 9 ตัวใน reference ผ่านกับ g++ 11.4 + `-Werror` และ mutation 5 แบบถูกจับครบ (`tools/test-templates.sh` ดึงจาก markdown มารันใน CI); `safety-reviewer` พบ 🔴 1 (pose ค้างเงียบเมื่อ reject ต่อเนื่อง) + 🟡 6 แก้ครบแล้ว; parameter ของ `diff_drive_controller` ตรวจกับ yaml ของ branch humble
+- `ParameterDescriptor` สำหรับ parameter ด้านความปลอดภัย: `read_only` + range — ตรวจกับ source ของ rclcpp humble ว่า range ถูกตรวจตอน declare (throw) และตอน set; range ไม่กัน NaN
+- บอกว่า Humble EOL พฤษภาคม 2027 ให้แจ้งผู้ใช้ตอนเริ่มโปรเจกต์ใหม่
+
 ## 3.3.0 — 2026-10-14
 ล้างเนื้อหาที่ผิดสำหรับ Humble (จากรีวิว docs/reviews/2026-10-14-skills.md กลุ่ม 2) — แก้เอกสารเท่านั้น ยังไม่ได้ build ตัวอย่าง C++ ใหม่กับ Humble จริง
 - **reference ที่หาย**: เพิ่ม `deployment.md` (systemd/pm2 บน mini PC, `sd_notify` + `NotifyAccess=all`, rollback, shutdown บน Humble), `runtime-provenance.md`, `system-diagnostics.md` ดัดแปลงจาก upstream @4ee4dea เป็น Humble; ตัดการอ้างถึง realtime/security/simulation/multi-robot/sensor-integration/engineering-principles และ `scripts/*.py`; เพิ่ม `references/LICENSE` (Apache-2.0)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ทดสอบโค้ด template ที่คุม hardware ใน skill — ไม่ต้องมี ROS2 และไม่แตะอุปกรณ์จริง
-#   1) gtest ของ ros2-humble-cpp (rate_limiter, command_watchdog)
+#   1) gtest ของ ros2-humble-cpp (rate_limiter, command_watchdog, odometry ใน references/odometry.md)
 #   2) compile node_template.cpp กับ rclcpp จำลอง (ตรวจ type/syntax เท่านั้น — ไม่ใช่การ build กับ ROS2 จริง)
 #   3) modbus_client.hpp กับ libmodbus จริง + Modbus TCP server จำลองบน 127.0.0.1
 # ต้องมี: g++ libgtest-dev libmodbus-dev python3   (Ubuntu: sudo apt-get install -y g++ libgtest-dev libmodbus-dev)
@@ -20,6 +20,14 @@ mkdir -p "$OUT/inc/my_pkg"
 cp "$TPL"/*.hpp "$OUT/inc/my_pkg/"
 $CXX -I"$OUT/inc" "$TPL/test_example.cpp" -lgtest -lgtest_main -pthread -o "$OUT/tests"
 "$OUT/tests" --gtest_brief=1
+
+echo "== 1b) gtest: diff_drive_odometry (code blocks in references/odometry.md)"
+ODO="$ROOT/skills/ros2-humble-cpp/references/odometry.md"
+# block แรก = header, block ที่สอง = gtest — เอกสารเปลี่ยนลำดับ block ต้องแก้ตรงนี้ด้วย
+awk -v out="$OUT" '/^```cpp/{n++;on=1;next} /^```/{on=0;next} on{print > (out "/odo" n ".cpp")}' "$ODO"
+cp "$OUT/odo1.cpp" "$OUT/inc/my_pkg/diff_drive_odometry.hpp"
+$CXX -I"$OUT/inc" "$OUT/odo2.cpp" -lgtest -lgtest_main -pthread -o "$OUT/odo_tests"
+"$OUT/odo_tests" --gtest_brief=1
 
 echo "== 2) node_template.cpp compiles against a stub rclcpp"
 mkdir -p "$OUT/inc/rclcpp" "$OUT/inc/geometry_msgs/msg"

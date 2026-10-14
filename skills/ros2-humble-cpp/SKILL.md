@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.3.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.4.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์
@@ -15,6 +15,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 ## สภาพแวดล้อม
 - Ubuntu 22.04 + ROS2 Humble, node เขียนด้วย C++ (rclcpp), launch file เขียนเป็น Python (`*.launch.py`)
 - **Humble เท่านั้น:** ไฟล์ใน `references/` ครอบคลุมหลาย distro — ใช้เฉพาะส่วนที่ใช้ได้กับ Humble, ข้ามคำแนะนำที่ระบุว่าเป็นของ Iron/Jazzy/Kilted/Rolling ขึ้นไป เช่น Humble ยังใช้ `ament_target_dependencies()` ได้ตามปกติ (อย่าเปลี่ยนเป็น `target_link_libraries(... dep::dep)` แบบ Jazzy)
+- Humble หมดอายุ (EOL) **พฤษภาคม 2027** — หลังจากนั้นไม่มี security/bug fix; โปรเจกต์ใหม่ที่ต้องใช้งานนานกว่านั้น ให้บอกผู้ใช้ตอนเริ่มว่าอาจต้องย้ายไป Jazzy (Ubuntu 24.04) ไม่เปลี่ยน distro เอง
 - ถ้าไม่แน่ใจว่า API มีใน Humble ไหม ให้เช็กจาก header ใน `/opt/ros/humble/include` หรือ `--help` ของคำสั่ง ก่อนใช้
 - workspace: ใช้ root ของโปรเจกต์ที่เปิดอยู่ (โฟลเดอร์ที่มี `src/`) ถ้ายังไม่มี ให้ถามผู้ใช้ก่อนสร้าง
 - ทุก terminal ต้อง `source /opt/ros/humble/setup.bash` แล้ว `source <workspace>/install/setup.bash`
@@ -81,6 +82,7 @@ export ROS_DOMAIN_ID=<0-101>     # แยกจากระบบอื่น �
 | debug, rosbag2, tracing | [references/debugging.md](references/debugging.md) |
 | gtest, launch_testing, CI | [references/testing.md](references/testing.md) |
 | tf2, URDF | [references/tf2-urdf.md](references/tf2-urdf.md) |
+| wheel odometry จาก encoder (diff drive), counter wrap/reset, calibration | [references/odometry.md](references/odometry.md) |
 | กล้อง, OpenCV, cv_bridge, object detection | [references/perception.md](references/perception.md) |
 | message type, หน่วย, frame | [references/message-types.md](references/message-types.md) |
 | Web UI / dashboard ↔ ROS2 (rosbridge, bridge, teleop จาก browser) | skill `industrial-ui` → platforms/ros2-bridge.md |
@@ -128,6 +130,19 @@ ros2 pkg create <pkg_name> --build-type ament_cmake --dependencies rclcpp std_ms
 ## รูปแบบ node
 - class สืบทอด `rclcpp::Node`, ใช้ `std::chrono_literals`
 - ค่าที่ปรับได้ (พอร์ต, IP, rate, gain, limit) ต้องเป็น parameter ผ่าน `declare_parameter` ห้าม hard-code
+- parameter ด้านความปลอดภัย (timeout, limit ความเร็ว/ความเร่ง) ใส่ `ParameterDescriptor`:
+  ```cpp
+  rcl_interfaces::msg::ParameterDescriptor d;
+  d.description = "command timeout [s]";
+  d.read_only = true;                       // ros2 param set ตอนรันถูกปฏิเสธ — เปลี่ยนได้ทาง yaml + restart เท่านั้น
+  d.floating_point_range.resize(1);
+  d.floating_point_range[0].from_value = 0.05;  // ช่วงตาม spec ของเครื่อง (ค่าในนี้เป็นตัวอย่าง)
+  d.floating_point_range[0].to_value = 1.0;
+  cmd_timeout_ = declare_parameter<double>("cmd_timeout", 0.5, d);
+  ```
+  - ค่าใน yaml นอกช่วง → `declare_parameter` throw `InvalidParameterValueException` (node ไม่ start); `ros2 param set` นอกช่วงหรือแก้ read_only → ถูกปฏิเสธ (ตรวจกับ source ของ rclcpp branch humble แล้ว)
+  - **range ไม่กัน NaN** (`NaN < from` เป็น false) — ยังต้องตรวจ `std::isfinite` เองเหมือนใน template
+  - `read_only` กันการแก้ตอนรันเท่านั้น ไม่กันคนแก้ yaml — การแก้ yaml ให้ `safety-reviewer` ตรวจ
 - ใช้ timer (`create_wall_timer`) สำหรับงานวนรอบ ห้ามใช้ `while` + `sleep` ใน callback
 - งาน I/O ที่อาจค้าง (Modbus, serial ที่มี timeout) ให้อยู่ใน timer ของตัวเอง แยก callback group ถ้า node มี callback อื่นที่ต้องเร็ว
 - QoS เริ่มต้น:
