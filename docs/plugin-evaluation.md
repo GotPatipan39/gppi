@@ -44,7 +44,7 @@
 - ป้องกันกฎความปลอดภัยหายเงียบ (hook ไม่รัน) และแก้ผิดแล้วไปถึงทุกเครื่อง (เครื่องหน้างานติดตาม branch/tag ที่ทดสอบแล้ว)
 
 ## ยังไม่ได้ทดสอบ
-- auto-update เช็คบ่อยแค่ไหน (ไม่ได้ผลภายในไม่กี่นาที) — ถ้าช้าเกินไป ทางสำรองคือสั่ง `claude plugin marketplace update` + `plugin update` เอง (ยังสั้นกว่า `git pull` + install แต่ไม่ใช่อัตโนมัติ)
+- ~~auto-update เช็คบ่อยแค่ไหน (ไม่ได้ผลภายในไม่กี่นาที)~~ → ทดสอบแล้วกับ gppi (ดูหัวข้อ "auto-update" ด้านล่าง): ได้รุ่นใหม่เองเมื่อตั้ง `version` ใน plugin.json และเปิด auto-update ของ marketplace
 - hook บน Ubuntu
 - repo เดียวเป็นทั้ง marketplace และ plugin
 
@@ -79,5 +79,9 @@ log ไม่ได้บันทึก `hook_success` ของ PreToolUse ท
 - Claude ใน session ทดสอบโหลด `gppi:ros2-humble-cpp` เอง, ไปรันใน WSL (ไม่รัน ROS2 บน Windows), ตั้ง `ROS_LOCALHOST_ONLY=1` และเติม `--once` เอง — กฎใน `rules.md` ทำงาน
 
 ยังไม่ได้ทดสอบ: VS Code ใน auto mode, Windows ที่ไม่มี Git Bash, Desktop app
+
+## auto-update (gppi 0.1.0 → 0.1.1)
+ออก v0.1.1 (push tag `gppi--v0.1.1`) วันที่ 2026-10-14 — เครื่อง WSL (Claude Code 2.1.299, marketplace จาก GitHub ผ่าน HTTPS, เปิด Enable auto-update) ได้ `Version: 0.1.1` เองโดย **ไม่ได้สั่ง `claude plugin update`** ภายในช่วงเวลาที่ผู้ใช้เปิด session ทำงานต่อหลัง push (ไม่ได้จับเวลาแน่นอน; docs บอกว่าเช็กหลังข้อความแรกของ session แบบ interactive โดยหน่วงสุ่มไม่เกิน 10 นาที และใช้รุ่นใหม่ใน session ถัดไป)
+ต่างจากการทดลองกับ mskills ที่ไม่ได้ผลในไม่กี่นาที — ตอนนั้น plugin ไม่มี `version` (ติดตาม commit) และตั้ง `autoUpdate` ผ่าน settings แทนเมนู; ยังไม่ได้แยกว่าปัจจัยไหนทำให้ต่าง
 
 WSL: ของเก่าจาก installer ของ mskills (`~/.claude/skills/<ชื่อ>`, `agents/safety-reviewer.md`, `CLAUDE.md`) ค้างอยู่และบัง skill ของ gppi — `git-commit` ตัวเก่า (1.1.2) ถูกโหลดแทน 1.2.0; ย้ายไป backup แล้วเหลือของ gppi ชุดเดียว (ขั้นตอนอยู่ใน INSTALL.md ส่วน WSL ขั้น 4)
