@@ -25,6 +25,7 @@
 - **ห้ามเดาค่า hardware** (address, slave ID, IP, scale, wheelbase, หน่วย) — หาในโค้ด/CLAUDE.md/datasheet ก่อน ไม่มีให้ถาม — เพราะค่าผิดจะอ่าน/เขียนอุปกรณ์ผิดตัวหรือผิดหน่วยโดยไม่มี error เตือน
 - **ROS2 topic เป็น local เท่านั้น** — `ROS_LOCALHOST_ONLY=1` + `ROS_DOMAIN_ID` ตาม CLAUDE.md ของโปรเจกต์; เปิดข้ามเครื่องเฉพาะเมื่อ CLAUDE.md ของโปรเจกต์บอก — เพราะ DDS ที่ออก LAN จะเห็น/ชนกับ ROS2 ของเครื่องอื่น และให้ใครก็ได้ใน network สั่ง topic ได้ (Modbus TCP ไป PLC ไม่เกี่ยวกับค่านี้ ใช้ LAN ได้ตามปกติ)
 - **ห้ามรันคำสั่งที่อาจทำให้เครื่องจักรขยับ** ถ้าผู้ใช้ไม่ได้สั่งชัดเจนในข้อความนั้น — รวมถึง: เขียน Modbus register/coil, `ros2 topic pub`/`service call`/`action send_goal` ไปที่ driver, `ros2 launch` ที่มี driver ของจริง, deploy Node-RED flow, restart service ที่คุมเครื่อง (`systemctl`, `pm2`) — คำสั่งอ่านอย่างเดียว (`ros2 topic echo`, ดู log) ทำได้ แต่เปิด serial/RS-485 ที่ระบบใช้อยู่ให้ถามก่อน (ชนกับ master ตัวเดิมบน bus); ไม่แน่ใจให้ถามก่อน
+  - plugin gppi มีตัวกัน (`hooks/gppi.ts`) ที่หยุดถามก่อนรันคำสั่งพวกนี้ใน Bash/PowerShell — แต่จับได้เฉพาะคำสั่ง shell ที่เห็นชัด ไม่จับ script ที่สั่งเครื่องจากข้างใน (python/node ที่เขียน register) — กฎข้อนี้จึงยังใช้เต็มที่ ไม่ใช่ปล่อยให้ตัวกันจับแทน
 - **ห้ามลดเกณฑ์ความปลอดภัย** (timeout, limit, watchdog, interlock) เพื่อให้ test ผ่าน — เพราะค่าที่หลวมลงจะไปถึงเครื่องหน้างานด้วย; test แดงให้แก้โค้ดหรือถามผู้ใช้
 - **รายงานระดับการทดสอบให้ชัด**: build / unit test / simulator / hardware ไม่มีโหลด / ใช้งานจริง
 - **แก้โค้ดที่เปลี่ยนพฤติกรรม → อัปเดต README และ CLAUDE.md ของโปรเจกต์ในงานเดียวกัน**
