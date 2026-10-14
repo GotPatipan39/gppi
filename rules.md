@@ -34,4 +34,4 @@
 ## เครื่องที่ใช้
 - dev: Windows 11 + WSL Ubuntu 22.04 (ROS2 Humble) / runtime: mini PC Ubuntu 22.04 — ไม่รัน ROS2 บน Windows
 - โค้ดทำงานร่วมกับทีมบน GitLab
-- skill ทั้งหมดเก็บใน repo `gppi` บน GitHub (private) — แก้ผ่าน issue/PR ที่ repo นั้น ไม่แก้สำเนาใน `~/.claude/skills`, cache ของ plugin (`~/.claude/plugins/`) หรือในโปรเจกต์ (skill ของเราอยู่ใน `skills/`; ใน `vendor/` เป็นของภายนอก ห้ามแก้เนื้อหา)
+- skill ทั้งหมดเก็บใน repo `gppi` บน GitHub (private) — แก้ผ่าน issue/PR ที่ repo นั้น ไม่แก้สำเนาใน `~/.claude/skills`, cache ของ plugin (`~/.claude/plugins/`) หรือในโปรเจกต์ (skill ที่มีไฟล์ `LICENSE` ของตัวเอง เช่น `grilling`, `domain-modeling` มาจากภายนอก ห้ามแก้เนื้อหา — อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์)
