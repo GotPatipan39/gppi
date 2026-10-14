@@ -70,6 +70,7 @@ log ไม่ได้บันทึก `hook_success` ของ PreToolUse ท
 | hook command ใน Git Bash, ไม่มี node ใน PATH | — | exit 2 + ข้อความ "gppi: ตัวกันคำสั่ง ... รันไม่ได้" (fail-closed) ✅ |
 | CLI, auto (หลังขยายขอบเขต, `fc8ab0d`) | tool PowerShell: `docker compose up -d` | ถาม "Hook PreToolUse:PowerShell ... gppi: ..." ✅ |
 | CLI, auto (หลังขยายขอบเขต) | `git commit --dry-run -m "fix safe shutdown sequence"` | ตัวกันไม่ถาม — classifier อนุมัติ (`reasonType: classifier`) ✅ ไม่ถามเกิน |
+| CLI ใน WSL Ubuntu 22.04 (Claude Code 2.1.299, node 22.23.3 จาก NodeSource, ติดตั้งจาก GitHub ผ่าน HTTPS/gh) | `ros2 topic pub /test ...` | ถาม "Hook PreToolUse:Bash ... gppi: ..." ✅ hook รันด้วย bash + node บน Linux ได้ — แต่ขึ้นคำเตือน "gppi tried to reword a PreToolUse hook's ask" เพราะ mod ตอบ ask ทับ hook → แก้ใน `862b7a3` |
 | CI (GitHub Actions, ubuntu-22.04, node 22.18.0) | `claude plugin validate --strict`, `claude plugin test` (22 pass), hook ใต้ node | ผ่าน ไม่ต้อง login ✅ |
 
 ข้อสังเกต:
@@ -77,4 +78,6 @@ log ไม่ได้บันทึก `hook_success` ของ PreToolUse ท
 - prompt ตั้งตัวเลือกเริ่มต้นไว้ที่ "1. Yes" — กด Enter = อนุญาต
 - Claude ใน session ทดสอบโหลด `gppi:ros2-humble-cpp` เอง, ไปรันใน WSL (ไม่รัน ROS2 บน Windows), ตั้ง `ROS_LOCALHOST_ONLY=1` และเติม `--once` เอง — กฎใน `rules.md` ทำงาน
 
-ยังไม่ได้ทดสอบ: VS Code ใน auto mode, CLI ใน WSL (ยังไม่มี node ≥ 22.18), Windows ที่ไม่มี Git Bash, Desktop app
+ยังไม่ได้ทดสอบ: VS Code ใน auto mode, Windows ที่ไม่มี Git Bash, Desktop app
+
+WSL: ของเก่าจาก installer ของ mskills (`~/.claude/skills/<ชื่อ>`, `agents/safety-reviewer.md`, `CLAUDE.md`) ค้างอยู่และบัง skill ของ gppi — `git-commit` ตัวเก่า (1.1.2) ถูกโหลดแทน 1.2.0; ย้ายไป backup แล้วเหลือของ gppi ชุดเดียว (ขั้นตอนอยู่ใน INSTALL.md ส่วน WSL ขั้น 4)

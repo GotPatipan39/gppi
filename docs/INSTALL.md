@@ -1,7 +1,7 @@
 # ติดตั้ง gppi ทีละขั้น
 
 คู่มือนี้พาจากเครื่องเปล่าจนตัวกันคำสั่งทำงาน — ทำตามลำดับ ไม่ต้องข้ามไปอ่านที่อื่น
-ขั้นตอนฝั่ง Windows ทดสอบแล้วบนเครื่องจริง (2026-10-14, Claude Code 2.1.296) — ฝั่ง WSL ยังไม่ได้ทดสอบ ถ้าติดตรงไหนแจ้งเจ้าของ repo
+ทดสอบแล้วบนเครื่องจริงทั้ง Windows และ WSL (2026-10-14) — ถ้าติดตรงไหนแจ้งเจ้าของ repo
 
 > [!IMPORTANT]
 > **Windows กับ WSL เป็นคนละเครื่องในมุมของ Claude Code** (`~/.claude` แยกกัน) — ใช้ Claude Code ฝั่งไหน ต้องติดตั้งฝั่งนั้น ใช้ทั้งสองฝั่งก็ทำทั้งสองรอบ
@@ -112,7 +112,7 @@ claude
 
 ## WSL (Ubuntu 22.04)
 > [!NOTE]
-> ยังไม่ได้ทดสอบบนเครื่องจริง — ถ้าคำสั่งไหนไม่ผ่าน แจ้งเจ้าของ repo
+> ทดสอบแล้ว 2026-10-14 บน WSL Ubuntu 22.04 (Claude Code 2.1.299, node 22.23.3, git ผ่าน HTTPS ด้วย GitHub CLI = ขั้น 3 ทาง B) — ทาง A (SSH key) ยังไม่ได้ลองใน WSL
 
 ### 1. node 22.18+ จาก NodeSource
 apt ของ Ubuntu 22.04 ให้ node 12 ซึ่งเก่าเกิน — ใช้ NodeSource (ติดตั้งที่ `/usr/bin/node` ซึ่ง hook มองเห็นทุก shell):
@@ -126,13 +126,48 @@ node --version      # v22.18 ขึ้นไป
 ### 2. Claude Code
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
+grep -q '.local/bin' ~/.bashrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+claude --version
 ```
-ปิด terminal แล้วเปิดใหม่ → `claude --version`
+บรรทัดที่ 2 จำเป็น — installer วางโปรแกรมไว้ที่ `~/.local/bin` ซึ่ง Ubuntu เพิ่มเข้า PATH ผ่าน `~/.profile` เท่านั้น แต่ terminal ของ WSL (โดยเฉพาะใน VS Code) มักเป็น shell แบบ non-login ที่อ่านแค่ `~/.bashrc` → ได้ `claude: command not found` ใน terminal ใหม่ (`source ~/.profile` แก้ได้แค่ terminal ที่เปิดอยู่)
 
-### 3. Login, git, ติดตั้ง gppi
-เหมือนฝั่ง Windows ขั้น 3–8 โดย:
-- โปรเจกต์บนไดรฟ์ D: อยู่ที่ `/mnt/d/...`
-- git แบบ HTTPS: ใช้ `gh auth login` + `gh auth setup-git` (ติดตั้ง `gh` ตามคู่มือของ GitHub) หรือ fine-grained token แบบ read-only + `git config --global credential.helper store` แล้ว `git clone` repo ครั้งหนึ่งให้จำ token — แล้ว `export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` ใน `~/.bashrc`
+### 3. ให้ git ใน WSL เข้า GitHub ได้
+WSL ใช้กุญแจ/สิทธิ์ **คนละชุดกับ Windows** — ถึงฝั่ง Windows ใช้ได้ WSL ก็ต้องตั้งใหม่ (และ `winget` ใช้ใน WSL ไม่ได้)
+```bash
+ssh -T git@github.com
+```
+- ได้ `Hi <username>! You've successfully authenticated` → ข้ามไปขั้น 4
+- ได้ `Permission denied (publickey)` → เลือกทางใดทางหนึ่ง:
+
+**ทาง A: SSH key (ขั้นตอนน้อยกว่า)**
+```bash
+ssh-keygen -t ed25519 -C "wsl-<ชื่อเครื่อง>"     # กด Enter 3 ครั้ง
+cat ~/.ssh/id_ed25519.pub                        # copy ทั้งบรรทัด
+```
+เปิด https://github.com/settings/keys → **New SSH key** → วาง → **Add SSH key** แล้วเช็กด้วย `ssh -T git@github.com` อีกครั้ง
+ส่งให้คนอื่นได้เฉพาะไฟล์ `.pub` — ไฟล์ `id_ed25519` (ไม่มี .pub) ห้ามส่งให้ใคร
+
+**ทาง B: HTTPS ผ่าน GitHub CLI (ทดสอบแล้ว)**
+```bash
+sudo mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y
+gh auth login          # GitHub.com → HTTPS → Yes → Login with a web browser (ใส่รหัสที่ github.com/login/device)
+gh auth setup-git
+echo 'export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1' >> ~/.bashrc && source ~/.bashrc
+```
+
+### 4. เก็บของเก่าจาก installer ของ mskills (ถ้ามี)
+installer รุ่นแรกวาง skill ไว้ที่ `~/.claude/skills/` — ตัวพวกนี้ **บัง skill ของ gppi โดยไม่มีคำเตือน** (Claude จะใช้เนื้อหาเก่า เช่น git-commit ที่ยังเรียก agent ชื่อเก่า)
+```bash
+ls ~/.claude/skills ~/.claude/agents; head -3 ~/.claude/CLAUDE.md
+```
+ถ้าเห็น skill ชื่อเดียวกับของ gppi (`modbus`, `tdd`, `git-commit` ...), `grill-me`, `handoff`, `agents/safety-reviewer.md` หรือ CLAUDE.md ที่ขึ้นต้นด้วย `<!-- BEGIN claude-skills` — **ย้าย** (ไม่ลบ) ไปไว้ใน `~/.claude/mskills-backup/` ทั้งหมดพร้อมกัน — ห้ามย้ายแค่ agent แต่ทิ้ง skill `git-commit` ตัวเก่าไว้ ไม่อย่างนั้นการตรวจก่อน commit จะถูกข้ามเงียบๆ
+- **ไม่แตะ** `~/.claude/skills/synced/` (skill ที่ sync จาก claude.ai)
+- ให้ Claude ช่วยตรวจและย้ายได้ — สั่งให้เทียบกับ plugin gppi และย้ายไป backup ก่อน
+- CLAUDE.md ใหม่ใส่แค่กฎส่วนตัว — กฎของทีมมาจาก gppi แล้ว
+
+### 5. Login, ติดตั้ง gppi, ตรวจ
+เหมือนฝั่ง Windows ขั้น 3, 5–8 — โปรเจกต์บนไดรฟ์ D: อยู่ที่ `/mnt/d/...`
 
 > [!WARNING]
 > WSL มี ROS2 ตัวจริงได้ — ตอนทดสอบขั้น 8 กด **No** เท่านั้น และเช็กว่าไม่มี driver/node ของเครื่องจริงรันอยู่
@@ -144,6 +179,7 @@ curl -fsSL https://claude.ai/install.sh | bash
 | อาการ | สาเหตุ / วิธีแก้ |
 |---|---|
 | `claude : The term 'claude' is not recognized` | ยังไม่ได้เพิ่ม PATH หรือยังไม่ได้ปิด-เปิด VS Code ใหม่ (Windows ขั้น 2) |
+| WSL: `claude: command not found` หลังติดตั้ง หรือใน terminal ใหม่ | เพิ่ม `~/.local/bin` ลง `~/.bashrc` (WSL ขั้น 2 บรรทัดที่ 2) แล้ว `source ~/.bashrc` |
 | Claude บอกว่า **"gppi: ตัวกันคำสั่ง ... รันไม่ได้ จึงบล็อกคำสั่ง shell ทุกตัว"** | hook หา node ไม่เจอหรือ node เก่ากว่า 22.18 — เช็ก `node --version` ใน shell เดียวกับที่ Claude ใช้ แล้วเปิด session ใหม่ |
 | `marketplace add` ขึ้น error เรื่อง authentication / clone ไม่ได้ | git ยังเข้า repo private ไม่ได้ (ขั้น 4) หรือยังไม่ได้เป็น collaborator |
 | สั่ง `ros2 topic pub` แล้ว **รันเลยไม่ถาม** | หยุดใช้กับเครื่องจริงก่อน — เช็กว่าเปิด **แชทใหม่** หลังติดตั้งแล้ว, `claude plugin list` เห็น gppi enabled, และ `node --version` ผ่าน; ถ้ายังไม่ถาม แจ้งเจ้าของ repo |
