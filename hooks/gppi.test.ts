@@ -4,9 +4,9 @@ import { isRiskyGit, isMachineCommand, preToolUseDecision } from './gppi'
 const RISKY = [
   'git push',
   'git push origin main',
-  'git -C D:/ws/mskills push',
+  'git -C D:/ws/gppi push',
   'git -C "C:/Users/Got Automation/x" push origin main',
-  'cd /d/ws/mskills && git push -u origin plugin-trial',
+  'cd /d/ws/gppi && git push -u origin feature-x',
   'git reset --hard HEAD~1',
   'git clean -fd',
   'git branch -D old',

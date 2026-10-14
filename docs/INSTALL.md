@@ -64,18 +64,7 @@ Claude Code ดึง plugin ด้วย git แบบไม่ถามรห�
   [Environment]::SetEnvironmentVariable("CLAUDE_CODE_PLUGIN_PREFER_HTTPS", "1", "User")
   ```
 
-### 5. เอา mskills ออก (เฉพาะเครื่องที่เคยใช้)
-```powershell
-claude plugin list
-```
-ถ้าเห็น `mskills@mskills`:
-```powershell
-claude plugin uninstall mskills@mskills
-claude plugin marketplace remove mskills
-```
-เปิดทั้งสองตัวพร้อมกัน กฎจะซ้ำ 2 ชุด ตัวกันทำงานซ้ำ และ skill มีสองชุด
-
-### 6. ติดตั้ง gppi
+### 5. ติดตั้ง gppi
 ```powershell
 claude plugin marketplace add GotPatipan39/gppi
 claude plugin install gppi@gppi
@@ -84,12 +73,12 @@ claude plugin list
 ต้องเห็น:
 ```
 ❯ gppi@gppi
-  Version: 0.1.0      ← หรือใหม่กว่า
+  Version: 0.1.1      ← หรือใหม่กว่า
   Scope: user
   Status: ✔ enabled
 ```
 
-### 7. เปิด auto-update
+### 6. เปิด auto-update
 **ปิดอยู่เป็นค่าเริ่มต้น** สำหรับ marketplace ที่ไม่ใช่ของ Anthropic — ไม่เปิดจะไม่ได้รุ่นใหม่เลย
 ```powershell
 claude
@@ -97,7 +86,7 @@ claude
 พิมพ์ `/plugin` → แท็บ **Marketplaces** → `gppi` → **Enable auto-update**
 ทำถูกจะเห็น `1 mod active · gppi` และบรรทัด `Auto-update enabled.` (ใน VS Code ทำผ่านเมนู **Manage plugins** ได้เหมือนกัน)
 
-### 8. ตรวจว่าทำงาน
+### 7. ตรวจว่าทำงาน
 **เปิดแชทใหม่** (CLI: `/exit` แล้ว `claude`; VS Code: ปุ่ม `+`) — กฎและ hook โหลดตอนเริ่ม session เท่านั้น `/reload-plugins` ไม่พอ
 
 1. ถาม `ตอนนี้มีกฎอะไรบ้าง และมาจากไหน` → ต้องตอบว่ามาจาก plugin **gppi**
@@ -156,21 +145,11 @@ gh auth setup-git
 echo 'export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1' >> ~/.bashrc && source ~/.bashrc
 ```
 
-### 4. เก็บของเก่าจาก installer ของ mskills (ถ้ามี)
-installer รุ่นแรกวาง skill ไว้ที่ `~/.claude/skills/` — ตัวพวกนี้ **บัง skill ของ gppi โดยไม่มีคำเตือน** (Claude จะใช้เนื้อหาเก่า เช่น git-commit ที่ยังเรียก agent ชื่อเก่า)
-```bash
-ls ~/.claude/skills ~/.claude/agents; head -3 ~/.claude/CLAUDE.md
-```
-ถ้าเห็น skill ชื่อเดียวกับของ gppi (`modbus`, `tdd`, `git-commit` ...), `grill-me`, `handoff`, `agents/safety-reviewer.md` หรือ CLAUDE.md ที่ขึ้นต้นด้วย `<!-- BEGIN claude-skills` — **ย้าย** (ไม่ลบ) ไปไว้ใน `~/.claude/mskills-backup/` ทั้งหมดพร้อมกัน — ห้ามย้ายแค่ agent แต่ทิ้ง skill `git-commit` ตัวเก่าไว้ ไม่อย่างนั้นการตรวจก่อน commit จะถูกข้ามเงียบๆ
-- **ไม่แตะ** `~/.claude/skills/synced/` (skill ที่ sync จาก claude.ai)
-- ให้ Claude ช่วยตรวจและย้ายได้ — สั่งให้เทียบกับ plugin gppi และย้ายไป backup ก่อน
-- CLAUDE.md ใหม่ใส่แค่กฎส่วนตัว — กฎของทีมมาจาก gppi แล้ว
-
-### 5. Login, ติดตั้ง gppi, ตรวจ
-เหมือนฝั่ง Windows ขั้น 3, 5–8 — โปรเจกต์บนไดรฟ์ D: อยู่ที่ `/mnt/d/...`
+### 4. Login, ติดตั้ง gppi, ตรวจ
+เหมือนฝั่ง Windows ขั้น 3, 5–7 — โปรเจกต์บนไดรฟ์ D: อยู่ที่ `/mnt/d/...`
 
 > [!WARNING]
-> WSL มี ROS2 ตัวจริงได้ — ตอนทดสอบขั้น 8 กด **No** เท่านั้น และเช็กว่าไม่มี driver/node ของเครื่องจริงรันอยู่
+> WSL มี ROS2 ตัวจริงได้ — ตอนทดสอบ (Windows ขั้น 7) กด **No** เท่านั้น และเช็กว่าไม่มี driver/node ของเครื่องจริงรันอยู่
 
 ---
 
@@ -181,10 +160,10 @@ ls ~/.claude/skills ~/.claude/agents; head -3 ~/.claude/CLAUDE.md
 | `claude : The term 'claude' is not recognized` | ยังไม่ได้เพิ่ม PATH หรือยังไม่ได้ปิด-เปิด VS Code ใหม่ (Windows ขั้น 2) |
 | WSL: `claude: command not found` หลังติดตั้ง หรือใน terminal ใหม่ | เพิ่ม `~/.local/bin` ลง `~/.bashrc` (WSL ขั้น 2 บรรทัดที่ 2) แล้ว `source ~/.bashrc` |
 | Claude บอกว่า **"gppi: ตัวกันคำสั่ง ... รันไม่ได้ จึงบล็อกคำสั่ง shell ทุกตัว"** | hook หา node ไม่เจอหรือ node เก่ากว่า 22.18 — เช็ก `node --version` ใน shell เดียวกับที่ Claude ใช้ แล้วเปิด session ใหม่ |
-| `marketplace add` ขึ้น error เรื่อง authentication / clone ไม่ได้ | git ยังเข้า repo private ไม่ได้ (ขั้น 4) หรือยังไม่ได้เป็น collaborator |
+| `marketplace add` ขึ้น error เรื่อง authentication / clone ไม่ได้ | git ยังเข้า repo private ไม่ได้ (Windows ขั้น 4 / WSL ขั้น 3) หรือยังไม่ได้เป็น collaborator |
 | สั่ง `ros2 topic pub` แล้ว **รันเลยไม่ถาม** | หยุดใช้กับเครื่องจริงก่อน — เช็กว่าเปิด **แชทใหม่** หลังติดตั้งแล้ว, `claude plugin list` เห็น gppi enabled, และ `node --version` ผ่าน; ถ้ายังไม่ถาม แจ้งเจ้าของ repo |
-| มี skill ชื่อซ้ำกัน (`mskills:...` คู่กับ `gppi:...`) | ยังไม่ได้เอา mskills ออก (Windows ขั้น 5) |
-| ไม่ได้รุ่นใหม่ทั้งที่เจ้าของออกเวอร์ชันแล้ว | ยังไม่ได้เปิด auto-update (ขั้น 7) — หรืออัปเดตเองด้วย `claude plugin marketplace update gppi` แล้ว `claude plugin update gppi@gppi` แล้วเปิดแชทใหม่ |
+| skill ทำงานไม่ตรงกับเนื้อหาใน repo gppi / เห็น skill ชื่อสั้น (`modbus`) ซ้ำกับ `gppi:modbus` | มี skill ชื่อเดียวกันวางไว้เองใน `~/.claude/skills/` ซึ่ง **บังตัวใน plugin โดยไม่มีคำเตือน** — ย้ายออก (อย่าแตะ `~/.claude/skills/synced/`) แล้วเปิดแชทใหม่ |
+| ไม่ได้รุ่นใหม่ทั้งที่เจ้าของออกเวอร์ชันแล้ว | ยังไม่ได้เปิด auto-update (Windows ขั้น 6) — หรืออัปเดตเองด้วย `claude plugin marketplace update gppi` แล้ว `claude plugin update gppi@gppi` แล้วเปิดแชทใหม่ |
 
 ## ถอนการติดตั้ง
 ```bash

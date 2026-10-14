@@ -60,14 +60,9 @@ claude plugin install gppi@gppi
 ```
 แล้วเปิด auto-update (`/plugin` → Marketplaces → `gppi` → Enable auto-update — **ปิดอยู่เป็นค่าเริ่มต้น**) และเปิดแชทใหม่
 
-### ของเก่าจาก mskills
-วิธีเอา plugin mskills ออกอยู่ใน [docs/INSTALL.md](docs/INSTALL.md) ขั้น 5
-เครื่องที่เคยใช้ installer รุ่นแรก (ก่อน 2026-10-12) ต้องเก็บของเก่าออกด้วย ไม่อย่างนั้น skill ใน `~/.claude/skills` จะบังตัวใน plugin **โดยไม่มีคำเตือน**:
-- ย้าย/ลบ `~/.claude/skills/<ชื่อ skill>` และ `~/.claude/agents/safety-reviewer.md`
-- ลบบล็อก `<!-- BEGIN claude-skills ... -->` … `<!-- END claude-skills -->` ใน `~/.claude/CLAUDE.md`
-- กฎ `ask` ของ git ที่ installer เคยใส่ใน `~/.claude/settings.json` ปล่อยไว้ได้ (ซ้ำกับตัวกันใน plugin ไม่เสียหาย)
-
-skill ที่เคยอัปโหลดขึ้นแอป Claude (หน้า Skills ของ claude.ai) ให้ลบออก — gppi ไม่ sync ไปที่นั่น และสำเนาเก่าจะตอบด้วยข้อมูลเก่าโดยไม่มีใครรู้
+### สำเนา skill ที่อื่น
+- **อย่า copy skill ของ gppi ไปไว้ใน `~/.claude/skills/`** — skill ชื่อเดียวกันที่นั่นจะบังตัวใน plugin **โดยไม่มีคำเตือน** และไม่อัปเดตตาม gppi
+- **อย่าอัปโหลด skill ของ gppi ขึ้นแอป Claude** (หน้า Skills ของ claude.ai) — gppi ไม่ sync ไปที่นั่น สำเนาจะค้างเป็นเนื้อหาเก่าโดยไม่มีใครรู้
 
 ## plugin ส่งอะไรให้บ้าง
 | ส่วน | มาจาก | ใช้อย่างไร |
