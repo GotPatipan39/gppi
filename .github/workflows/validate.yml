@@ -30,3 +30,11 @@ jobs:
           out=$(echo '{"tool_name":"Bash","tool_input":{"command":"ros2 topic list"}}' | node hooks/pretooluse.ts)
           test -z "$out"
           echo 'not json' | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'
+
+  # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — Ubuntu 22.04 = รุ่นเดียวกับเครื่อง runtime
+  templates:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y g++ libgtest-dev libmodbus-dev
+      - run: bash tools/test-templates.sh

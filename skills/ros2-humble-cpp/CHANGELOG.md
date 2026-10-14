@@ -7,6 +7,12 @@
 - **dt เป็น NaN ทำให้ ramp กระโดดถึง target ทันที** (เจอระหว่างเขียน test — clamp กับ limit ที่เป็น NaN คืน delta ทั้งก้อน) → dt ที่ไม่ใช่ตัวเลขจริงไม่ขยับ
 - **ramp ข้ามศูนย์ใน step เดียว** (0.1 → -0.1) ทั้งที่ comment บอกว่าผ่าน 0 แล้ว — drive ที่ใช้ bit ทิศทางต้องเห็น 0 ก่อนกลับทิศ → หยุดที่ 0 หนึ่งรอบก่อน
 - ทดสอบ: gtest 12/12 (g++ 11.4); `node_template.cpp` compile ผ่านกับ rclcpp จำลอง — ยังไม่ได้ build กับ ROS2 Humble จริง
+- ตาม 🟡 ของ safety-reviewer (commit ถัดไป, TDD):
+  - **dt มีเพดาน** (`RateLimiter(max_up, max_down, max_dt)`; node ใช้ 2 รอบของ timer) — executor ค้างหลายวินาทีแล้วคำสั่งมาก่อน timer รอบถัดไป ramp จะไม่กระโดดถึงความเร็วสูงสุด
+  - **parameter ผิด = node ไม่ start**: `RateLimiter`/`CommandWatchdog` throw เมื่อค่าไม่ใช่ตัวเลขจริงหรือ ≤ 0 (NaN accel = ramp กระโดด, ติดลบ = clamp UB, timeout Inf = ไม่มีวันตัด, rate_hz 0 = หารศูนย์); node ตรวจ `max_speed` ด้วย
+  - **คำสั่ง NaN/Inf → เป้าเป็น 0 ทันที** (ชะลอด้วย decel) และไม่ feed watchdog — เดิมวิ่งด้วยคำสั่งดีล่าสุดต่อจนครบ timeout; ตรวจทุก field ของ Twist ไม่ใช่แค่ `linear.x`
+  - TODO ใน `send_command`: เขียน 0 ตอนกลับทิศไม่สำเร็จ = ค้างที่ 0 ห้ามส่งทิศใหม่
+  - gtest 15/15; ชุดทดสอบเก็บไว้ที่ `tools/test-templates.sh` และรันใน CI
 
 ## 3.2.2 — 2026-10-14
 - แก้ลิงก์เสีย: `references/safety-estop.md` และ `references/testing.md` อ้างถึง `references/evidence-progression.md` 4 จุด แต่ไฟล์นี้ไม่เคยมีใน repo (ตกหล่นตอนดัดแปลง references มา) — Claude ที่ตามลิงก์ไปจะไม่ได้เนื้อหาอะไร

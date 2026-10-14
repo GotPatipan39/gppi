@@ -1,5 +1,6 @@
 // Template: gtest สำหรับ logic ที่ไม่แตะ ROS/hardware
 // รันด้วย: colcon test --packages-select my_pkg && colcon test-result --verbose
+// (ใน repo gppi: bash tools/test-templates.sh — ไม่ต้องมี ROS2)
 #include <gtest/gtest.h>
 
 #include "my_pkg/rate_limiter.hpp"
@@ -7,6 +8,7 @@
 
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 TEST(RateLimiter, RampsUpAtLimitedRate)
 {
@@ -61,6 +63,30 @@ TEST(RateLimiter, NonFiniteDtIsIgnored)
   RateLimiter r(1.0, 1.0);
   r.reset(0.5);
   EXPECT_DOUBLE_EQ(r.step(1.0, std::numeric_limits<double>::quiet_NaN()), 0.5);
+}
+
+// executor ค้างหลายวินาทีแล้วคำสั่งมาก่อน timer รอบถัดไป → dt ใหญ่ = ramp กระโดดถึงความเร็วสูงสุดในรอบเดียว
+TEST(RateLimiter, CapsLargeDt)
+{
+  RateLimiter r(1.0, 2.0, /*max_dt=*/0.1);
+  EXPECT_DOUBLE_EQ(r.step(1.0, 5.0), 0.1);   // ใช้ได้แค่ 0.1 s ไม่ใช่ 5 s
+}
+
+// ค่า parameter ผิด (NaN, ติดลบ, 0) ทำให้ ramp กระโดด / clamp เป็น UB → ไม่ยอมสร้าง (node ไม่ start)
+TEST(RateLimiter, RejectsInvalidLimits)
+{
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  EXPECT_THROW(RateLimiter(nan, 1.0), std::invalid_argument);
+  EXPECT_THROW(RateLimiter(1.0, -1.0), std::invalid_argument);
+  EXPECT_THROW(RateLimiter(0.0, 1.0), std::invalid_argument);
+  EXPECT_THROW(RateLimiter(1.0, 1.0, /*max_dt=*/0.0), std::invalid_argument);
+}
+
+TEST(CommandWatchdog, RejectsInvalidTimeout)
+{
+  EXPECT_THROW(CommandWatchdog(std::numeric_limits<double>::infinity()), std::invalid_argument);
+  EXPECT_THROW(CommandWatchdog(std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+  EXPECT_THROW(CommandWatchdog(0.0), std::invalid_argument);
 }
 
 // watchdog ใช้ steady clock — ROS time (now()) หยุดเดินเมื่อ use_sim_time:=true บนเครื่องจริงที่ไม่มี /clock

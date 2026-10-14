@@ -16,7 +16,9 @@
 claude plugin validate . --strict
 claude plugin test .                 # test ของตัวกันคำสั่ง (hooks/gppi.test.ts)
 claude --plugin-dir .                # ลองของที่แก้แต่ยังไม่ release — ปิด gppi ที่ติดตั้งไว้ก่อน ไม่อย่างนั้นจะโหลดซ้ำ
+bash tools/test-templates.sh         # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — รันใน WSL/Ubuntu
 ```
+`tools/test-templates.sh` ต้องมี `g++ libgtest-dev libmodbus-dev` (Ubuntu: `sudo apt-get install -y g++ libgtest-dev libmodbus-dev`) — ไม่ต้องมี ROS2 และไม่แตะอุปกรณ์จริง (Modbus server จำลองบน 127.0.0.1); แก้ template ที่คุม hardware ต้องเพิ่ม test ที่แดงก่อนแก้ (skill `tdd`)
 CI ([`.github/workflows/validate.yml`](../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
 
 กฎ (`rules.md`) และ hook โหลดตอนเริ่ม session — ทดสอบต้อง **เปิดแชทใหม่** (`/reload-plugins` ไม่รัน SessionStart ซ้ำ)

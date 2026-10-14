@@ -4,14 +4,21 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
+#include <string>
 
 class RateLimiter
 {
 public:
   // max_up: อัตราเพิ่มสูงสุด (หน่วย/วินาที), max_down: อัตราลดสูงสุด (ค่าบวก)
   // ตั้ง max_down สูงกว่า max_up ได้ เพื่อให้ชะลอได้ไวกว่าเร่ง
-  RateLimiter(double max_up, double max_down)
-  : max_up_(max_up), max_down_(max_down) {}
+  // max_dt: dt ที่ใช้ได้มากสุดต่อ step — executor/timer ค้างแล้ว dt ใหญ่ = ramp กระโดดถึง target ในรอบเดียว
+  //         node ควรตั้งเป็นราว 2 รอบของ timer
+  // ค่าที่ไม่ใช่ตัวเลขจริงหรือ ≤ 0 → throw (NaN ทำให้ clamp คืน delta ทั้งก้อน, ติดลบทำให้ clamp เป็น UB)
+  RateLimiter(double max_up, double max_down, double max_dt = 1.0)
+  : max_up_(require_positive(max_up, "max_up")),
+    max_down_(require_positive(max_down, "max_down")),
+    max_dt_(require_positive(max_dt, "max_dt")) {}
 
   // คืนค่าใหม่ที่ขยับเข้าหา target ได้ไม่เกินอัตราที่กำหนดใน dt วินาที
   // "เพิ่ม/ลด" วัดจากขนาด |ค่า| เพื่อให้ฝั่งลบ (ถอยหลัง/เลี้ยวขวา) ทำงานสมมาตร
@@ -21,6 +28,7 @@ public:
   double step(double target, double dt)
   {
     if (!std::isfinite(dt) || dt <= 0.0) {return value_;}
+    dt = std::min(dt, max_dt_);
     if (!std::isfinite(target)) {target = 0.0;}
     const bool reversing = (target * value_ < 0.0);
     if (reversing) {target = 0.0;}
@@ -36,6 +44,14 @@ public:
   double value() const {return value_;}
 
 private:
-  double max_up_, max_down_;
+  static double require_positive(double v, const char * name)
+  {
+    if (!std::isfinite(v) || v <= 0.0) {
+      throw std::invalid_argument(std::string("RateLimiter: ") + name + " must be finite and > 0");
+    }
+    return v;
+  }
+
+  double max_up_, max_down_, max_dt_;
   double value_{0.0};
 };
