@@ -5,7 +5,7 @@ description: ใช้เมื่อจะ commit หรือออก release
 
 # Git commit และ release
 
-> เวอร์ชัน 1.2.1 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.3.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ถ้า `CLAUDE.md` ของโปรเจกต์กำหนดรูปแบบ commit ไว้ต่างจากนี้ ให้ยึดของโปรเจกต์
 
@@ -29,6 +29,8 @@ stage ทีละไฟล์ด้วย `git add <path>` — ไม่ใช�
 
 - ค่าเครื่องจริงที่เปลี่ยน: ถามว่า "ตั้งใจเปลี่ยน หรือแก้ชั่วคราวตอนทดสอบ" ก่อนทุกครั้ง แม้จะดูตั้งใจ
 - ถ้า diff **ลด**เกณฑ์ความปลอดภัย (timeout, limit, watchdog, interlock) ต้องให้ผู้ใช้ยืนยัน และเขียนเหตุผลใน body
+
+**เอกสารตามโค้ด** (rules.md): diff เปลี่ยนพฤติกรรมที่คนใช้เห็น — parameter, topic/service, IP/port, วิธีติดตั้ง/รัน, ลำดับการทำงานของเครื่อง — แต่ไม่มี `README.md`/`CLAUDE.md` อยู่ใน diff → เปิดอ่านส่วนที่เกี่ยวข้อง ถ้าเอกสารยังเขียนแบบเดิม ให้เสนอแก้ (skill `project-readme`) ใน commit เดียวกันก่อน commit; ผู้ใช้บอกว่าไม่ต้อง → commit ได้ แต่บอกในสรุปว่าเอกสารยังไม่ตรง
 
 **โปรเจกต์ที่คุมเครื่องจักร** (มีโค้ด Modbus/PLC/serial/servo/ROS2 driver หรือ Node-RED ที่สั่งอุปกรณ์) และ diff แตะโค้ดหรือ config ที่ไม่ใช่แค่เอกสาร/หน้าตา:
 หลัง stage แล้ว เรียก subagent `safety-reviewer` — คนที่เขียนโค้ดตรวจงานตัวเองมักไม่เห็นสิ่งที่ตัวเองตั้งใจแก้ ตัวตรวจที่ไม่เห็นแชทจะอ่านแบบคนนอก
@@ -63,6 +65,14 @@ Co-Authored-By: ...   ← คงบรรทัดที่ Claude Code ใส�
 | `build` / `ci` | build system, dependency, pipeline |
 | `chore` | งานดูแลอื่นๆ (script, ลบของเก่า) |
 | `perf` | เร็วขึ้น พฤติกรรมเหมือนเดิม |
+
+**breaking change** — การเปลี่ยนที่เครื่อง/ระบบอื่นที่ใช้อยู่ต้องทำอะไรตามตอนอัปเดต (address map, ชื่อ topic/service, รูปแบบ config, PLC program, การต่อสาย, ข้อมูลเก่าใช้ไม่ได้): ใส่ `!` หลัง type และ footer `BREAKING CHANGE: <ต้องทำอะไร>` ก่อนบรรทัด Co-Authored-By
+```
+feat(plc)!: move pallet counters from D100 to D200
+
+BREAKING CHANGE: PLC program must be updated to v3 before installing.
+```
+ไม่แน่ใจว่า breaking ไหม (เช่น เปลี่ยน address) → ถามผู้ใช้ ไม่ตัดสินเอง
 
 **บรรทัดแรก** บอกผลที่เกิด ไม่ใช่สิ่งที่ทำกับโค้ด: `fix: stop PLC link recovery from wiping pallet box counts` ดีกว่า `fix: update plcStatusWatcher.js`
 
@@ -99,6 +109,7 @@ EOF
 | **patch** `1.3.0 → 1.3.1` | แก้ bug, operator ใช้งานเหมือนเดิม |
 
 บอกเหตุผลที่เลือก เช่น "minor — มี feat 2 ตัว ไม่มีอะไรต้องตั้งที่เครื่อง" — ถ้ามี commit ที่แตะ address/register/PLC/wiring ให้ถามว่าต้องเป็น major ไหม
+- commit ที่มี `!` หรือ `BREAKING CHANGE:` → **major** (ข้อความใน footer คือบรรทัด "⚠ ติดตั้ง" ของ CHANGELOG) — ยกเว้นยังเป็น `0.x` ซึ่งขึ้น minor ได้ แต่ต้องมีบรรทัด "⚠ ติดตั้ง" เหมือนกัน: หาด้วย `git log <release ล่าสุด>..HEAD -E --grep='^[a-z]+(\(.+\))?!:' --grep='^BREAKING CHANGE:'`
 
 **หาเวอร์ชันล่าสุด** — repo เก่าอาจเคยออกเวอร์ชันด้วย commit message อย่างเดียว ไม่มี tag:
 ```bash
