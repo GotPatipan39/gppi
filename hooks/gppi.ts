@@ -141,7 +141,9 @@ export const register: Register = on => {
   for (const tool of ['Bash', 'PowerShell']) {
     on('tool.check', { tool }, async ($, e, next) => {
       const verdict = await next(e)
-      if (verdict.decision === 'deny') return verdict
+      // deny ไม่ผ่อน; ask (ส่วนใหญ่มาจาก PreToolUse hook) ไม่เขียนทับ — mod เติม ask เฉพาะตอนที่ระบบจะปล่อยผ่าน (hook ไม่ได้ทำงาน)
+      // decision มีได้แค่ allow/ask/deny (engine ข้าม hook ที่ตอบค่าอื่น) จึงเหลือ allow เป็นกรณีเดียวที่ไปต่อ
+      if (verdict.decision === 'deny' || verdict.decision === 'ask') return verdict
       const command = (e.input as { command?: unknown }).command
       if (typeof command !== 'string') return verdict
       const reason = askReason(command)

@@ -429,6 +429,13 @@ test('Bash/PowerShell: คำสั่งเครื่องจักร → a
   }
 })
 
+// hook ตอบ ask ไปแล้ว → mod ไม่เขียนทับ (Claude Code ไม่ยอมและขึ้นคำเตือน "gppi tried to reword a PreToolUse hook's ask")
+test('ask ที่มีอยู่แล้ว (จาก hook) ส่งต่อตามเดิม ไม่เขียนทับเหตุผล', async ($, on) => {
+  on('tool.check', () => ({ decision: 'ask', reason: 'from hook' }))
+  const v = await $.tool.check({ tool: 'Bash', input: { command: 'ros2 topic pub /test std_msgs/msg/String {}' } })
+  expect([v.decision, v.reason]).toEqual(['ask', 'from hook'])
+})
+
 test('ไม่ผ่อน deny ของคำสั่งเครื่องจักร', async ($, on) => {
   on('tool.check', () => ({ decision: 'deny', reason: 'blocked' }))
   expect((await $.tool.check({ tool: 'Bash', input: { command: 'pm2 restart node-red' } })).decision).toBe('deny')
