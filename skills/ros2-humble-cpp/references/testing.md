@@ -802,9 +802,9 @@ Rules for using the ladder:
 - **L6 preconditions are field-specific.** Require the applicable site/product
   procedure, supervised operation, an operator stop path, and recorded evidence
   for the actual duty cycle. L6 is never an unattended CI step.
-- **Authorization and execution authority are separate.** Apply the authorization,
-  attempt-budget, and operator-handoff rules in
-  [Evidence progression §2](evidence-progression.md#2-authorization-and-readiness-are-separate).
+- **Authorization and execution authority are separate.** A passing level or a
+  ready system is not permission to move hardware; running on the real machine
+  still needs the user's explicit instruction in that message (gppi `rules.md`).
 - **Safety claims cite their weakest link.** A stop path verified at L3 is a
   stop path verified in simulation, however many tests it passed
   (`references/safety-estop.md` §3).
@@ -821,6 +821,5 @@ Rules for using the ladder:
 **See also:** `references/simulation.md` for headless simulation testing in CI,
 `references/launch-system.md` for launch_testing framework patterns,
 `references/workspace-build.md` for colcon test configuration and CI/CD setup,
-`references/runtime-provenance.md` for verifying what a running system actually
-loaded, and `references/evidence-progression.md` for authorization, gate, and
-recovery evidence.
+and `references/runtime-provenance.md` for verifying what a running system
+actually loaded.

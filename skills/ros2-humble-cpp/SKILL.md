@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.2.1 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.2.2 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์

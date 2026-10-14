@@ -178,7 +178,7 @@ not a live permission. A late joiner starts stopped and requires a fresh valid
 permit plus the reset protocol; neither cached status nor a returning heartbeat
 may clear its latch. When a status, telemetry, or management link drops, identify
 which component owns the permit before concluding that motion was or was not
-allowed; see `references/evidence-progression.md` section 2.
+allowed.
 
 ## 3. Command arbitration
 
@@ -524,8 +524,8 @@ the policy is enforced.
 
 ## 5. Recovery and reset semantics
 
-Apply [Evidence progression §5](evidence-progression.md#5-recovery-without-stale-command-replay)
-to the recovery decision. The protocol below implements it at the stop gate.
+The protocol below governs the recovery decision at the stop gate. A recovery
+must never replay a command that was pending when the stop latched.
 
 ### Latch the stop, require a deliberate reset
 
