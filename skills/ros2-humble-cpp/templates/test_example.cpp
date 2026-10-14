@@ -3,6 +3,10 @@
 #include <gtest/gtest.h>
 
 #include "my_pkg/rate_limiter.hpp"
+#include "my_pkg/command_watchdog.hpp"
+
+#include <cmath>
+#include <limits>
 
 TEST(RateLimiter, RampsUpAtLimitedRate)
 {
@@ -26,11 +30,56 @@ TEST(RateLimiter, NegativeSideIsSymmetric)
   EXPECT_DOUBLE_EQ(r.step(0.0, 0.1), -0.8);   // ชะลอใช้ max_down
 }
 
-TEST(RateLimiter, ReversingPassesThroughZeroWithDecelRate)
+// drive ที่ใช้ bit ทิศทางต้องเห็นค่า 0 อย่างน้อย 1 รอบก่อนกลับทิศ — ห้ามกระโดดข้ามศูนย์ใน step เดียว
+TEST(RateLimiter, ReversingStopsAtZeroForOneStepFirst)
 {
   RateLimiter r(1.0, 2.0);
   r.reset(0.1);
-  EXPECT_NEAR(r.step(-1.0, 0.1), -0.1, 1e-12);  // ข้ามศูนย์ ใช้อัตราชะลอ
+  EXPECT_DOUBLE_EQ(r.step(-1.0, 0.1), 0.0);     // ชะลอได้ถึง -0.1 แต่หยุดที่ 0 ก่อน
+  EXPECT_NEAR(r.step(-1.0, 0.1), -0.1, 1e-12);  // รอบถัดไปค่อยเร่งไปทางลบด้วย max_up
+}
+
+TEST(RateLimiter, ReversingFromNegativeAlsoStopsAtZero)
+{
+  RateLimiter r(1.0, 2.0);
+  r.reset(-0.1);
+  EXPECT_DOUBLE_EQ(r.step(1.0, 0.1), 0.0);
+}
+
+// NaN/Inf จาก publisher ที่พัง: std::clamp(NaN, ...) คืน NaN แล้วค้างใน ramp ตลอด → ถือเป็น "หยุด"
+TEST(RateLimiter, NonFiniteTargetMeansStop)
+{
+  RateLimiter r(1.0, 2.0);
+  r.reset(1.0);
+  EXPECT_DOUBLE_EQ(r.step(std::numeric_limits<double>::quiet_NaN(), 0.1), 0.8);
+  EXPECT_DOUBLE_EQ(r.step(std::numeric_limits<double>::infinity(), 0.1), 0.6);
+  EXPECT_TRUE(std::isfinite(r.value()));
+}
+
+TEST(RateLimiter, NonFiniteDtIsIgnored)
+{
+  RateLimiter r(1.0, 1.0);
+  r.reset(0.5);
+  EXPECT_DOUBLE_EQ(r.step(1.0, std::numeric_limits<double>::quiet_NaN()), 0.5);
+}
+
+// watchdog ใช้ steady clock — ROS time (now()) หยุดเดินเมื่อ use_sim_time:=true บนเครื่องจริงที่ไม่มี /clock
+TEST(CommandWatchdog, ExpiredBeforeFirstCommand)
+{
+  CommandWatchdog w(0.5);
+  EXPECT_TRUE(w.expired(CommandWatchdog::Clock::now()));  // ยังไม่เคยได้คำสั่ง = หยุด
+}
+
+TEST(CommandWatchdog, FreshAfterFeedThenExpiresAfterTimeout)
+{
+  using namespace std::chrono_literals;
+  CommandWatchdog w(0.5);
+  const auto t0 = CommandWatchdog::Clock::now();
+  w.feed(t0);
+  EXPECT_FALSE(w.expired(t0 + 400ms));
+  EXPECT_TRUE(w.expired(t0 + 600ms));
+  w.feed(t0 + 600ms);
+  EXPECT_FALSE(w.expired(t0 + 700ms));
 }
 
 TEST(RateLimiter, ReachesTargetWithoutOvershoot)

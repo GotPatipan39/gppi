@@ -1,8 +1,7 @@
 # C++ ด้วย libmodbus
 
 ใช้ [modbus_client.hpp](modbus_client.hpp) เป็นจุดเริ่ม (ทดสอบแล้วกับ libmodbus 3.1.10 + `tools/modbus_sim.py`: อ่าน/เขียน register, coil, int16 ติดลบ, int32 แบบ low word ก่อน, reconnect หลัง server หลุด)
-- ⚠️ เครื่อง runtime Ubuntu 22.04 ได้ libmodbus **3.1.6** จาก apt — ยังไม่ได้ทดสอบ template กับ 3.1.6
-- ⚠️ การแยก exception ของอุปกรณ์ออกจาก error ของสาย และ `unit_id` (เพิ่ม 2026-10-14) ยังไม่ได้ compile/ทดสอบ — ทดสอบกับ `modbus_sim.py` (อ่าน address ที่ไม่มี → ต้องได้ `last_was_device_exception()` และ `connected()` ยังเป็น true) ก่อนใช้กับเครื่องจริง
+- เครื่อง runtime Ubuntu 22.04 ได้ libmodbus **3.1.6** จาก apt — ทดสอบแล้ว 2026-10-14 (g++ 11.4, `-Werror`) กับ Modbus TCP server จำลองบน localhost: อ่านปกติ / อ่าน address ที่ไม่มี → `last_was_device_exception()` = true และ `connected()` ยังเป็น true / อ่านต่อได้ทันที / server เห็นการเชื่อมต่อครั้งเดียว (ไม่ reconnect วน) — ยังไม่ได้ทดสอบกับ PLC จริง
 
 ## ติดตั้ง
 ```bash

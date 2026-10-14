@@ -15,9 +15,15 @@ public:
 
   // คืนค่าใหม่ที่ขยับเข้าหา target ได้ไม่เกินอัตราที่กำหนดใน dt วินาที
   // "เพิ่ม/ลด" วัดจากขนาด |ค่า| เพื่อให้ฝั่งลบ (ถอยหลัง/เลี้ยวขวา) ทำงานสมมาตร
+  // - target ไม่ใช่ตัวเลขจริง (NaN/Inf) = ชะลอลงหา 0 — std::clamp(NaN, …) คืน NaN แล้วค้างใน value_ ตลอด
+  // - dt ไม่ใช่ตัวเลขจริงหรือ ≤ 0 = ไม่ขยับ — clamp กับ limit ที่เป็น NaN คืน delta ทั้งก้อน (กระโดดถึง target ทันที)
+  // - กลับทิศ: หยุดที่ 0 หนึ่งรอบก่อน — drive ที่ใช้ bit ทิศทางต้องเห็น 0 ก่อนเปลี่ยนทิศ
   double step(double target, double dt)
   {
-    if (dt <= 0.0) {return value_;}
+    if (!std::isfinite(dt) || dt <= 0.0) {return value_;}
+    if (!std::isfinite(target)) {target = 0.0;}
+    const bool reversing = (target * value_ < 0.0);
+    if (reversing) {target = 0.0;}
     double delta = target - value_;
     bool growing = (target * value_ >= 0.0) && (std::abs(target) > std::abs(value_));
     double limit = (growing ? max_up_ : max_down_) * dt;

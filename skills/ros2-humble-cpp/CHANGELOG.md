@@ -1,5 +1,13 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.2.3 — 2026-10-14
+แก้ template ที่คุม hardware (จากรีวิว docs/reviews/2026-10-14-skills.md) — ทำแบบ TDD: เห็น test แดงก่อนแก้ทุกข้อ
+- **watchdog ใช้ ROS time** (`now()`): `use_sim_time:=true` บนเครื่องจริงที่ไม่มี `/clock` ทำให้เวลาหยุดเดิน watchdog ไม่มีวันตัด → แยกเป็น `templates/command_watchdog.hpp` ใช้ steady clock, เริ่มต้นแบบหมดเวลา (= หยุดจนกว่าจะได้คำสั่งแรก); node ใช้ steady clock สำหรับ dt ของ ramp ด้วย
+- **NaN/Inf ผ่าน clamp**: `std::clamp(NaN, …)` คืน NaN แล้วค้างใน ramp → ส่งไป hardware — node ไม่นับคำสั่งที่ไม่ใช่ตัวเลขจริง (ไม่ feed watchdog) และ `RateLimiter` ถือ target ที่ไม่ใช่ตัวเลขจริงเป็น 0
+- **dt เป็น NaN ทำให้ ramp กระโดดถึง target ทันที** (เจอระหว่างเขียน test — clamp กับ limit ที่เป็น NaN คืน delta ทั้งก้อน) → dt ที่ไม่ใช่ตัวเลขจริงไม่ขยับ
+- **ramp ข้ามศูนย์ใน step เดียว** (0.1 → -0.1) ทั้งที่ comment บอกว่าผ่าน 0 แล้ว — drive ที่ใช้ bit ทิศทางต้องเห็น 0 ก่อนกลับทิศ → หยุดที่ 0 หนึ่งรอบก่อน
+- ทดสอบ: gtest 12/12 (g++ 11.4); `node_template.cpp` compile ผ่านกับ rclcpp จำลอง — ยังไม่ได้ build กับ ROS2 Humble จริง
+
 ## 3.2.2 — 2026-10-14
 - แก้ลิงก์เสีย: `references/safety-estop.md` และ `references/testing.md` อ้างถึง `references/evidence-progression.md` 4 จุด แต่ไฟล์นี้ไม่เคยมีใน repo (ตกหล่นตอนดัดแปลง references มา) — Claude ที่ตามลิงก์ไปจะไม่ได้เนื้อหาอะไร
   - `safety-estop.md` §5: ย้ายหลัก "recovery ห้ามส่งคำสั่งที่ค้างตอน stop ซ้ำ" ขึ้นต้นหัวข้อ (เนื้อหาเดียวกับที่หัวข้อเขียนไว้แล้วข้างล่าง)

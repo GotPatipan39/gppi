@@ -2,7 +2,7 @@
 
 ## 1.1.1 — 2026-10-14
 จากรีวิว docs/reviews/2026-10-14-skills.md
-- `clients/modbus_client.hpp`: เดิมตัด TCP ทุกครั้งที่อ่าน/เขียนไม่สำเร็จ รวมตอนอุปกรณ์ตอบ exception (address ผิด) ทั้งที่ connection ยังดี → reconnect วนทุกรอบ และแยกไม่ออกว่า "address ผิด" หรือ "สายหลุด" — ตอนนี้ exception จากอุปกรณ์ (`EMBXILFUN..EMBXGTAR`) ไม่ตัด + มี `last_was_device_exception()`; error อื่นยังตัดแล้วต่อใหม่เหมือนเดิม — **ยังไม่ได้ compile/ทดสอบ** (ไม่มี compiler ในเครื่องที่แก้)
+- `clients/modbus_client.hpp`: เดิมตัด TCP ทุกครั้งที่อ่าน/เขียนไม่สำเร็จ รวมตอนอุปกรณ์ตอบ exception (address ผิด) ทั้งที่ connection ยังดี → reconnect วนทุกรอบ และแยกไม่ออกว่า "address ผิด" หรือ "สายหลุด" — ตอนนี้ exception จากอุปกรณ์ (`EMBXILFUN..EMBXGTAR`) ไม่ตัด + มี `last_was_device_exception()`; error อื่นยังตัดแล้วต่อใหม่เหมือนเดิม — ทดสอบกับ libmodbus 3.1.6 + Modbus TCP server จำลองบน localhost (ไม่ใช่ PLC จริง): exception ไม่ตัดสาย, server เห็นการเชื่อมต่อครั้งเดียว (แก้โค้ดก่อนเขียน test — ไม่ได้เห็น test แดงกับโค้ดเดิม)
 - `modbus_client.hpp`: เพิ่ม `unit_id` (ค่าเริ่มต้นไม่ตั้ง = พฤติกรรมเดิม) สำหรับ gateway TCP→RTU
 - ตัวอย่างที่เขียนค่า: แยก "อ่าน" กับ "เขียน" ใน `python-pymodbus.md` พร้อมคำเตือนว่าเขียนแล้วเครื่องทำงานจริง; `mbpoll` RTU ต้องถามก่อนเปิด serial (ชน master เดิม); ลอง address ±1 ด้วยการอ่านเท่านั้น
 - `cpp-libmodbus.md`: ระบุว่า Ubuntu 22.04 ได้ libmodbus 3.1.6 ซึ่งยังไม่ได้ทดสอบ template

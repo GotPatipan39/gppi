@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.2.2 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.2.3 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์
@@ -92,12 +92,13 @@ export ROS_DOMAIN_ID=<0-101>     # แยกจากระบบอื่น �
 | [templates/CMakeLists.txt](templates/CMakeLists.txt) | node + library ภายใน + gtest + install launch/config |
 | [templates/example.launch.py](templates/example.launch.py) | launch ที่โหลด params.yaml และรับ argument |
 | [templates/params.yaml](templates/params.yaml) | รูปแบบไฟล์ parameter |
-| [templates/rate_limiter.hpp](templates/rate_limiter.hpp) | ramp (จำกัดความเร่ง) — logic ล้วน ไม่ใช้ rclcpp |
-| [templates/test_example.cpp](templates/test_example.cpp) | gtest ของ rate_limiter (ทดสอบผ่านแล้ว 7/7) |
+| [templates/rate_limiter.hpp](templates/rate_limiter.hpp) | ramp (จำกัดความเร่ง) — logic ล้วน ไม่ใช้ rclcpp; NaN/Inf = ชะลอหา 0, กลับทิศหยุดที่ 0 หนึ่งรอบ |
+| [templates/command_watchdog.hpp](templates/command_watchdog.hpp) | watchdog ของคำสั่งด้วย steady clock — **ห้ามใช้ `now()` (ROS time) ทำ watchdog**: `use_sim_time:=true` ที่ไม่มี `/clock` ทำให้เวลาหยุดเดินและ watchdog ไม่มีวันตัด |
+| [templates/test_example.cpp](templates/test_example.cpp) | gtest ของ rate_limiter + watchdog (ผ่าน 12/12) |
 
-วางไฟล์ใน package ตามนี้: `src/my_node.cpp`, `include/my_pkg/rate_limiter.hpp`, `test/test_example.cpp`, `launch/`, `config/params.yaml` แล้วแทนที่ `my_pkg` / `my_node` ด้วยชื่อจริง
+วางไฟล์ใน package ตามนี้: `src/my_node.cpp`, `include/my_pkg/rate_limiter.hpp`, `include/my_pkg/command_watchdog.hpp`, `test/test_example.cpp`, `launch/`, `config/params.yaml` แล้วแทนที่ `my_pkg` / `my_node` ด้วยชื่อจริง
 
-สถานะการทดสอบ template: `rate_limiter.hpp` + gtest คอมไพล์และผ่านแล้ว; launch/package.xml/yaml ตรวจ syntax แล้ว; `node_template.cpp` และ `CMakeLists.txt` **ยังไม่เคย build กับ ROS2 Humble จริง** — build ครั้งแรกให้ตรวจ error แล้วแก้ template นี้ด้วย
+สถานะการทดสอบ template: `rate_limiter.hpp` + `command_watchdog.hpp` + gtest คอมไพล์และผ่านแล้ว (g++ 11.4 = Ubuntu 22.04); `node_template.cpp` compile ผ่านกับ rclcpp จำลอง (ตรวจ type/syntax เท่านั้น); launch/package.xml/yaml ตรวจ syntax แล้ว; `node_template.cpp` และ `CMakeLists.txt` **ยังไม่เคย build กับ ROS2 Humble จริง** — build ครั้งแรกให้ตรวจ error แล้วแก้ template นี้ด้วย
 
 ## โครงสร้าง workspace ที่แนะนำ
 ```
