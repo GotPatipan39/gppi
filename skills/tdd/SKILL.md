@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน logic ใหม่หรื
 
 # Test-Driven Development
 
-> เวอร์ชัน 1.0.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 TDD คือวน: เขียน test ที่ fail → เขียนโค้ดเท่าที่ทำให้ผ่าน → refactor ตอนที่ test เขียวอยู่ → test ถัดไป
 skill นี้บอกว่า test แบบไหนควรเก็บไว้ test ไว้ตรงไหน และกฎของลูป — ใช้ทุกรอบ ไม่ใช่อ่านทีหลัง
@@ -18,7 +18,7 @@ skill นี้บอกว่า test แบบไหนควรเก็บ�
 
 ## 0. ดูของที่โปรเจกต์มีก่อน
 - หา test เดิมและ framework ที่ใช้อยู่ (`test/`, `tests/`, `CMakeLists.txt` ที่มี `ament_add_gtest`/`GTest`, `pytest.ini`/`setup.cfg`, `package.json`) แล้วใช้แบบเดียวกัน
-- ไม่มี framework: เสนอตัวที่ไม่ต้องโหลดจาก internet ตอน build — C++ ใช้ `libgtest-dev` ของระบบ (ไม่ใช้ `FetchContent` ดึง gtest), Python ใช้ `pytest` (ถ้ายังไม่มี ให้ถามก่อนติดตั้ง), JS ใช้ `node --test` ที่มากับ Node ≥ 18
+- ไม่มี framework: เสนอตัวที่ไม่ต้องโหลดจาก internet ตอน build — C++ ใช้ `libgtest-dev` ของระบบ (ไม่ใช้ `FetchContent` ดึง gtest), Python ใช้ `pytest` (ถ้ายังไม่มี ให้ถามก่อนติดตั้ง), JS ใช้ `node --test` ที่มากับ Node (ใช้ Node ≥ 20 — runner เป็น stable ตั้งแต่ 20 และ 18 หมดอายุแล้ว; รันแบบไม่ใส่ argument ให้มันหาไฟล์ `*.test.js` เอง)
 - งาน ROS2: วิธีเขียน gtest/launch_testing/mock_components อยู่ใน skill `ros2-humble-cpp` (`references/testing.md`) — skill นี้บอกว่า test อะไร skill นั้นบอกว่าต่อเข้า colcon อย่างไร
 
 ## 1. ตกลง seam กับผู้ใช้ก่อนเขียน test
@@ -56,8 +56,18 @@ seam ที่เสนอ:
 - **Horizontal slicing** — เขียน test ทุกตัวก่อน แล้วค่อยเขียนโค้ดทั้งหมด
 - **test ที่ไม่มีวันแดง** — ไม่เคยเห็นมัน fail ก็ไม่รู้ว่ามันตรวจอะไรได้จริง
 
-ตัวอย่าง test ที่ดี/ไม่ดีใน C++, Python, JS: [references/examples.md](references/examples.md)
+ตัวอย่าง test ที่ดี/ไม่ดีใน C++, Python, JS และ property-based test (สุ่ม input ตรวจ invariant เช่น ramp ไม่เกิน step, output ไม่เป็น NaN): [references/examples.md](references/examples.md)
 
 ## 5. รายงานผล
 บอกผู้ใช้ว่าผ่านระดับไหน — TDD ให้แค่ระดับ **unit test** (บาง seam เป็น integration กับ fake) ไม่ใช่ simulator หรือ hardware
 ระบุสิ่งที่ test ไม่ได้ครอบคลุม (จาก "จับอะไรไม่ได้" ในข้อ 1) และสิ่งที่ยังต้องลองกับเครื่องจริง
+
+### ขั้นถัดจาก unit test — เสนอให้ผู้ใช้ ไม่ข้ามขั้น
+| ขั้น | ทดสอบกับ | จับเพิ่มได้ | ใครรัน |
+|---|---|---|---|
+| unit (skill นี้) | fake ใน process | logic, ขอบค่า, invariant | Claude |
+| simulator | Modbus server จำลองบน localhost (skill `modbus` → `tools/modbus_sim.py`), `mock_components` ของ ros2_control (skill `ros2-humble-cpp` → `references/testing.md` §5) | encode/decode บนสายจริงของ protocol, timeout, reconnect | Claude ได้ — ต้องเป็น localhost ไม่ใช่ IP ของอุปกรณ์ |
+| hardware ไม่มีโหลด | อุปกรณ์จริง แยกจากกลไก/ยกล้อ | timing จริง, ค่าจริงของอุปกรณ์, comm timeout ฝั่ง drive | **ผู้ใช้** (คำสั่งที่ทำให้เครื่องขยับ — rules.md) |
+| ใช้งานจริง | เครื่องที่หน้างาน | โหลด, สภาพแวดล้อม | ผู้ใช้ |
+
+ผ่านขั้นไหนรายงานขั้นนั้น — ห้ามเขียนว่า "ทดสอบแล้ว" ถ้าผ่านแค่ unit

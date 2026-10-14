@@ -88,12 +88,12 @@ claude plugin install gppi@gppi
 | `industrial-ui` | 1.2.3 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.2 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.0.1 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
-| `git-commit` | 1.2.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
-| `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
+| `git-commit` | 1.3.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
+| `tdd` | 1.1.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
 
-`grilling` และ `domain-modeling` มาจาก mattpocock/skills (MIT) @ 49dd158 (2026-10-09) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว
+`grilling` และ `domain-modeling` มาจาก mattpocock/skills (MIT) @ 49dd158 (2026-10-09) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว ส่วนที่ดัดแปลงจากภายนอก (`tdd`, `git-commit`, reference บางส่วนของ ROS2 และ industrial-ui) ดู [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 | subagent | เวอร์ชัน | ใช้กับ | เรียกอย่างไร |
 |---|---|---|---|
@@ -109,6 +109,7 @@ gppi/
 ├── rules.md          ← กฎการทำงานที่ Claude อ่านทุก session
 ├── templates/        ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์
 ├── docs/             ← INSTALL, GUARD, MAINTAINING, ADR, ผลทดสอบ
+├── THIRD_PARTY_NOTICES.md ← license ของส่วนที่ดัดแปลงจากภายนอก
 └── CHANGELOG.md      ← อะไรเปลี่ยนในแต่ละเวอร์ชัน
 ```
 
