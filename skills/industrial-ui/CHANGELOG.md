@@ -1,5 +1,14 @@
 # CHANGELOG — industrial-ui
 
+## 1.2.1 — 2026-10-14
+แก้จุดที่ทำให้ operator เข้าใจสถานะเครื่องผิด (จากรีวิว docs/reviews/2026-10-14-skills.md)
+- `templates/hmi_template.html`:
+  - ป้าย "PLC เชื่อมต่อ" เดิมมาจากสถานะ WebSocket — server หลุดจาก PLC แต่ socket ยังต่อ ป้ายก็ยังขึ้นว่าเชื่อมต่อ → ตอนนี้แยก browser↔server กับ server↔PLC (server ส่ง `links.plc` มาเอง) และบอกว่าขาดที่ link ไหน
+  - mode / สถานะเครื่อง / สถานะอุปกรณ์ ไม่เคยตรวจความสด — ข้อมูลหยุดแต่ socket ยังต่อ = ขึ้น RUNNING ค้าง → ตอนนี้ใช้ timestamp ของ status แบบเดียวกับค่าตัวเลข และปิดปุ่ม mode/jog เมื่อ stale
+  - ปุ่ม STOP เดิมถูก disable ระหว่างรอ ack (สูงสุด 2 s) → STOP ไม่ผ่าน `runButton` แล้ว กดซ้ำได้ทุกเมื่อ ล้มเหลวแล้วบอกให้ใช้ E-stop ที่ตัวเครื่อง
+  - simulator เพิ่มปุ่ม "server หลุดจาก PLC" และ "ข้อมูลหยุด (socket ยังต่อ)"
+- SKILL.md: สถานะการเชื่อมต่อต้องแยกทีละ link, stale ใช้กับ mode/สถานะด้วย, STOP ห้ามถูกล็อก, interlock บนจอเป็นแค่ความสะดวก PLC ต้องตรวจซ้ำ; checklist ทดสอบ 3 แบบของการขาดการเชื่อมต่อ
+
 ## 1.2.0 — 2026-10-02
 - เพิ่ม platforms/ros2-bridge.md ดัดแปลงจาก robotics-agent-skills `ros2-web-integration` (Apache-2.0):
   - โครงสร้าง bridge ที่เข้ากับ ROS_LOCALHOST_ONLY=1, เลือก rosbridge vs bridge เขียนเอง, allowlist, rate limit, ack พร้อมสถานะ, ภาพกล้อง, threading ของ rclpy + FastAPI, ความปลอดภัยใน LAN

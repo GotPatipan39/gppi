@@ -179,6 +179,8 @@ dialog .row .btn { flex: 1; }
   <div class="sim" id="simBar">
     <span>SIMULATOR:</span>
     <button type="button" id="simDrop">จำลองหลุดการเชื่อมต่อ</button>
+    <button type="button" id="simPlc">จำลอง server หลุดจาก PLC</button>
+    <button type="button" id="simFreeze">จำลองข้อมูลหยุด (socket ยังต่อ)</button>
     <button type="button" id="simAlarm">จำลอง alarm</button>
     <button type="button" id="simAir">จำลองแรงดันลมต่ำ</button>
   </div>
@@ -214,14 +216,16 @@ const EQUIP_DEFS = [
 ];
 
 // ---------------- state ----------------
-const S = { connected: false, values: {}, ts: {}, mode: null, state: null, equip: {}, alarm: null, alarmAck: false };
+// connected = browser ↔ server (WebSocket) เท่านั้น
+// plc + ts.status = server ↔ PLC ที่ server รายงานมาเอง — socket ต่ออยู่ไม่ได้แปลว่าได้ข้อมูลจาก PLC
+const S = { connected: false, plc: false, values: {}, ts: {}, mode: null, state: null, equip: {}, alarm: null, alarmAck: false };
 
 // ---------------- transport (simulator) ----------------
 // interface: onData(cb), onConn(cb), send(cmd) -> Promise<ack>
 class SimTransport {
   constructor() {
     this.dataCb = () => {}; this.connCb = () => {};
-    this.up = true; this.running = false; this.jog = 0; this.lastHb = 0;
+    this.up = true; this.plcUp = true; this.frozen = false; this.running = false; this.jog = 0; this.lastHb = 0;
     this.mode = "AUTO"; this.airLow = false; this.alarm = null; this.count = 120; this.speed = 0;
     setTimeout(() => this.connCb(true), 300);
     setInterval(() => this.tick(), 200);
@@ -231,12 +235,18 @@ class SimTransport {
   tick() {
     // ฝั่ง "เครื่อง": jog หยุดเองถ้า heartbeat หาย > 500 ms
     if (this.jog && Date.now() - this.lastHb > 500) this.jog = 0;
-    if (!this.up) return;
+    if (!this.up || this.frozen) return;
+    if (!this.plcUp) {
+      // server ยังส่งข้อความได้ แต่บอกตรงๆ ว่าไม่มีข้อมูลจาก PLC — ไม่ส่งค่าเก่าซ้ำ
+      this.dataCb({ t: Date.now(), links: { plc: false } });
+      return;
+    }
     const target = this.running ? 0.6 : this.jog * 0.15;
     this.speed += (target - this.speed) * 0.3;
     if (this.running && Math.random() < 0.05) this.count++;
     this.dataCb({
       t: Date.now(),
+      links: { plc: true },   // server รายงานสถานะ link ไป PLC เอง (เช่น อ่าน register ล่าสุดสำเร็จภายในเวลาที่กำหนด)
       values: {
         speed: Math.abs(this.speed) < 0.005 ? 0 : this.speed,
         current: 2 + Math.abs(this.speed) * 14 + Math.random() * 0.3,
@@ -254,6 +264,8 @@ class SimTransport {
       if (!this.up) return reject(new Error("ไม่มีการเชื่อมต่อ"));
       setTimeout(() => {
         if (!this.up) return reject(new Error("ไม่มีการเชื่อมต่อ"));
+        if (!this.plcUp) return resolve({ ok: false, reason: "server ติดต่อ PLC ไม่ได้" });
+        if (this.frozen) return;   // ไม่ตอบเลย → ฝั่ง UI timeout เอง
         switch (cmd.name) {
           case "start": if (this.airLow || this.mode !== "AUTO") return resolve({ ok: false, reason: "เงื่อนไขไม่ครบ" }); this.running = true; break;
           case "stop": this.running = false; this.jog = 0; break;
@@ -269,6 +281,8 @@ class SimTransport {
   }
   // ปุ่ม simulator
   toggleUp() { this.up = !this.up; this.connCb(this.up); if (!this.up) { this.running = false; } }
+  togglePlc() { this.plcUp = !this.plcUp; if (!this.plcUp) { this.running = false; } }
+  toggleFreeze() { this.frozen = !this.frozen; }
   toggleAlarm() { this.alarm = this.alarm ? null : { level: "high", text: "กระแสมอเตอร์สูง (12.4 A) — ตรวจโหลด/ความฝืดของล้อ", acked: false }; }
   toggleAir() { this.airLow = !this.airLow; if (this.airLow) this.running = false; }
 }
@@ -315,8 +329,10 @@ $("equip").innerHTML = EQUIP_DEFS.map((e) =>
 // ---------------- data in ----------------
 T.onConn((up) => { S.connected = up; if (!up) stopJog(); render(); });
 T.onData((d) => {
+  S.plc = !!(d.links && d.links.plc);
+  if (!S.plc) return;   // server ไม่มีข้อมูลจาก PLC → ไม่อัปเดตค่า ปล่อยให้ค่าเดิมกลายเป็น stale
   for (const [k, v] of Object.entries(d.values)) { S.values[k] = v; S.ts[k] = d.t; }
-  S.mode = d.mode; S.state = d.state; S.equip = d.equip;
+  S.mode = d.mode; S.state = d.state; S.equip = d.equip; S.ts.status = d.t;
   if (!d.alarm) { S.alarm = null; } else { S.alarm = d.alarm; }
 });
 
@@ -325,23 +341,28 @@ const EQ_TEXT = { on: "เดิน", off: "หยุด", fault: "ผิดป�
 function interlocks() {
   // ค่าที่ stale ห้ามนำมาแสดงเหมือนค่าปัจจุบัน → แสดง "—" และถือว่าไม่ผ่าน
   const air = isStale("air") ? null : S.values.air;
-  const mode = S.connected ? S.mode : null;
+  const mode = statusFresh() ? S.mode : null;
   return [
-    { ok: S.connected, text: "เชื่อมต่อกับเครื่อง" },
+    { ok: statusFresh(), text: "ได้ข้อมูลล่าสุดจากเครื่อง" },
     { ok: mode === "AUTO", text: `อยู่ใน MODE AUTO (ตอนนี้ ${mode ?? "—"})` },
     { ok: air != null && air >= 5.0, text: `แรงดันลม ${air != null ? air.toFixed(1) : "—"} bar (ต้อง ≥ 5.0)` },
     { ok: !(S.alarm && S.alarm.level === "critical"), text: "ไม่มี alarm วิกฤต" },
   ];
 }
-function isStale(k) { return !S.connected || !S.ts[k] || Date.now() - S.ts[k] > STALE_MS; }
+function isStale(k) { return !S.connected || !S.plc || !S.ts[k] || Date.now() - S.ts[k] > STALE_MS; }
+// mode / สถานะเครื่อง / อุปกรณ์ ใช้ได้ก็ต่อเมื่อมาจาก PLC และยังไม่เก่า — ไม่ใช่แค่ socket ยังต่อ
+function statusFresh() { return !isStale("status"); }
 function render() {
   const now = new Date();
   $("clock").textContent = now.toLocaleTimeString("th-TH", { hour12: false });
-  const c = $("conn");
-  c.className = "chip conn " + (S.connected ? "ok" : "bad");
-  c.textContent = S.connected ? "PLC เชื่อมต่อ" : "ขาดการเชื่อมต่อ";
-  $("mode").textContent = S.connected ? (S.mode ?? "—") : "—";
-  $("state").textContent = S.connected ? (S.state ?? "—") : "ไม่ทราบ";
+  const c = $("conn"), fresh = statusFresh();
+  c.className = "chip conn " + (fresh ? "ok" : "bad");
+  c.textContent = !S.connected ? "ขาดการเชื่อมต่อกับ server"
+    : !S.plc ? "server ติดต่อ PLC ไม่ได้"
+    : !fresh ? "ข้อมูลจากเครื่องหยุดอัปเดต"
+    : "PLC เชื่อมต่อ";
+  $("mode").textContent = fresh ? (S.mode ?? "—") : "—";
+  $("state").textContent = fresh ? (S.state ?? "—") : "ไม่ทราบ";
 
   for (const k of KPI_DEFS) {
     const el = $("kpi-" + k.key), v = S.values[k.key], stale = isStale(k.key);
@@ -353,7 +374,7 @@ function render() {
       : high ? (k.low != null && v < k.low ? "ต่ำกว่าเกณฑ์" : "สูงกว่าเกณฑ์") : "";
   }
   for (const e of EQUIP_DEFS) {
-    const el = $("eq-" + e.key), st = S.connected ? S.equip[e.key] : undefined;
+    const el = $("eq-" + e.key), st = fresh ? S.equip[e.key] : undefined;
     el.className = "eq " + (st ?? "unknown");
     el.querySelector(".st").textContent = EQ_TEXT[st] ?? "?";
   }
@@ -369,14 +390,15 @@ function render() {
   $("interlock").innerHTML = il.map((i) => `<li class="${i.ok ? "ok" : "bad"}">${i.text}</li>`).join("");
   const startBtn = $("startBtn");
   if (!startBtn.classList.contains("pending")) startBtn.disabled = !ready || S.state === "RUNNING";
+  // STOP ไม่ขึ้นกับความสดของข้อมูลและไม่ถูกล็อกระหว่างรอ ack — ปิดเฉพาะตอนไม่มีทางส่งถึง server
   $("stopBtn").disabled = !S.connected;
   if (!$("modeBtn").classList.contains("pending")) {
-    $("modeBtn").disabled = !S.connected;
+    $("modeBtn").disabled = !fresh;
     $("modeBtn").textContent = S.mode === "AUTO" ? "เปลี่ยนเป็น MANUAL" : "เปลี่ยนเป็น AUTO";
   }
-  const jogOk = S.connected && S.mode === "MANUAL";
+  const jogOk = fresh && S.mode === "MANUAL";
   for (const id of ["jogFwd", "jogRev"]) $(id).disabled = !jogOk;
-  if (!jogOk && !$("jogHint").textContent.startsWith("ไม่สำเร็จ")) $("jogHint").textContent = S.connected ? "ใช้ได้เฉพาะ MODE MANUAL" : "ไม่มีการเชื่อมต่อ";
+  if (!jogOk && !$("jogHint").textContent.startsWith("ไม่สำเร็จ")) $("jogHint").textContent = fresh ? "ใช้ได้เฉพาะ MODE MANUAL" : "ไม่มีข้อมูลล่าสุดจากเครื่อง";
   else if (jogOk && $("jogHint").textContent.startsWith("ใช้ได้")) $("jogHint").textContent = "";
 }
 setInterval(render, 250);
@@ -386,7 +408,12 @@ $("startBtn").onclick = async () => {
   if (!(await confirmDialog("เริ่มเดินอัตโนมัติ?", "เครื่องจะเริ่มเคลื่อนที่ทันทีและทำงานต่อเนื่องจนกว่าจะกด STOP", "เริ่มเดิน"))) return;
   runButton($("startBtn"), () => sendCmd({ name: "start" }));
 };
-$("stopBtn").onclick = () => runButton($("stopBtn"), () => sendCmd({ name: "stop" }));  // ไม่ต้องยืนยัน
+// STOP: ไม่ต้องยืนยัน และไม่ผ่าน runButton — ห้ามล็อกปุ่มระหว่างรอ ack; กดซ้ำได้ทุกเมื่อ (ส่งซ้ำได้ เพราะ stop ทำกี่ครั้งก็ได้ผลเดิม)
+$("stopBtn").onclick = () => {
+  sendCmd({ name: "stop" })
+    .then((r) => { if (r && r.ok === false) alertInline(`STOP ไม่สำเร็จ: ${r.reason || "เครื่องปฏิเสธคำสั่ง"} — ใช้ E-stop ที่ตัวเครื่อง`); })
+    .catch((e) => alertInline(`STOP ไม่สำเร็จ: ${e.message} — ใช้ E-stop ที่ตัวเครื่อง`));
+};
 $("ackBtn").onclick = () => runButton($("ackBtn"), () => sendCmd({ name: "ack" }));
 
 // JOG: hold-to-run + heartbeat
@@ -429,6 +456,8 @@ $("themeBtn").onclick = () => {
 };
 if (SIM) {
   $("simDrop").onclick = () => T.toggleUp();
+  $("simPlc").onclick = () => T.togglePlc();
+  $("simFreeze").onclick = () => T.toggleFreeze();
   $("simAlarm").onclick = () => T.toggleAlarm();
   $("simAir").onclick = () => T.toggleAir();
 } else { $("simBar").remove(); }
