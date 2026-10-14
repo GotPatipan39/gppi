@@ -3,6 +3,11 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.2 — 2026-10-14
+Tested: unit test (23 pass), ตรวจลิงก์ในเอกสารและ skill — เปลี่ยนแค่เนื้อหา skill และเอกสาร ไม่แตะตัวกัน
+- แก้: skill `ros2-humble-cpp` 3.2.2 — เลิกอ้างถึงไฟล์ `evidence-progression.md` ที่ไม่มีอยู่จริง (4 จุดในเรื่อง e-stop และการทดสอบ) Claude จะไม่ถูกพาไปหาไฟล์ที่ไม่มีอีก
+- เอกสาร: README แยกตามคนอ่าน — เพิ่มหัวข้อ "ใช้งานประจำวัน" (เจอ prompt แล้วทำอะไร, `CLAUDE.md` ที่โปรเจกต์ต่อเครื่องจริงต้องมี); รายละเอียดตัวกันย้ายไป `docs/GUARD.md` เรื่องดูแล repo ย้ายไป `docs/MAINTAINING.md`
+
 ## v0.1.1 — 2026-10-14
 Tested: unit test (23 pass) + ใช้งานจริงบน Windows 11 (VS Code, CLI) และ WSL Ubuntu 22.04 (CLI)
 - แก้: คำสั่งที่ตัวกันถามขึ้นคำเตือน "gppi tried to reword a PreToolUse hook's ask" ทุกครั้ง — ตัวกันยังถามถูกต้องอยู่แล้ว แค่ไม่มีคำเตือนนี้อีก
