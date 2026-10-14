@@ -56,8 +56,10 @@ public:
 inline void init(int, char **) {}
 template<class T> void spin(T) {}
 inline void shutdown() {}
+inline Logger get_logger(const std::string &) { return {}; }
 }
 #define RCLCPP_INFO(logger, ...) ((void)(logger))
+#define RCLCPP_FATAL(logger, ...) ((void)(logger))
 #define RCLCPP_WARN_THROTTLE(logger, clock, ms, ...) ((void)(logger), (void)(clock), (void)(ms))
 H
 $CXX -Wno-unused-parameter -I"$OUT/inc" -c "$TPL/node_template.cpp" -o "$OUT/node.o"

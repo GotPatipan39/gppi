@@ -13,9 +13,10 @@ public:
   // max_up: อัตราเพิ่มสูงสุด (หน่วย/วินาที), max_down: อัตราลดสูงสุด (ค่าบวก)
   // ตั้ง max_down สูงกว่า max_up ได้ เพื่อให้ชะลอได้ไวกว่าเร่ง
   // max_dt: dt ที่ใช้ได้มากสุดต่อ step — executor/timer ค้างแล้ว dt ใหญ่ = ramp กระโดดถึง target ในรอบเดียว
-  //         node ควรตั้งเป็นราว 2 รอบของ timer
+  //         node ควรตั้งเป็นราว 2 รอบของ timer — ไม่มีค่าเริ่มต้นโดยตั้งใจ ให้ผู้ใช้เลือกตาม rate ของ loop
+  //         (ใช้กับขาชะลอด้วย: executor ค้างแล้วชะลอได้ทีละ max_dt ไม่ใช่รวดเดียว — watchdog ยังตัดทันทีเมื่อครบ timeout)
   // ค่าที่ไม่ใช่ตัวเลขจริงหรือ ≤ 0 → throw (NaN ทำให้ clamp คืน delta ทั้งก้อน, ติดลบทำให้ clamp เป็น UB)
-  RateLimiter(double max_up, double max_down, double max_dt = 1.0)
+  RateLimiter(double max_up, double max_down, double max_dt)
   : max_up_(require_positive(max_up, "max_up")),
     max_down_(require_positive(max_down, "max_down")),
     max_dt_(require_positive(max_dt, "max_dt")) {}

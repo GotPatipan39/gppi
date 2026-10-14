@@ -13,6 +13,11 @@
   - **คำสั่ง NaN/Inf → เป้าเป็น 0 ทันที** (ชะลอด้วย decel) และไม่ feed watchdog — เดิมวิ่งด้วยคำสั่งดีล่าสุดต่อจนครบ timeout; ตรวจทุก field ของ Twist ไม่ใช่แค่ `linear.x`
   - TODO ใน `send_command`: เขียน 0 ตอนกลับทิศไม่สำเร็จ = ค้างที่ 0 ห้ามส่งทิศใหม่
   - gtest 15/15; ชุดทดสอบเก็บไว้ที่ `tools/test-templates.sh` และรันใน CI
+- ตาม 🟡 รอบสอง (TDD):
+  - `CommandWatchdog(timeout_s, check_period_s)`: timeout ต้อง ≥ 3 รอบของ timer (rate 0.5 Hz กับ timeout 0.5 s = ตรวจทุก 2 s) และต้องแปลงเป็น duration ได้ (`1e300` overflow = UB) — ไม่ใส่เพดานของงาน ค่าจริงมาจากโปรเจกต์
+  - `RateLimiter` ไม่มีค่าเริ่มต้นของ `max_dt` แล้ว — คนใช้ต้องเลือกตาม rate ของ loop; เพดาน dt มีผลกับขาชะลอด้วยโดยตั้งใจ (ชะลอทีละ max_dt ตอน executor ค้าง, watchdog ยังตัดทันทีเมื่อครบ timeout)
+  - `main` จับ `std::invalid_argument` → log FATAL + exit 1 แทน abort; comment ว่า drive/PLC ต้องมี comm timeout ของตัวเอง เพราะ node ที่ start ไม่ขึ้นหรือ crash จะไม่ส่ง 0 ให้
+  - gtest 16/16
 
 ## 3.2.2 — 2026-10-14
 - แก้ลิงก์เสีย: `references/safety-estop.md` และ `references/testing.md` อ้างถึง `references/evidence-progression.md` 4 จุด แต่ไฟล์นี้ไม่เคยมีใน repo (ตกหล่นตอนดัดแปลง references มา) — Claude ที่ตามลิงก์ไปจะไม่ได้เนื้อหาอะไร

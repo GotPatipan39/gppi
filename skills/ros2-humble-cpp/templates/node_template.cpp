@@ -30,7 +30,7 @@ public:
     // ค่า parameter ผิด (NaN, ≤ 0) → constructor throw = node ไม่ start (ดีกว่า start แล้ว ramp/watchdog ทำงานผิด)
     // max_dt = 2 รอบของ timer: executor ค้างแล้ว dt ใหญ่จะไม่ทำให้ ramp กระโดด (rate_hz ≤ 0/NaN ก็ throw ที่นี่)
     ramp_(accel_, decel_, 2.0 / rate_hz_),
-    watchdog_(cmd_timeout_)   // เริ่มต้นแบบหมดเวลา = หยุด จนกว่าจะได้คำสั่งแรก
+    watchdog_(cmd_timeout_, 1.0 / rate_hz_)   // เริ่มต้นแบบหมดเวลา = หยุด จนกว่าจะได้คำสั่งแรก; timeout ต้อง ≥ 3 รอบ timer
   {
     // ---- interfaces ----
     cmd_sub_ = create_subscription<geometry_msgs::msg::Twist>(
@@ -124,7 +124,17 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<MyNode>());
+  // drive/PLC ต้องมี communication timeout ของตัวเองเสมอ: node ที่ start ไม่ขึ้น หรือ crash ระหว่างวิ่ง จะไม่ส่ง 0 ให้
+  std::shared_ptr<MyNode> node;
+  try {
+    node = std::make_shared<MyNode>();   // ครอบแค่การสร้าง — error ระหว่างวิ่งต้องไม่ถูกรายงานว่า "not started"
+  } catch (const std::invalid_argument & e) {
+    // parameter ผิด → ไม่ start: ยังไม่ได้ส่งอะไรไป hardware เลย (throw ก่อนสร้าง timer)
+    RCLCPP_FATAL(rclcpp::get_logger("my_node"), "not started (bad parameter): %s", e.what());
+    rclcpp::shutdown();
+    return 1;
+  }
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }
