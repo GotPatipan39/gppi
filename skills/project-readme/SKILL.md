@@ -1,11 +1,11 @@
 ---
 name: project-readme
-description: ใช้เมื่อเขียน ปรับปรุง หรือตรวจ README.md ของโปรเจกต์ที่ทีมอ่านบน GitLab/GitHub — โดยเฉพาะงานเครื่องจักร/robot/IoT ที่มี hardware, ROS2, PLC, Modbus, Web UI — ให้คนที่มาทำต่อเข้าใจระบบ ติดตั้ง รัน และใช้งานได้อย่างปลอดภัย
+description: ใช้เมื่อเขียน ปรับปรุง หรือตรวจ README.md ของโปรเจกต์ที่ทีมอ่านบน GitLab/GitHub และเมื่อแก้โค้ด/config ที่ทำให้สิ่งที่ README อธิบายไว้เปลี่ยน (คำสั่งรัน, IP/port, parameter, topic, วิธีติดตั้ง, พฤติกรรมที่ผู้ใช้เห็น) — โดยเฉพาะงานเครื่องจักร/robot/IoT ที่มี hardware, ROS2, PLC, Modbus, Web UI — ให้คนที่มาทำต่อเข้าใจระบบ ติดตั้ง รัน และใช้งานได้อย่างปลอดภัย (README, documentation, docs)
 ---
 
 # README สำหรับโปรเจกต์ที่ทีมทำงานร่วมกัน
 
-> เวอร์ชัน 1.0.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.0.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ต้นแบบ: [examples/borunte-control-README.md](examples/borunte-control-README.md) — อ่านก่อนเขียนทุกครั้ง เพื่อดูระดับรายละเอียดและน้ำเสียงที่ต้องการ (ไม่ต้องลอกหัวข้อทั้งหมด แต่ละโปรเจกต์ต่างกัน)
 

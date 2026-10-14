@@ -1,5 +1,8 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.2.4 — 2026-10-14
+- description: เพิ่ม trigger ให้ตรงกับตาราง "ใช้ skill ตามงาน" ใน rules.md — Claude เลือก skill จาก description ถ้าไม่มีคำเหล่านี้ skill จะไม่ถูกโหลดในงานที่ตารางสั่งไว้ (จากรีวิว กลุ่ม 3): bringup/systemd, ros2_control, lifecycle, rosbag, e-stop/watchdog
+
 ## 3.2.3 — 2026-10-14
 แก้ template ที่คุม hardware (จากรีวิว docs/reviews/2026-10-14-skills.md) — ทำแบบ TDD: เห็น test แดงก่อนแก้ทุกข้อ
 - **watchdog ใช้ ROS time** (`now()`): `use_sim_time:=true` บนเครื่องจริงที่ไม่มี `/clock` ทำให้เวลาหยุดเดิน watchdog ไม่มีวันตัด → แยกเป็น `templates/command_watchdog.hpp` ใช้ steady clock, เริ่มต้นแบบหมดเวลา (= หยุดจนกว่าจะได้คำสั่งแรก); node ใช้ steady clock สำหรับ dt ของ ramp ด้วย

@@ -1,5 +1,8 @@
 # CHANGELOG — industrial-ui
 
+## 1.2.3 — 2026-10-14
+- description: เพิ่ม trigger ให้ตรงกับตาราง "ใช้ skill ตามงาน" ใน rules.md — Claude เลือก skill จาก description ถ้าไม่มีคำเหล่านี้ skill จะไม่ถูกโหลดในงานที่ตารางสั่งไว้ (จากรีวิว กลุ่ม 3): Web UI ↔ ROS2 (rosbridge, roslibjs, teleop), Dashboard 2.0/FlowFuse, alarm
+
 ## 1.2.2 — 2026-10-14
 ข้อมูลล้าสมัย (จากรีวิว docs/reviews/2026-10-14-skills.md กลุ่ม 2)
 - `platforms/ros2-bridge.md`: rosbridge **มี** glob allowlist (`topics_glob` ฯลฯ) — ที่ไม่มีคือการยืนยันตัวตนผู้ใช้ (rosauth ไม่มีใน ROS 2) เดิมเขียนว่าจำกัด topic ไม่ได้

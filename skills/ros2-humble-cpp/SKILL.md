@@ -1,11 +1,11 @@
 ---
 name: ros2-humble-cpp
-description: ใช้เมื่อเขียน แก้ ออกแบบ หรือ debug งาน ROS2 Humble ด้วย C++ (rclcpp) — สร้าง workspace/package, node, launch file, CMakeLists/package.xml, custom msg, colcon build, topic/QoS/parameter, tf2/URDF, odometry, node ที่สั่งมอเตอร์หรือ hardware, การรันบน mini PC และการพัฒนาบน WSL
+description: ใช้เมื่อเขียน แก้ ออกแบบ หรือ debug งาน ROS2 Humble ด้วย C++ (rclcpp) — สร้าง workspace/package, node, launch file, CMakeLists/package.xml, custom msg, colcon build, topic/QoS/parameter, tf2/URDF, odometry, ros2_control/hardware interface, lifecycle node, bringup/systemd, rosbag, e-stop/watchdog, node ที่สั่งมอเตอร์หรือ hardware, การรันบน mini PC และการพัฒนาบน WSL
 ---
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.2.3 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.2.4 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์

@@ -1,11 +1,11 @@
 ---
 name: industrial-ui
-description: ใช้เมื่อออกแบบหรือเขียน UI/UX สำหรับงานอุตสาหกรรม — หน้าจอ HMI คุมเครื่องจักร, dashboard ดูข้อมูลเซนเซอร์/smart meter, หน้า config ตั้งค่า parameter — บน Web (HTML/JS/React), Node-RED Dashboard หรือ Grafana สำหรับ touch panel, tablet หรือจอห้องควบคุม
+description: ใช้เมื่อออกแบบหรือเขียน UI/UX สำหรับงานอุตสาหกรรม — หน้าจอ HMI คุมเครื่องจักร, dashboard ดูข้อมูลเซนเซอร์/smart meter, หน้า config ตั้งค่า parameter, หน้าจอ alarm — บน Web (HTML/JS/React), Node-RED Dashboard 2.0 (FlowFuse), Grafana และ Web UI ที่คุยกับ ROS2 (rosbridge, roslibjs, browser teleop/jog) สำหรับ touch panel, tablet หรือจอห้องควบคุม
 ---
 
 # Industrial UI / UX
 
-> เวอร์ชัน 1.2.2 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.3 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ข้อมูลเฉพาะโปรเจกต์ (ชื่อ tag, ช่วงค่าปกติ, ผู้ใช้, ภาษา) อยู่ใน `CLAUDE.md` ของโปรเจกต์ — อ่านก่อนเสมอ ถ้าขัดกับ skill นี้ให้ยึดของโปรเจกต์
 
