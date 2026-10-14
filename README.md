@@ -1,1 +1,169 @@
-# gppi
+# mskills
+
+**m**achine **skills** — skill สำหรับ Claude Code (VS Code / CLI) และแอป Claude — เก็บไว้ที่เดียว แล้วติดตั้งลงเครื่องหรือลงโปรเจกต์ด้วย script
+
+## เริ่มต้นบนเครื่องใหม่
+```powershell
+git clone <url ของ repo นี้บน GitHub> D:\ws\mskills
+```
+แล้วดับเบิลคลิก `install\install-global.bat` — เท่านี้ Claude Code บนเครื่องนั้นก็ใช้ skill ได้ทุกโปรเจกต์
+(clone ไว้ที่ไหนก็ได้ script หา path จากตำแหน่งของตัวเอง; ใน WSL/Linux ใช้ `bash <path>/install/install-skills.sh`)
+หรือติดตั้งเป็น plugin — ดู "แบบ plugin" ด้านล่าง
+
+## โครงสร้าง
+```
+mskills/
+├── .claude-plugin/              ← plugin + marketplace (ใช้ skills/, vendor/, agents/ ตรงๆ)
+├── skills/<ชื่อ>/               ← skill ของเราเอง (แก้ได้)
+├── vendor/<ที่มา>/LICENSE       ← skill จากภายนอก copy มาตรงๆ ห้ามแก้เนื้อหา
+│   └── <ชื่อ>/                     (ตอนนี้มี vendor/mattpocock/)
+├── agents/<ชื่อ>.md             ← subagent ของเราเอง
+├── install/                     ← ทุกอย่างที่ใช้ติดตั้ง
+│   ├── install-global.bat, install-all-global.bat, install-to-project.bat   ← ดับเบิลคลิก
+│   ├── install-skills.ps1, install-skills.sh
+│   ├── global-CLAUDE.md         ← กฎระดับเครื่อง (~/.claude/CLAUDE.md)
+│   └── permissions.json         ← กฎขอยืนยันคำสั่ง git อันตราย (รวมเข้า ~/.claude/settings.json)
+├── docs/                        ← ผลทดสอบ/บันทึกการตัดสินใจของ repo นี้
+└── README.md
+```
+**ของที่ Claude ใช้** (`skills/`, `vendor/`, `agents/`) แยกจาก **ของที่ใช้ติดตั้ง** (`install/`)
+script หา skill จากทั้ง `skills/` และ `vendor/*/` แต่ติดตั้งลงปลายทางด้วยชื่อ skill อย่างเดียว (เช่น `~/.claude/skills/grilling`) ชื่อ skill จึงห้ามซ้ำกันข้ามโฟลเดอร์ ถ้าซ้ำ script จะหยุดและแจ้ง
+skill จาก `vendor/` จะได้ `LICENSE` ของที่มานั้น copy ไปไว้ในโฟลเดอร์ skill ที่ติดตั้งด้วย
+
+## อัปเดต skill
+1. แก้ skill ในโฟลเดอร์นี้ (หรือให้ Claude แก้)
+2. `git diff` ดูว่าเปลี่ยนอะไร → อัปเดตเวอร์ชันใน `SKILL.md` + `CHANGELOG.md` ของ skill นั้น และตารางด้านล่าง → commit → push
+3. เครื่องอื่น: `git pull` แล้วดับเบิลคลิก install อีกครั้ง; โปรเจกต์ที่ copy skill ไปแล้ว: รัน `install-to-project.bat` ทับ
+4. แอป Claude: อัปโหลด zip ของ skill ที่เปลี่ยน (ดู "ใช้ในแอป Claude")
+
+## skill ของเราเอง (`skills/`)
+| skill | เวอร์ชัน | ใช้กับ |
+|---|---|---|
+| `ros2-humble-cpp` | 3.2.1 | งาน ROS2 Humble + C++ |
+| `modbus` | 1.1.0 | งาน Modbus RTU/TCP ทุกแบบ (C++, Node-RED, Python) |
+| `industrial-ui` | 1.2.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
+| `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมบน GitLab อ่านเข้าใจ (ต้นแบบ: borunte-control) |
+| `git-commit` | 1.1.2 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release `vX.Y.Z` + CHANGELOG + tag |
+| `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
+| `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
+
+## subagent ของเรา (`agents/`)
+Claude อีกตัวที่ Claude หลักส่งงานไปให้ทำ — มี context แยก (ไม่เห็นแชท) และจำกัด tool ได้ เหมาะกับงานตรวจที่ต้องการมุมมองคนนอก
+
+| subagent | เวอร์ชัน | ใช้กับ | ถูกเรียกจาก |
+|---|---|---|---|
+| `safety-reviewer` | 1.0.0 | ตรวจ diff ก่อน commit ในโปรเจกต์ที่คุมเครื่องจักร: เกณฑ์ความปลอดภัยที่ถูกลด, ค่า hardware ที่เปลี่ยน, คำสั่งขยับที่ไม่มีเงื่อนไข, ตอนสื่อสารล้มเหลว, test ที่ถูกแก้ให้ผ่าน — อ่านอย่างเดียว | skill `git-commit` (ขั้นตอนที่ 2) หรือสั่งเอง: "ให้ safety-reviewer ตรวจ" / พิมพ์ `@` แล้วเลือก |
+
+- ติดตั้งเฉพาะแบบทุกโปรเจกต์ (`install-global.bat`, `install-all-global.bat`, `install-skills.sh` ที่ไม่มี `-p`) ไปที่ `~/.claude/agents/` — `install-to-project.bat` ไม่ติดตั้ง agent
+- เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตารางนี้ และเขียนเหตุผลใน commit message
+- Bash ของ `safety-reviewer` จำกัดแค่ด้วยคำสั่งในไฟล์ agent (อ่าน git อย่างเดียว) ไม่ใช่ด้วยระบบ — `permissions` ใน `settings.json` ยังมีผลกับ subagent ตามปกติ
+
+## skill จากภายนอก (`vendor/`, copy มาตรงๆ ไม่แก้เนื้อหา)
+| skill | ที่มา | ใช้กับ | ต้อง copy คู่กับ |
+|---|---|---|---|
+| `grilling` | mattpocock/skills (MIT, [`vendor/mattpocock/LICENSE`](vendor/mattpocock/LICENSE)) @ d81f3a1, 2026-09-29 | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง | — |
+| `grill-me` | เหมือนข้างบน | ตัวเรียก `grilling` (พิมพ์ `/grill-me`) | **`grilling`** |
+| `domain-modeling` | เหมือนข้างบน | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) | — |
+| `grill-with-docs` | เหมือนข้างบน | ซักถาม + จด GLOSSARY/ADR ไปพร้อมกัน (พิมพ์ `/grill-with-docs`) | **`grilling`** และ **`domain-modeling`** |
+| `handoff` | mattpocock/skills (MIT) @ f3fc563, 2026-10-07 | สรุปแชทที่ยาวแล้วเป็นไฟล์ให้ session ใหม่ทำต่อ (พิมพ์ `/handoff` เท่านั้น Claude เรียกเองไม่ได้) — ไฟล์ไปอยู่ใน `%TEMP%` / `/tmp` ถ้าจะเก็บหรือเปิดจากเครื่องอื่นให้บอก path เช่น `/handoff เก็บไว้ที่ docs/` | — |
+
+`grill-me` และ `grill-with-docs` เป็นแค่ตัวเรียก — ถ้า copy ไปโดยไม่มีตัวที่มันเรียก จะใช้ไม่ได้
+
+## เอาไปใช้ใน VS Code
+**แบบง่าย (ดับเบิลคลิกในโฟลเดอร์ `install/`):**
+- `install-global.bat` — ติดตั้ง skill ทั่วไป (grilling, domain-modeling, project-readme, git-commit, tdd ...) ให้ใช้ได้ทุกโปรเจกต์
+- `install-all-global.bat` — ติดตั้ง **ทุก skill** ให้ใช้ได้ทุกโปรเจกต์
+- `install-to-project.bat` — เลือกโฟลเดอร์โปรเจกต์จากหน้าต่าง แล้วพิมพ์หมายเลข skill ที่ต้องการ (หรือพิมพ์ `all` = ทุกตัว)
+
+**กฎระดับเครื่อง:** `install-global.bat` / `install-all-global.bat` ติดตั้ง [`install/global-CLAUDE.md`](install/global-CLAUDE.md) เป็น `~/.claude/CLAUDE.md` ด้วย — Claude Code อ่านไฟล์นี้ **ทุกแชท ทุกโปรเจกต์** จึงรู้ว่างานไหนต้องใช้ skill ไหนโดยไม่ต้องสั่ง
+- ใส่ไว้ในบล็อก `<!-- BEGIN claude-skills -->` … `<!-- END claude-skills -->` — เนื้อหาอื่นที่เขียนเองในไฟล์นั้นไม่ถูกแตะ, รันซ้ำจะแทนที่เฉพาะบล็อก
+- แก้กฎ: แก้ `install/global-CLAUDE.md` ที่นี่ แล้วดับเบิลคลิก `install-global.bat` อีกครั้ง
+- เพิ่ม skill ใหม่: สร้างใน `skills/<ชื่อ>/` และเพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ `install/global-CLAUDE.md` ด้วย
+
+**กฎขอยืนยันคำสั่ง:** `install-global.bat` / `install-all-global.bat` เอากฎใน [`install/permissions.json`](install/permissions.json) ไปรวมเข้า `~/.claude/settings.json` — ตอนนี้เป็นกฎ `ask` ให้ Claude Code เด้งกล่องขอยืนยันก่อน `git push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` (ทั้ง Bash และ PowerShell tool)
+- **เพิ่มอย่างเดียว ไม่ลบ** — กฎที่ settings.json มีอยู่แล้ว และค่าอื่นในไฟล์ (model, hooks ...) ไม่ถูกแตะ; รันซ้ำไม่เพิ่มกฎซ้ำ; ไม่มีกฎใหม่ = ไม่เขียนไฟล์
+- ลบกฎออกจาก `permissions.json` แล้ว เครื่องที่ติดตั้งไปแล้วยังมีกฎนั้นอยู่ — ต้องลบเองใน `~/.claude/settings.json` ของเครื่องนั้น (ตั้งใจ: ไม่ให้ script ลบกฎที่ตั้งเองบนเครื่อง)
+- settings.json ที่ JSON เสีย → script ข้าม ไม่แตะไฟล์ และเตือน
+- ใช้ `ask` ไม่ใช่ hook บล็อก: hook แบบ mattpocock ต้องใช้ `jq` (Windows ไม่มี) และดักแค่ Bash — ดูตาราง "ตรวจแล้ว" ด้านล่าง
+
+**แบบสั่งเอง:** ใช้ script — skill ที่ต้องใช้คู่กันจะถูก copy ให้อัตโนมัติ, copy ทับของเดิม (รันซ้ำได้เมื่อ skill อัปเดต)
+
+**Windows (PowerShell):**
+```powershell
+cd D:\ws\mskills
+# skill ทั่วไป (grilling, domain-modeling ...) → ใช้ได้ทุกโปรเจกต์
+powershell -ExecutionPolicy Bypass -File .\install\install-skills.ps1
+# skill เฉพาะโปรเจกต์
+powershell -ExecutionPolicy Bypass -File .\install\install-skills.ps1 -Project D:\ws\fg-robot-pallet -Skills ros2-humble-cpp,modbus,industrial-ui
+# ดูก่อนว่าจะ copy อะไร (ยังไม่ copy จริง): เติม -WhatIf
+```
+
+**WSL:**
+```bash
+bash /mnt/d/ws/mskills/install/install-skills.sh                                # skill ทั่วไป → ทุกโปรเจกต์ (แก้ path ตามที่ clone ไว้)
+bash /mnt/d/ws/mskills/install/install-skills.sh --all                          # ทุก skill → ทุกโปรเจกต์ (เหมือน install-all-global.bat)
+bash /mnt/d/ws/mskills/install/install-skills.sh -p ~/fg-robot-pallet ros2-humble-cpp modbus industrial-ui
+bash /mnt/d/ws/mskills/install/install-skills.sh -p ~/fg-robot-pallet --all
+```
+เสร็จแล้วใน VS Code: `Ctrl+Shift+P` → **Developer: Reload Window** แล้วพิมพ์ `/` เพื่อดูรายการ skill
+
+ข้อมูลเฉพาะโปรเจกต์ (address map, hardware, กฎเฉพาะเครื่อง) ให้เขียนใน `CLAUDE.md` ที่ root ของโปรเจกต์ ไม่ใส่ใน skill
+การตัดสินใจสำคัญของโปรเจกต์ (ย้อนกลับยาก + คนอ่านทีหลังจะสงสัย + มีทางเลือกจริง) จดเป็น ADR ใน `docs/adr/` ของโปรเจกต์
+
+### แบบ plugin (ทดลองใช้ทีละเครื่อง)
+plugin ส่ง skill ทั้งหมด + `safety-reviewer`; installer ยังติดตั้ง CLAUDE.md + permissions (plugin ส่ง 2 อย่างนี้ไม่ได้) — ผลทดสอบและเหตุผลอยู่ใน [docs/plugin-evaluation.md](docs/plugin-evaluation.md)
+
+ตั้งเครื่อง (ครั้งเดียว):
+1. ย้าย skill/agent ของ mskills ที่ installer เคย copy ไว้ออกจาก `~/.claude/skills/` และ `~/.claude/agents/` — ถ้ายังอยู่ ตัวเก่าจะบังตัวใน plugin โดยไม่มีคำเตือน (installer ข้อ 2 จะเตือนถ้ายังมี)
+2. ติดตั้งกฎ: `install-skills.ps1 -ConfigOnly` (Windows) / `install-skills.sh --config-only` (Linux)
+3. ติดตั้ง plugin (git ในเครื่องต้องเข้า repo private ได้; เครื่องที่ใช้ HTTPS ตั้ง `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` ก่อน):
+   ```bash
+   claude plugin marketplace add GotPatipan39/mskills
+   claude plugin install mskills@mskills
+   ```
+
+อัปเดต (หลัง push): `claude plugin marketplace update mskills && claude plugin update mskills@mskills` แล้วเปิด session ใหม่ — auto-update ของ Claude Code ยังไม่เห็นผลในการทดสอบ; ถ้า `install/global-CLAUDE.md` หรือ `install/permissions.json` เปลี่ยน ให้รันข้อ 2 ซ้ำด้วย
+- ชื่อใน plugin มี prefix: skill แสดงเป็น `mskills:tdd` (พิมพ์ `/tdd` และตารางที่ใช้ชื่อสั้นยังใช้ได้), agent ต้องใช้ `mskills:safety-reviewer`
+- ถอยกลับ: `claude plugin uninstall mskills@mskills` แล้วรัน `install-all-global.bat` / `install-skills.sh --all`
+
+## ใช้ในแอป Claude
+skill ในแอป Claude ผูกกับบัญชี ไม่ได้อ่านจากโฟลเดอร์นี้ — ต้องอัปโหลดเองในหน้า Skills (`+ Add`)
+- skill ที่มีหลายไฟล์ อัปโหลดเป็น `.zip` ของโฟลเดอร์ skill (คลิกขวาที่โฟลเดอร์ → Compress to ZIP) ไม่งั้นไฟล์ประกอบจะหาย
+- `_upload/` เป็นที่พักไฟล์ zip สำหรับอัปโหลด ไม่เก็บใน git (อยู่ใน `.gitignore`)
+
+## เช็กว่าโปรเจกต์ใช้เวอร์ชันไหน
+ดูบรรทัด "เวอร์ชัน" ใน `SKILL.md` ที่อยู่ใน `.claude/skills/` ของโปรเจกต์นั้น เทียบกับตารางด้านบน
+
+## รับ skill จากภายนอก
+ไม่ติดตั้งด้วย `npx skills add` ตรงเข้าโปรเจกต์ — ให้ Claude อ่านก่อนทุกครั้ง แล้วเลือกอย่างใดอย่างหนึ่ง:
+- **copy มาตรงๆ** (ตาราง "skill จากภายนอก") เมื่อเนื้อหาดีและไม่ขัดกับหลักของเรา — วางไว้ที่ `vendor/<ที่มา>/<ชื่อ>/` พร้อม `vendor/<ที่มา>/LICENSE` ไฟล์เดียว, บันทึกที่มา, commit/วันที่, license
+- **ดัดแปลงเข้า skill ของเรา** เมื่อดีบางส่วน — บันทึกใน CHANGELOG ว่าเอาอะไรมาจากไหน และไม่เอาอะไรเพราะอะไร
+- **ไม่ใช้** — จดเหตุผลไว้ด้านล่าง กันพิจารณาซ้ำ
+
+สิ่งที่ต้องตรวจ:
+1. อ่าน `SKILL.md` และ **ทุกไฟล์ที่มันอ้างถึง** (บางตัวเป็นแค่ตัวเรียก skill อื่น หรือเป็น stub ที่ให้ไปโหลดเนื้อหาจาก CLI)
+2. มี script / hook / `allowed-tools` ที่รันคำสั่งเองไหม — ถ้ามี ต้องอ่านว่ารันอะไร
+3. ต้องใช้ internet หรือบริการภายนอกตอนใช้งานไหม — ถ้าใช่ ต้องรู้ว่าส่งข้อมูลอะไรออกไป
+4. `description` กว้างเกินไปจนแย่ง skill อื่นไหม (เช่น "ให้ใช้ตัวนี้แทน tool อื่นทุกตัว")
+5. เนื้อหาถูกต้องไหม และตรงกับเวอร์ชันที่เราใช้ไหม (เช่น ROS2 Humble)
+6. ขัดกับหลักของเราไหม (ความปลอดภัยของเครื่อง, ROS2 local เท่านั้น, ห้ามเดาค่า hardware)
+7. ที่มาน่าเชื่อถือไหม: ผู้ทำ, license, อัปเดตล่าสุด, จำนวนผู้ใช้/star
+
+### ตรวจแล้ว ไม่ใช้ หรือใช้แค่บางส่วน
+| skill | ผล |
+|---|---|
+| omer-metin/skills-for-antigravity `ros2-robotics` | ไม่ใช้ — description เสีย (`Use when ", " mentioned.`), เนื้อหาบางส่วนผิด, น่าจะสร้างอัตโนมัติ |
+| arpitg1304/robotics-agent-skills `docker-ros2-development` | ไม่ใช้ตอนนี้ — เนื้อหาดี แต่ยังไม่ใช้ Docker (WSL + mini PC + PM2 พอ) พิจารณาใหม่เมื่อต้อง deploy หลายเครื่อง/แบบ offline |
+| vercel-labs/agent-browser `agent-browser` | ไม่ใช้ — เป็น stub ต้องติดตั้ง CLI + Chrome, description กว้างเกิน, ส่วนใหญ่ไม่เกี่ยว (Slack, Vercel, AWS) ทดสอบ UI ใช้ Playwright แทน |
+| vercel-labs/skills `find-skills` | ไม่ใช้ — ต้องใช้ internet และให้ติดตั้ง skill เองแบบข้ามการยืนยัน (`-y`) ขัดกับขั้นตอนตรวจข้างบน (นำเกณฑ์คัดคุณภาพมาใส่ข้อ 7) |
+| anthropics/skills `frontend-design` | บางส่วน — ไม่ copy (เน้นดีไซน์แปลกใหม่ ขัดกับ HMI) ดัดแปลงเข้า `industrial-ui` 1.1.0 |
+| arpitg1304 `ros2`, dbwls99706 `ros2-engineering-skills` | บางส่วน — คัด references / ดัดแปลงเข้า `ros2-humble-cpp` 2.0.0 |
+| arpitg1304 `ros2-web-integration` | บางส่วน — ดัดแปลงเข้า `industrial-ui` 1.2.0 (แก้ watchdog teleop และการตั้ง parameter) |
+| github/awesome-copilot `create-readme` | ไม่ใช้ — สั้นมาก (21 บรรทัด), ต้องโหลด README ตัวอย่าง 4 ไฟล์จาก internet ทุกครั้ง, เน้น README โปรเจกต์ open source ไม่ใช่งานเครื่องจักร; ส่วนที่ดี (กระชับ, ไม่ซ้ำกับ LICENSE/CHANGELOG, ใช้ GitHub admonition) จดไว้ใช้ถ้าทำ skill README ของเราเอง |
+| github/awesome-copilot `git-commit` @ 143a3d9 | บางส่วน — ดัดแปลงเข้า `git-commit` 1.0.0: เอาตาราง type ของ Conventional Commits และกฎความปลอดภัยของ git; ที่ไม่เอา: `allowed-tools: Bash` (รัน Bash ทุกคำสั่งได้โดยไม่ถามระหว่างที่ skill ทำงาน), แนะนำ `git add -p` (interactive ใช้ใน Claude Code ไม่ได้), ไม่มีเรื่องระดับการทดสอบและสิ่งที่ห้าม commit (IP/ค่าเครื่องจริง) |
+| mattpocock/skills `git-guardrails-claude-code` @ d81f3a1 | ไม่ใช้ — hook ใช้ `jq` ซึ่งไม่มีบน Windows เครื่องนี้ ทดสอบแล้ว hook ไม่บล็อกอะไรเลยและไม่เตือน, ดักแค่ Bash ไม่ดัก PowerShell tool, บล็อก `git push` ทั้งหมด, จับคำสั่งด้วย regex หลวมจนข้อความใน commit message ก็โดน; ใช้ `permissions` ใน `settings.json` แทน |
+| anthropics/skills `skill-creator` @ 8a1541c (Apache-2.0) | ไม่ใช้ — ไม่ copy เข้า repo: มีฉบับที่ซิงก์จากบัญชี claude.ai (`anthropic-skills:skill-creator`) ในเครื่องอยู่แล้ว เรียกใช้ได้เมื่อต้องการ; หลักการเขียน skill (อธิบายเหตุผลแทน MUST, SKILL.md < 500 บรรทัด, แยก references, สัมภาษณ์ก่อนเขียน) เราทำอยู่แล้ว; description แบบ "pushy" ขัดข้อ 4; `run_loop.py` ปรับ description ใช้บน Windows ไม่ได้ (`select()` บน pipe → นับทุก query เป็นไม่ trigger โดยไม่ error, ไม่ระบุ encoding → พังกับภาษาไทย cp874) และต้องมี `claude` CLI + เรียก `claude -p` ราว 360 ครั้งต่อ skill; viewer โหลด Google Fonts/SheetJS จาก CDN และ kill ทุก process บน port 3117; ส่วนที่มีประโยชน์ (รันเทียบมี/ไม่มี skill ด้วย subagent) ทำได้โดยไม่ต้องติดตั้งอะไร |
+| obra/superpowers `using-git-worktrees` @ 8ca22db | ไม่ใช้ — description กว้างจนทำงานทุกครั้งที่เริ่ม feature, รัน `npm/pip/poetry install` เอง (ต้องใช้ internet, ไม่รองรับ colcon), ROS2 ต้อง build แยกทุก worktree และรันพร้อมกันจะแย่ง `/dev/ttyUSB*`; Claude Code มี worktree ในตัวอยู่แล้ว |
+| mattpocock/skills `tdd` @ 3f59913 (MIT) | บางส่วน — ดัดแปลงเป็น `tdd` 1.0.0 ของเรา: เอาการตกลง seam ก่อนเขียน test, anti-pattern (tautological, ผูกกับ implementation, horizontal slicing), mock เฉพาะขอบระบบ; ไม่ copy ตรงๆ เพราะเรียก skill `codebase-design` และ `code-review` ของเขาที่เราไม่มี (`code-review` จะไปชนกับ `/code-review` ของ Claude Code), ตัวอย่างเป็น TypeScript/checkout ทั้งหมด, ไม่พูดถึง hardware; ใส่ refactor กลับเข้าลูป |
+| tondevrel/scientific-agent-skills `opencv` @ 6e89d9e (MIT แต่ frontmatter เขียน Apache-2.0) | ไม่ใช้ — เขียน `opencv` 1.0.0 ของเราเองแทน: เป็นคู่มือ cv2 แบบ notebook (Python อย่างเดียว, `imshow` ทุกตัวอย่าง, `pip install opencv-python` ซึ่งชนกับ OpenCV 4.5.4 ของ Humble/cv_bridge); ผิด: บอกว่า SIFT อยู่ใน contrib (ย้ายเข้า main ตั้งแต่ 4.4), วาดกรอบ QR ผิด shape ของ 4.x, threaded capture ใช้ queue 128 เฟรม (ภาพช้าสะสม) และ release ข้าม thread; description อ้างว่ามี calibration/DNN แต่ไม่มีเนื้อหา; ไม่มี C++, cv_bridge, กล้อง industrial/depth, pixel→mm; ทั้ง repo 72 skill มาใน commit เดียวไม่เคยอัปเดต |
+| anthropics/claude-code plugin-dev `Plugin Structure`, `Plugin Settings` @ 3deb873 | ไม่ใช้ — license "All rights reserved" (Commercial Terms) copy ลง vendor ไม่ได้; หลายจุดเก่ากว่าที่ทดสอบกับ Claude Code 2.1.296: `hooks.json` ไม่ครอบด้วย `{"hooks": ...}`, ชื่อ skill มีช่องว่าง (ชื่อสั้นใช้เรียกไม่ได้), agent ไม่มี `name` และใช้ `capabilities:`, บอกว่าชื่อซ้ำจะ error (จริงคือ `~/.claude/skills` บังตัวใน plugin เงียบๆ), ไม่พูดถึง prefix `plugin:` ของ agent, เน้น `commands/`; script ตัวอย่างใช้ `jq`; ที่นำมาใช้: matcher ของ `SessionStart` (`startup/resume/clear/compact`), ใส่ `timeout` ให้ hook, quote `${CLAUDE_PLUGIN_ROOT}`; ขัดกับ docs เรื่องไม่ใส่ `version` (ถือเป็น 0.1.0 หรือติดตาม commit) — ต้องทดสอบก่อนใช้ plugin |

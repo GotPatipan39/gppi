@@ -1,0 +1,10 @@
+# Template: parameter ของ node
+# key บนสุดต้องตรงกับชื่อ node (name= ใน launch) หรือใช้ /** เพื่อให้ทุก node ใช้ร่วมกัน
+# ใส่หน่วยในคอมเมนต์ทุกค่า — ค่า hardware (IP, wheelbase, scale) ต้องมาจากผู้ใช้หรือ CLAUDE.md ห้ามเดา
+my_node:
+  ros__parameters:
+    rate_hz: 20.0        # Hz
+    cmd_timeout: 0.5     # s — ไม่ได้รับคำสั่งเกินนี้ = หยุด
+    max_speed: 0.3       # m/s — เริ่มต่ำไว้ก่อน แล้วค่อยเพิ่มหลังทดสอบ
+    max_accel: 0.3       # m/s^2
+    max_decel: 0.6       # m/s^2

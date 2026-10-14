@@ -1,0 +1,10 @@
+# ให้ทุกเครื่องได้ line ending ที่ถูกต้อง ไม่ว่าจะตั้ง core.autocrlf ไว้อย่างไร
+* text=auto
+# bash ใน WSL รันไฟล์ที่มี CRLF ไม่ได้
+*.sh   text eol=lf
+*.py   text eol=lf
+# cmd / PowerShell บน Windows
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+*.png  binary
+*.zip  binary
