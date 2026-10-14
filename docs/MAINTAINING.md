@@ -7,7 +7,7 @@
 - **skill**: แก้ใน `skills/<ชื่อ>/` แล้วขึ้นเวอร์ชันในบรรทัด `> เวอร์ชัน` ของ `SKILL.md` + `CHANGELOG.md` ของ skill นั้น + ตาราง skill ใน [README](../README.md#skill-และ-subagent) — commit แบบ `<skill> vX.Y.Z: <สรุป>`
 - **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules.md`](../rules.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
 - **agent**: เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตาราง README และเขียนเหตุผลใน commit message
-- Bash ของ `safety-reviewer` จำกัดแค่ด้วยคำสั่งในไฟล์ agent (อ่าน git อย่างเดียว) ไม่ใช่ด้วยระบบ — ตัวกันคำสั่งของ plugin ยังมีผลกับ subagent ตามปกติ
+- `safety-reviewer` **ไม่มี Bash** (ตั้งแต่ 1.1.0) — plugin subagent ใช้ `permissionMode`/`hooks` ใน frontmatter ไม่ได้ การห้ามในข้อความจึงบังคับไม่ได้จริง ทางเดียวที่บังคับได้คือไม่ให้ tool นั้น; ผู้เรียกเขียน diff ไว้ที่ `.git/gppi-review.diff` ให้แทน — ห้ามเพิ่ม Bash กลับโดยไม่มีทางจำกัดที่ระบบบังคับ
 - skill ที่มีไฟล์ `LICENSE` ของตัวเอง (`grilling`, `domain-modeling`) มาจากภายนอก — **ห้ามแก้เนื้อหา** อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์
 - แก้ตัวกันคำสั่ง: ดู [GUARD.md](GUARD.md#แก้ตัวกัน)
 

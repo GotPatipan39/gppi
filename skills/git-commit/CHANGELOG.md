@@ -1,5 +1,9 @@
 # CHANGELOG — git-commit
 
+## 1.2.1 — 2026-10-14
+- `safety-reviewer` 1.1.0 ไม่มี Bash แล้ว → ก่อนเรียกต้องเขียน diff ไว้ที่ `.git/gppi-review.diff` แล้วส่ง path ไปให้; diff ใหญ่ให้แบ่งส่ง
+- ไม่มีตัวตรวจในเครื่อง → ต้องบอกผู้ใช้ **ก่อน** commit ว่าไม่ได้ผ่านตัวตรวจแยก
+
 ## 1.2.0 — 2026-10-14
 - ย้ายจาก mskills มาเป็น plugin `gppi`: เรียกตัวตรวจด้วย `gppi:safety-reviewer` ชื่อเดียว (เลิกใช้ installer แล้ว)
 - ข้อยกเว้นของ repo gppi: เพิ่มการ release ทั้ง plugin — เลขใน `plugin.json`, CHANGELOG ที่ root, validate/test ก่อน, tag ด้วย `claude plugin tag`

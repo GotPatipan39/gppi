@@ -88,7 +88,7 @@ claude plugin install gppi@gppi
 | `industrial-ui` | 1.2.1 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.1 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.0.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
-| `git-commit` | 1.2.0 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
+| `git-commit` | 1.2.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.0.0 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
@@ -97,7 +97,7 @@ claude plugin install gppi@gppi
 
 | subagent | เวอร์ชัน | ใช้กับ | เรียกอย่างไร |
 |---|---|---|---|
-| `safety-reviewer` | 1.0.0 | ตรวจ diff ก่อน commit ในโปรเจกต์ที่คุมเครื่องจักร: เกณฑ์ความปลอดภัยที่ถูกลด, ค่า hardware ที่เปลี่ยน, คำสั่งขยับที่ไม่มีเงื่อนไข, ตอนสื่อสารล้มเหลว, test ที่ถูกแก้ให้ผ่าน — อ่านอย่างเดียว | skill `git-commit` เรียกให้เอง หรือสั่ง "ให้ safety-reviewer ตรวจ" — ชื่อเต็มคือ `gppi:safety-reviewer` |
+| `safety-reviewer` | 1.1.0 | ตรวจ diff ก่อน commit ในโปรเจกต์ที่คุมเครื่องจักร: เกณฑ์ความปลอดภัยที่ถูกลด, ค่า hardware ที่เปลี่ยน, คำสั่งขยับที่ไม่มีเงื่อนไข, ตอนสื่อสารล้มเหลว, test ที่ถูกแก้ให้ผ่าน, โหมดทดสอบที่ค้างในของจริง, การขยับเองหลัง reset — **ไม่มี Bash** (รันคำสั่งไม่ได้เลย อ่าน diff จากไฟล์ที่ผู้เรียกเขียนให้) | skill `git-commit` เรียกให้เอง หรือสั่ง "ให้ safety-reviewer ตรวจ" — ชื่อเต็มคือ `gppi:safety-reviewer` |
 
 ## โครงสร้าง
 ```
