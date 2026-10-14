@@ -8,8 +8,8 @@
 4. Actions
 5. Custom interfaces
 6. Type adapters (REP-2007)
-7. Content-filtered topics (Jazzy+)
-8. Service introspection (Jazzy+)
+7. Content-filtered topics (Humble+, RMW-dependent)
+8. Service introspection (Iron+ — not in Humble)
 9. QoS deep dive
 10. DDS configuration
 11. Serialization and bandwidth
@@ -375,13 +375,22 @@ eliminate serialization and `cv_bridge` conversion for nodes in the same
 process. Whether the underlying `cv::Mat` buffer is actually shared rather
 than copied follows the intra-process rules: publish as `unique_ptr`, and
 copies may still occur depending on callback type, subscriber count, and QoS
-(see `references/nodes-executors.md`).
+(see `references/nodes-executors.md` §4). On Humble, intra-process endpoints
+must be `KEEP_LAST` + `VOLATILE` or creation throws `std::invalid_argument`.
 
 **Industry reference:** NVIDIA NITROS (used in Isaac ROS) builds on type adapters to
 negotiate GPU tensor <-> ROS message conversion, keeping data on the GPU between
 NITROS-accelerated nodes and only converting to CPU ROS messages at the boundary.
 
-## 7. Content-filtered topics (Jazzy+)
+## 7. Content-filtered topics (Humble+, RMW-dependent)
+
+> **Available on Humble** — content filtered topics are listed as a new feature in the
+> [Humble release notes](https://github.com/ros2/ros2_documentation/blob/humble/source/Releases/Release-Humble-Hawksbill.rst)
+> and demoed in the
+> [Humble content-filtering tutorial](https://github.com/ros2/ros2_documentation/blob/humble/source/Tutorials/Demos/Content-Filtering-Subscription.rst).
+> They only filter on `rmw_fastrtps_cpp` (Humble default) and `rmw_connextdds`;
+> **`rmw_cyclonedds_cpp` does not support them at all** — the subscription is
+> still created but receives every message unfiltered.
 
 Content-filtered topics allow subscribers to receive only messages matching a
 filter expression, evaluated at the DDS layer before delivery. This reduces CPU
@@ -441,12 +450,16 @@ if (!sub->is_cft_enabled()) {
 
 | Vendor | Content filter support |
 |---|---|
-| FastDDS | Full support |
-| CycloneDDS | Limited support (basic expressions only) |
-| Connext DDS | Full support |
-| Zenoh (rmw_zenoh) | Not currently supported |
+| FastDDS (`rmw_fastrtps_cpp`) | Supported |
+| CycloneDDS (`rmw_cyclonedds_cpp`) | **Not supported** — `is_cft_enabled()` returns false, all messages are delivered |
+| Connext DDS (`rmw_connextdds`) | Supported |
+| Zenoh (rmw_zenoh) | Not supported |
 
-## 8. Service introspection (Jazzy+)
+Because CycloneDDS silently delivers everything, never rely on the filter for
+correctness (e.g., to drop commands meant for another device) — keep an
+application-level check in the callback.
+
+## 8. Service introspection (Iron+ — not in Humble)
 
 Service introspection allows monitoring service request/response pairs without
 modifying the server or client code. This is useful for debugging, logging,
@@ -653,9 +666,9 @@ ros2 topic info /cmd_vel -v
 ros2 topic echo /rosout --qos-reliability reliable --field msg | grep -i "incompatible"
 ```
 
-Before running anything, `scripts/qos_audit.py <package>` statically pairs
-declared publishers and subscriptions by topic and message type across rclpy and
-rclcpp sources. It reports unresolved or RMW-default-dependent results instead of
+Before running anything, pair the declared publishers and subscriptions by topic
+and message type in the sources (grep `create_publisher` / `create_subscription`
+and their QoS) and flag any pair whose QoS depends on RMW defaults instead of
 guessing; confirm the running graph with `ros2 topic info -v`.
 
 ## 10. DDS configuration
@@ -696,6 +709,13 @@ export CYCLONEDDS_URI=file://$(pwd)/cyclonedds.xml
 
 ### Multi-machine communication
 
+> **Team default: local only.** Projects run with `ROS_LOCALHOST_ONLY=1` and the
+> `ROS_DOMAIN_ID` from the project's `CLAUDE.md` (see SKILL.md "ขอบเขต network").
+> Use this subsection **only when the project's `CLAUDE.md` says the system is
+> multi-machine** — DDS on the LAN sees/collides with other machines' ROS 2 graphs
+> and lets anyone on the network publish to your topics. When it does apply, keep
+> it on the machine's dedicated LAN, not the office LAN.
+
 ```bash
 # Same DDS domain (default 0) on same network — automatic discovery
 export ROS_DOMAIN_ID=42  # Isolate from other ROS 2 systems on the network
@@ -722,8 +742,9 @@ middleware to reach Tier 1 status in ROS 2. It offers lower wire overhead and be
 performance in challenging network conditions compared to DDS.
 
 ```bash
-# Install (available as binary in Jazzy+)
-sudo apt install ros-jazzy-rmw-zenoh-cpp
+# Install (binary also released for Humble: rmw_zenoh_cpp 0.1.x,
+# https://index.ros.org/p/rmw_zenoh_cpp/)
+sudo apt install ros-humble-rmw-zenoh-cpp
 
 # Use Zenoh instead of a DDS-based RMW
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
@@ -865,14 +886,15 @@ support topic-level QoS overrides in its XML config — set QoS programmatically
 </dds>
 ```
 
-### Localhost-only communication (for development)
+### Localhost-only communication (team default)
 
 ```bash
-# Jazzy+ (preferred):
-export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+# Humble — team default for every project (dev and runtime):
+export ROS_LOCALHOST_ONLY=1
+export ROS_DOMAIN_ID=<from project CLAUDE.md>
 
-# Humble (or Jazzy backward-compatible):
-export ROS_LOCALHOST_ONLY=1  # Deprecated in Jazzy+, still functional
+# Jazzy+ only (distro comparison; do not use on Humble):
+# export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST   # replaces ROS_LOCALHOST_ONLY
 
 # Or in CycloneDDS (all distros):
 # <General><AllowMulticast>false</AllowMulticast></General>
@@ -898,7 +920,7 @@ For high-bandwidth data (images, point clouds):
 
 - Use `image_transport` with compression
 - Use intra-process communication within the same process
-- Consider shared memory transport (Jazzy+)
+- Consider shared memory transport (vendor-specific, see §10)
 - **Message pre-allocation for high-throughput:** In tight loops (>100 Hz), avoid
   creating new message objects per publish cycle. Pre-allocate the message once and
   reuse it, only updating the fields that change:
@@ -934,9 +956,9 @@ For high-bandwidth data (images, point clouds):
 | Messages arrive out of order | BEST_EFFORT over lossy network | Use RELIABLE for ordering guarantees, or handle reordering in logic |
 | High CPU from subscriber | Callback slower than publish rate | Increase subscriber queue depth, add `KEEP_LAST` with small depth |
 | QoS deadline missed events not firing | Deadline policy not supported by DDS vendor for this topic type | Use CycloneDDS or FastDDS; verify with `ros2 topic info -v` |
-| Content filter has no effect | DDS vendor does not support content filtering | Check vendor docs; CycloneDDS has limited support, FastDDS has full support |
+| Content filter has no effect | RMW does not support content filtering | Check `sub->is_cft_enabled()`; CycloneDDS does not support it at all, FastDDS (Humble default) and Connext do — keep an application-level check either way |
 | Shared memory transport not working | iceoryx RouDi daemon not running or CYCLONEDDS_URI not set | Start `iox-roudi` first, export CYCLONEDDS_URI, ensure same user/permissions |
 
 ---
 
-**See also:** `references/nodes-executors.md` for executor and callback group patterns affecting communication, `references/realtime.md` for DDS tuning under real-time constraints, `references/security.md` for encrypting DDS traffic with SROS2.
+**See also:** `references/nodes-executors.md` for executor and callback group patterns affecting communication (including the Humble intra-process QoS restriction), `references/debugging.md` for diagnosing QoS and discovery problems.

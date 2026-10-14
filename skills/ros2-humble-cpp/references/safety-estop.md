@@ -7,7 +7,9 @@
 This guide covers designing the stop path of a robot: hardware vs software e-stop,
 heartbeat-based permits with watchdogs, command arbitration so a stop decision
 wins, SROS2 isolation so only the safety node can command (or clear) a stop, and reset
-semantics. SROS2 keystore/enclave mechanics live in `references/security.md` §2 and §5 —
+semantics. SROS2 keystore/enclave mechanics are in the Humble security tutorials
+([The Keystore](https://github.com/ros2/ros2_documentation/blob/humble/source/Tutorials/Advanced/Security/The-Keystore.rst),
+[Access Controls](https://github.com/ros2/ros2_documentation/blob/humble/source/Tutorials/Advanced/Security/Access-Controls.rst)) —
 this file covers the *safety architecture* built on top of them.
 
 ## Table of contents
@@ -65,9 +67,8 @@ if msg.emergency_stop:
 
 ### Heartbeat with QoS detection and application watchdogs
 
-The RELIABLE, VOLATILE, KEEP_LAST/1 profile in
-`references/engineering-principles.md` Principle 6 is an illustrative starting
-point. Derive heartbeat period, deadline, lifespan and accepted sample age from
+A RELIABLE, VOLATILE, KEEP_LAST/1 profile (as in the example below) is an
+illustrative starting point. Derive heartbeat period, deadline, lifespan and accepted sample age from
 the verified end-to-end stop budget. The example's 500 ms deadline and 1 s lifespan
 are not validated machine limits. DEADLINE reports a missed update; LIFESPAN limits
 DDS sample retention. Neither guarantees that a callback runs on time or that a
@@ -341,7 +342,7 @@ behavior, the vendor's documented command latency, and the sensor noise floor (a
 threshold below your encoder's resolution is not a criterion). Publish them with
 the stop-path test results so a later run can be compared against the same bar.
 
-| Link | Evidence | Level (`references/engineering-principles.md` Principle 13) |
+| Link | Evidence | Level (verification levels in `references/testing.md` §11) |
 |---|---|---|
 | Command ownership | `ros2 topic info -v` publisher set vs declared architecture, SROS2 policy, enforcement test | L3 |
 | Driver translation | driver source / vendor API path taken by a zero command | L0 + L4 |
@@ -350,8 +351,7 @@ the stop-path test results so a later run can be compared against the same bar.
 | Hardware response | encoder/current/IMU feedback vs `epsilon_stop`/`T_stop`/`T_hold` | L5 |
 
 Only the full chain supports a verified-stop claim. Topic observations do not
-establish measured hardware response (Principle 13 in
-`references/engineering-principles.md`). Measuring stopping from commanded motion
+establish measured hardware response (evidence levels in `references/testing.md` §11). Measuring stopping from commanded motion
 requires a restrained platform and an operator under the conditions in Section 6;
 it is never an unattended CI step or an agent-executed physical fault injection.
 
@@ -363,7 +363,7 @@ and its service permissions, check the installed interface, and handle switching
 failure within the stop budget. A successful switch or deactivation is not proof
 of physical stopping; confirm what the hardware writes and observe the response.
 See `references/hardware-interface.md` for driver cleanup, and the
-[controller-manager interface](https://control.ros.org/jazzy/doc/ros2_control/controller_manager/doc/userdoc.html)
+[controller-manager interface](https://control.ros.org/humble/doc/ros2_control/controller_manager/doc/userdoc.html)
 for switching and fallback limitations. Process cleanup on a shutdown signal is
 likewise not a hardware stop; the signal-handling pattern in
 `references/nodes-executors.md` §1 ends with the node's downstream watchdog and
@@ -376,9 +376,11 @@ Without access control, *any* process on the DDS domain can publish
 `/safety/estop_active` with `false` (masking the lock). SROS2 access control makes the
 safety topics writable by exactly one identity.
 
-Keystore creation, enclave generation, and signing are covered in
-`references/security.md` §2; permissions XML structure in §5. What follows is the
-safety-specific policy.
+Keystore creation, enclave generation, and signing are covered in the Humble
+[The Keystore](https://github.com/ros2/ros2_documentation/blob/humble/source/Tutorials/Advanced/Security/The-Keystore.rst)
+tutorial; policy/permissions structure in
+[Access Controls](https://github.com/ros2/ros2_documentation/blob/humble/source/Tutorials/Advanced/Security/Access-Controls.rst).
+What follows is the safety-specific policy.
 
 ### Threat model for the stop path
 
@@ -393,7 +395,7 @@ safety-specific policy.
 
 ```xml
 <!-- policy/safety_policy.xml — sros2 policy format (converted to signed
-     permissions with `ros2 security create_permission`, see security.md §2) -->
+     permissions with `ros2 security create_permission`, see the Access Controls tutorial) -->
 <policy version="0.2.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <enclaves>
@@ -476,22 +478,23 @@ This safety-specific fragment gives the named ACK and reset routes in both
 directions. Add only the application's actual hardware feedback, infrastructure
 and authorized start/source-generation interfaces; then generate and verify the
 effective DDS grants. It is not a complete policy for unspecified nodes.
-Service policy syntax: [SROS2 client/server example](https://github.com/ros2/sros2/blob/jazzy/sros2/test/policies/add_two_ints.policy.xml).
+Service policy syntax: [SROS2 client/server example](https://github.com/ros2/sros2/blob/humble/sros2/test/policies/add_two_ints.policy.xml).
 
 Key points:
 
 - **Default-deny permissions.** `<default>DENY</default>` belongs in each DDS
   permissions grant, not the governance document. Governance must also reject
   unauthenticated participants and enable join, read and write access control for
-  the protected topics (`security.md` §5).
+  the protected topics (Access Controls tutorial above).
 - **Audit effective grants in every enclave, including the supervisor.** Broad or
   wildcard grants must not accidentally authorize a protected publication. Inspect
   the XML structure and overlapping rules; filtering individual lines containing
   `publish` cannot establish the effective permissions of a multiline grant.
 
 - Remember DDS topic mangling: in *hand-written DDS permissions* the ROS topic
-  `/safety/motion_permit` appears as `rt/safety/motion_permit` (`security.md` §5
-  "Topic name prefixes"). The sros2 policy format above handles the prefix for you.
+  `/safety/motion_permit` appears as `rt/safety/motion_permit` (ROS 2 topic-name
+  mangling: `rt/` for topics, `rq/`/`rr/` for service request/reply). The sros2
+  policy format above handles the prefix for you.
 - Run with `ROS_SECURITY_ENABLE=true` and `ROS_SECURITY_STRATEGY=Enforce` on every
   participating process so missing or invalid security artifacts cannot silently
   fall back to unsecured operation. Peer admission and topic access still depend
@@ -509,8 +512,8 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{}'
 # or delivered command; inspect the failing process and receiver evidence.
 ```
 
-Local rejection is expected when [rcl security directory discovery](https://github.com/ros2/rcl/blob/jazzy/rcl/src/rcl/security.c)
-fails under Enforce: [rcl_init](https://github.com/ros2/rcl/blob/jazzy/rcl/src/rcl/init.c)
+Local rejection is expected when [rcl security directory discovery](https://github.com/ros2/rcl/blob/humble/rcl/src/rcl/security.c)
+fails under Enforce: [rcl_init](https://github.com/ros2/rcl/blob/humble/rcl/src/rcl/init.c)
 returns before initializing the RMW context. DDS logs are not required for that
 failure path.
 
@@ -664,7 +667,7 @@ commissioning test.
 | Zero command visible on the topic, robot keeps moving | The driver discarded the zero as "no command", the vendor call failed, or a competing publisher overwrote it | Verify all four links — command ownership, driver translation, submission plus remote-acceptance evidence, measured hardware response (Section 3) |
 | Stop clears itself when the flaky link recovers | Stop state derived directly from the live condition | Latch the stop; clear only via reset service that re-checks the condition (Section 5) |
 | Any node can publish the permit topic | Authentication/access control disabled, unsecured fallback, or overbroad grants | Enforce startup, access-control governance and default-deny permissions with supervisor-only permit publication (Section 4) |
-| Spoof test "passes" (spoof succeeds) in the lab | Nodes launched without enclaves fall back to unsecured participants | Launch every node with its enclave (`security.md` §9); make the spoof-must-fail check part of bringup |
+| Spoof test "passes" (spoof succeeds) in the lab | Nodes launched without enclaves fall back to unsecured participants | Launch every node with its enclave (`--ros-args --enclave <path>`, see the Humble Access Controls tutorial); make the spoof-must-fail check part of bringup |
 | Robot lurches on reset | An old goal republishes commands or queued data survives reset | Reset remains stationary; require deliberate start/resume and a new authorized command generation (Section 5) |
 | Late-started dashboard shows "no e-stop" during an incident | State topic is VOLATILE — late joiner missed the latch | `TRANSIENT_LOCAL` durability on `/safety/estop_state` (Section 2) |
 | Operators treat the ROS e-stop as THE e-stop | Software stop presented as safety-rated | Document the hardware chain as the safety function (ISO 13849/IEC 62061); ROS layer is a protective stop only (Section 1) |

@@ -303,7 +303,7 @@ extract.filter(*objects);
 
 ```bash
 # Install RealSense ROS 2 wrapper
-sudo apt install ros-jazzy-realsense2-camera
+sudo apt install ros-humble-realsense2-camera
 
 # Launch with aligned depth
 ros2 launch realsense2_camera rs_launch.py \
@@ -388,7 +388,7 @@ Z-up). The rotation above converts between them.
 
 ```bash
 # Install
-sudo apt install ros-jazzy-apriltag-ros
+sudo apt install ros-humble-apriltag-ros
 
 # Launch detector
 ros2 run apriltag_ros apriltag_node --ros-args \
@@ -582,4 +582,4 @@ These use NITROS for zero-copy GPU memory transfer between nodes. Install via Is
 
 ---
 
-**See also:** `references/communication.md` for image_transport and QoS profiles for sensor data, `references/simulation.md` for simulated sensors and camera testing, `references/tf2-urdf.md` for camera optical frame conventions in URDF.
+**See also:** `references/communication.md` for image_transport and QoS profiles for sensor data, `references/testing.md` for testing camera nodes without hardware, `references/tf2-urdf.md` for camera optical frame conventions in URDF.

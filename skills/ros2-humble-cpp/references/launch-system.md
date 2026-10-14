@@ -23,17 +23,18 @@ remappings. Three formats are supported: XML (`*.launch.xml`), YAML
 same underlying launch action/substitution model; Python provides direct access
 to that API.
 
-**Prefer declarative XML or YAML for straightforward launch descriptions. Use
-Python when the required launch behavior cannot be expressed cleanly through the
-declarative frontends or requires lower-level launch APIs.**
+**Team convention: write launch files in Python (`*.launch.py`).** This matches
+`SKILL.md`, the shipped `templates/example.launch.py`, and most upstream Humble
+packages (ros2_control demos, Nav2), so examples can be copied without
+translation.
 
-The ROS 2 migration guide states that for typical use cases XML and YAML should
-be preferred over Python. The launch format guide leaves the choice to the
-developer and reserves Python for flexibility that XML or YAML cannot achieve.
-The XML design article names the declarative advantages: easier to read, audit,
-and maintain. A Python launch file is still valid ROS 2; reviewing an existing
-`*.launch.py` does not require converting it. Rewriting pays off when the file
-is a plain node list that a declarative file expresses more clearly.
+XML (and YAML) remain a valid option: the upstream migration guide states that
+for typical use cases XML and YAML should be preferred, and the launch format
+guide leaves the choice to the developer. This skill picks Python for team
+consistency, not because XML is wrong. Use XML when a project already uses it or the launch
+is a plain node list and the team agrees; an existing `*.launch.xml` does not
+need converting. The XML examples in this file are kept for reading and
+maintaining such files.
 
 Keep launch files focused on orchestration and as simple as the system allows.
 If substantial computation or application logic accumulates in a launch file,
@@ -44,17 +45,17 @@ make launch programmable.
 
 | Launch content | Default choice |
 |---|---|
-| Nodes, parameters, remappings, namespaces, includes, simple conditions | XML/YAML |
-| Ordinary robot bringup composition | XML/YAML first |
+| Nodes, parameters, remappings, namespaces, includes, simple conditions | Python (team default); XML acceptable if the project already uses it |
+| Ordinary robot bringup composition | Python |
 | Low-level launch features not exposed by the frontends | Python |
 | A launch graph that genuinely depends on runtime logic | Python |
 | Actions generated from computation or external data | Python, with the need stated in the file |
-| "Python is more familiar" | Weak justification on its own |
+| Existing XML/YAML launch file | Keep its format; do not convert without a reason |
 | Application logic or substantial computation | Move it into a node or configuration, not launch |
 
-### When Python is justified, stay declarative
+### Python launch: stay declarative
 
-When Python is justified, keep the launch description declarative where that
+In Python, keep the launch description declarative where that
 preserves clarity and configurability. Prefer launch-native substitutions for
 values that should remain launch-time configurable or context-dependent, and
 prefer launch conditions or substitutions over Python control flow when they
@@ -146,14 +147,16 @@ verifies resolved parameter values or runtime behavior.
 | All | `ros2 launch <pkg> <file> --show-args` | The file is found, loads, and declares the listed arguments |
 | All | `ros2 launch <pkg> <file> --print` | The launch description is built and printed without launching; structural only, and a Python file is executed to build it |
 | XML | `xmllint --noout`, `ament_xmllint` | XML markup is well-formed; not launch semantics |
-| Python | `scripts/launch_validator.py` | Selected static defects in Python launch files (see its docstring) |
+| Python | `python3 -m py_compile <file>.launch.py`, `ament_flake8` | Python syntax / lint only; not launch semantics |
 
-This bundle ships no static validator for XML or YAML launch files. Runtime
+This skill ships no launch-file validator script. `--show-args` and `--print`
+build the launch description without starting nodes, but a `*.launch.py` is
+executed to do so, so check what it does at import time first. Runtime
 behavior is established by the verification levels in `references/testing.md`.
 
 **Technical sources:** [Rolling migration guide](https://github.com/ros2/ros2_documentation/blob/rolling/source/Migration-and-Upgrades/Migrating-from-ROS1/Migrating-Launch-Files.rst),
 [Humble migration guide](https://docs.ros.org/en/humble/How-To-Guides/Migrating-from-ROS1/Migrating-Launch-Files.html),
-[Jazzy launch format guide](https://docs.ros.org/en/jazzy/How-To-Guides/Launch-file-different-formats.html),
+[Humble launch format guide](https://docs.ros.org/en/humble/How-To-Guides/Launch-file-different-formats.html),
 [roslaunch XML design](https://design.ros2.org/articles/roslaunch_xml.html),
 [ros2launch options](https://github.com/ros2/launch_ros/blob/humble/ros2launch/ros2launch/command/launch.py).
 
@@ -180,7 +183,7 @@ behavior is established by the verification levels in `references/testing.md`.
 </launch>
 ```
 
-The same description in Python, for cases that need the API:
+The same description in Python (team default):
 
 ```python
 from launch import LaunchDescription
@@ -221,8 +224,11 @@ def generate_launch_description():
 
 ```bash
 # Launch with custom arguments (same syntax for every format)
-ros2 launch my_robot_bringup robot.launch.xml use_sim_time:=true robot_name:=arm_1
+ros2 launch my_robot_bringup robot.launch.py use_sim_time:=true robot_name:=arm_1
 ```
+
+This starts the driver node: on real hardware Claude asks the user before
+running it (`--show-args` / `--print` do not start nodes).
 
 ### Common substitutions
 
@@ -438,10 +444,13 @@ XML top-level file can include a Python subsystem launch and the reverse.
 <launch>
   <arg name="use_sim_time" default="false"/>
   <arg name="map" default=""/>
+  <!-- No defaults: port and baud come from the project's hardware config -->
+  <arg name="serial_port"/>
+  <arg name="baud_rate"/>
 
   <include file="$(find-pkg-share my_robot_driver)/launch/driver.launch.xml">
-    <arg name="serial_port" value="/dev/ttyUSB0"/>
-    <arg name="baud_rate" value="115200"/>
+    <arg name="serial_port" value="$(var serial_port)"/>
+    <arg name="baud_rate" value="$(var baud_rate)"/>
   </include>
 
   <include file="$(find-pkg-share my_robot_navigation)/launch/navigation.launch.py">
@@ -480,8 +489,9 @@ def generate_launch_description():
             ])
         ),
         launch_arguments={
-            'serial_port': '/dev/ttyUSB0',
-            'baud_rate': '115200',
+            # No defaults: values come from the project's hardware config
+            'serial_port': LaunchConfiguration('serial_port'),
+            'baud_rate': LaunchConfiguration('baud_rate'),
         }.items(),
     )
 
@@ -501,6 +511,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('map', default_value=''),
+        DeclareLaunchArgument('serial_port', description='Driver serial port (required)'),
+        DeclareLaunchArgument('baud_rate', description='Driver baud rate (required)'),
         driver_launch,
         navigation_launch,
     ])
@@ -508,23 +520,24 @@ def generate_launch_description():
 
 ### Recommended hierarchy
 
-The format is chosen per file; the extension below is illustrative.
+Team default is Python; an included file may still be XML/YAML when that is
+what the package already has.
 
 ```text
 my_robot_bringup/
 ├── launch/
-│   ├── robot.launch.xml         # Top-level: includes all subsystem launches
-│   ├── simulation.launch.xml    # Sim-specific (Gazebo + bridges)
-│   └── rviz.launch.xml          # Visualization
+│   ├── robot.launch.py          # Top-level: includes all subsystem launches
+│   ├── simulation.launch.py     # Sim-specific (Gazebo + bridges)
+│   └── rviz.launch.py           # Visualization
 my_robot_driver/
 ├── launch/
-│   └── driver.launch.xml        # Self-contained driver launch
+│   └── driver.launch.py         # Self-contained driver launch
 my_robot_navigation/
 ├── launch/
 │   └── navigation.launch.py     # Self-contained Nav2 launch (upstream Nav2 ships Python)
 my_robot_perception/
 ├── launch/
-│   └── perception.launch.yaml   # Self-contained perception pipeline
+│   └── perception.launch.py     # Self-contained perception pipeline
 ```
 
 **Technical sources:** [launch_xml sources](https://github.com/ros2/launch/blob/humble/launch_xml/launch_xml/launch_description_sources/__init__.py),
@@ -591,15 +604,15 @@ def generate_launch_description():
     )
 
     # Controller Manager
-    # Humble: pass robot_description as parameter
-    # Jazzy+: CM subscribes to /robot_description topic (published by RSP above)
-    #         — do NOT pass robot_description as parameter
-    cm_params = [{'robot_description': robot_description}, controller_config]  # Humble
-    # cm_params = [controller_config]  # Jazzy / Kilted / Rolling
+    # Humble: passing robot_description as a controller_manager parameter is
+    # deprecated. The manager subscribes to ~/robot_description
+    # (= /controller_manager/robot_description), so remap it to the topic that
+    # robot_state_publisher publishes. Without the remap it never gets the URDF.
     control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=cm_params,
+        parameters=[controller_config],
+        remappings=[('~/robot_description', '/robot_description')],
         output='screen',
     )
 
@@ -621,6 +634,9 @@ def generate_launch_description():
     ])
 ```
 
+With a real hardware plugin in the URDF, launching this file opens the hardware
+and activates controllers: Claude asks the user before running it.
+
 One spawner avoids launch-level process-exit sequencing, but does not make the
 entire multi-controller operation atomic. In the default mode each listed
 controller is loaded, configured, and activated in turn, so a failure on a
@@ -634,7 +650,8 @@ When separate spawner processes are required, chain them with the
 exit-code-gated `OnProcessExit` handler from section 4 rather than an
 unconditional `on_exit` list; the caveat stated there applies unchanged.
 
-**Technical sources:** [controller manager spawner options](https://github.com/ros-controls/ros2_control/blob/humble/controller_manager/doc/userdoc.rst).
+**Technical sources:** [controller manager spawner options and `~/robot_description` subscriber](https://control.ros.org/humble/doc/ros2_control/controller_manager/doc/userdoc.html),
+[ros2_control_demos example_2 launch (humble)](https://github.com/ros-controls/ros2_control_demos/blob/humble/example_2/bringup/launch/diffbot.launch.py).
 
 ## 8. Large system organization
 
@@ -689,7 +706,7 @@ failure before starting the dependent work. Process start alone is also not a
 readiness signal.
 
 Sources: [TimerAction](https://github.com/ros2/launch/blob/3.4.11/launch/launch/actions/timer_action.py),
-[controller manager spawner options](https://github.com/ros-controls/ros2_control/blob/jazzy/controller_manager/doc/userdoc.rst).
+[controller manager spawner options](https://github.com/ros-controls/ros2_control/blob/humble/controller_manager/doc/userdoc.rst).
 
 ## 9. Launch testing integration
 
@@ -766,29 +783,11 @@ problem is fixed. Verify a proposed upstream repair against the installed versio
 with a deterministic signal-injection regression and unchanged child-exit gates.
 Process shutdown remains separate from a downstream hardware stop mechanism.
 
-For authorized headless execution, the bundle provides
-`scripts/launch_supervisor.py`. Source ROS and the workspace, then give it the
-installed launch file and ordinary `name:=value` arguments:
-
-```bash
-python3 scripts/launch_supervisor.py \
-  "$(ros2 pkg prefix --share my_robot_driver)/launch/fleet.launch.py"
-```
-
-This POSIX entry point starts the real launch graph using `LaunchService` with
-its own asyncio loop. Its non-raising SIGINT handler stays active through task,
-async-generator, and executor cleanup, then restores the prior handler. Send
-SIGINT to the supervisor PID for graceful shutdown. It does not impose a hardware
-stop deadline or guarantee exit from an unresponsive user callback. A process
-manager must still enforce its shutdown deadline and account for every child.
-
-The generated-fleet CI uses this shipped entry point, retaining the 10-second
-supervisor limit and zero-exit evidence for every started child. A separate
-deterministic probe exercises the installed ROS signal manager with the old
-raising handler as a negative control. Native `ros2 launch --show-args` still
-checks file discovery/import compatibility; these results do **not** establish
-that upstream `ros2 launch` SIGINT handling was repaired. Launch files remain
-usable by that CLI, with the shutdown limitation above.
+This skill ships no launch supervisor script. For headless runs on the mini PC,
+let the process manager (systemd, see `references/system-bringup.md`) own the
+shutdown deadline and account for every child process; it does not replace a
+downstream hardware stop. Starting or restarting a service that runs real
+drivers can move the machine: Claude asks the user first.
 
 Sources: [Python asyncio SIGINT behavior](https://docs.python.org/3.12/library/asyncio-runner.html#handling-keyboard-interruption),
 [ROS launch 3.4.11 signal management](https://github.com/ros2/launch/blob/3.4.11/launch/launch/utilities/signal_management.py),

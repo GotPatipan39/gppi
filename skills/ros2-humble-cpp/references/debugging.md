@@ -65,7 +65,7 @@ NETWORK CONFIGURATION
   multicast: enabled
 
 DISTRIBUTION INFO
-  distro: jazzy
+  distro: humble
   rmw_implementation: rmw_cyclonedds_cpp
 
 TOPIC LIST
@@ -295,30 +295,50 @@ Low-overhead tracing for analyzing callback latency, scheduling, and DDS behavio
 
 ### Setup
 
-```bash
-# Install
-sudo apt install ros-jazzy-ros2trace ros-jazzy-tracetools-analysis
-sudo apt install lttng-tools babeltrace2
+> **Humble:** the `/opt/ros/humble` binaries are built **without** tracepoints —
+> tracing instrumentation is included by default only from Iron
+> ([Iron release notes](https://github.com/ros2/ros2_documentation/blob/rolling/source/Releases/Release-Iron-Irwini.rst)).
+> On Humble you must build `tracetools` from source in an overlay with LTTng
+> installed ([ros2_tracing humble README](https://github.com/ros2/ros2_tracing/blob/humble/README.md)).
+> There are also no `ros2 trace start/stop` subcommands on Humble — `ros2 trace`
+> is a single interactive command
+> ([humble `trace.py`](https://github.com/ros2/ros2_tracing/blob/humble/tracetools_trace/tracetools_trace/trace.py)).
 
-# Add user to tracing group
+```bash
+# Install (Humble)
+sudo apt install lttng-tools liblttng-ust-dev python3-babeltrace python3-lttng
+sudo apt install ros-humble-ros2trace ros-humble-tracetools-launch ros-humble-tracetools-analysis
+
+# Add user to tracing group (log out/in afterwards)
 sudo usermod -aG tracing $USER
+
+# Rebuild tracetools with LTTng in an overlay workspace (Humble binaries lack tracepoints)
+cd ~/tracing_ws/src
+git clone -b humble https://github.com/ros2/ros2_tracing.git
+cd ~/tracing_ws && colcon build --packages-up-to tracetools
+source ~/tracing_ws/install/setup.bash
+ros2 run tracetools status        # must print "Tracing enabled"
+# Then build/run your own workspace on top of this overlay
 ```
 
-### Recording a trace
+### Recording a trace (Humble)
 
 ```bash
-# Start tracing
-# Start tracing (all ROS 2 tracepoints enabled by default)
-ros2 trace start my_trace
+# Terminal 1 — interactive: sets up the session, waits for Enter to start,
+# then Enter (or Ctrl+C) to stop. All ROS 2 userspace tracepoints by default.
+ros2 trace -s my_trace            # -p <dir> to change base path, -k <events> for kernel events
 
-# Run your system
+# Terminal 2 — after pressing Enter in terminal 1, run the system
+# (source the tracing overlay here too)
 ros2 launch my_robot_bringup robot.launch.py
 
-# Stop tracing (Iron+; on Humble, use Ctrl+C on the interactive `ros2 trace`)
-ros2 trace stop my_trace
-
-# Traces are stored in ~/.ros/tracing/my_trace/
+# Back in terminal 1: press Enter to stop
+# Traces are stored in ~/.ros/tracing/my_trace/ (or $ROS_TRACE_DIR)
 ```
+
+Alternatively, trace from a launch file with the `Trace` action from
+`tracetools_launch` — the session starts and stops with the launch.
+(`ros2 trace start/stop/pause/resume` subcommands exist only in newer distros.)
 
 ### Analyzing traces
 
@@ -532,7 +552,7 @@ from sensor_msgs.msg import LaserScan
 reader = SequentialReader()
 storage_options = StorageOptions(
     uri='my_bag',
-    storage_id='mcap')  # MCAP is the default format since Iron; use 'sqlite3' for Humble compatibility
+    storage_id='sqlite3')  # Humble default; use 'mcap' only if ros-humble-rosbag2-storage-mcap is installed and the bag was recorded with -s mcap
 converter_options = ConverterOptions(
     input_serialization_format='cdr',
     output_serialization_format='cdr')
@@ -545,13 +565,20 @@ while reader.has_next():
         print(f't={timestamp/1e9:.3f}s, ranges={len(msg.ranges)} points')
 ```
 
-### MCAP format features (Iron+)
+### MCAP format
 
 MCAP became the default bag format in Iron (and continues in Jazzy/Kilted/Rolling), replacing SQLite3. It offers faster writes, better compression, and indexed random access.
 
+**Humble:** the default storage is still `sqlite3`. MCAP needs the storage plugin
+and an explicit `-s mcap` on record
+([rosbag2_storage_mcap on index.ros.org](https://index.ros.org/p/rosbag2_storage_mcap/), Humble 0.15.x).
+
 ```bash
-# Record with MCAP (default in Iron+)
-ros2 bag record -a -o my_bag
+# Humble: install the MCAP storage plugin once
+sudo apt install ros-humble-rosbag2-storage-mcap
+
+# Record with MCAP (Humble: -s mcap is required; without it you get sqlite3)
+ros2 bag record -a -o my_bag -s mcap
 
 # Record with compression (recommended for production)
 ros2 bag record -a -o my_bag --compression-mode file --compression-format zstd
@@ -588,7 +615,7 @@ Foxglove Studio is a modern alternative to rqt for visualization and debugging. 
 
 ```bash
 # Install Foxglove bridge for live connection
-sudo apt install ros-jazzy-foxglove-bridge
+sudo apt install ros-humble-foxglove-bridge
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml
 # Open https://app.foxglove.dev and connect to ws://localhost:8765
 ```
@@ -662,8 +689,15 @@ export CYCLONEDDS_URI='<CycloneDDS><Domain><Tracing><Verbosity>finest</Verbosity
 
 ### Common network problems
 
+> **Team default: local only.** Projects run with `ROS_LOCALHOST_ONLY=1` and the
+> `ROS_DOMAIN_ID` from the project's `CLAUDE.md`. Opening the firewall for DDS,
+> multicast checks, and interface pinning below apply **only when the project's
+> `CLAUDE.md` says the system is multi-machine** — otherwise "can't see the other
+> machine" is the intended behaviour, not a fault. When it does apply, open the
+> ports only on the machine's dedicated LAN interface, not the office LAN.
+
 ```bash
-# Firewall blocking DDS
+# Firewall blocking DDS (multi-machine projects only — see note above)
 sudo ufw allow 7400:7500/udp   # DDS discovery range
 sudo ufw allow 7400:7500/tcp
 
@@ -677,12 +711,10 @@ export CYCLONEDDS_URI='<CycloneDDS><Domain><General><Interfaces><NetworkInterfac
 ### Localhost-only debugging
 
 ```bash
-# Isolate from other ROS 2 systems
-# Jazzy+ (preferred):
-export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
-# Humble (or Jazzy backward-compatible):
-# export ROS_LOCALHOST_ONLY=1  # Deprecated in Jazzy+
-export ROS_DOMAIN_ID=42
+# Isolate from other ROS 2 systems — Humble / team default
+export ROS_LOCALHOST_ONLY=1
+export ROS_DOMAIN_ID=<from project CLAUDE.md>
+# (Jazzy+ only, distro comparison: ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST replaces ROS_LOCALHOST_ONLY)
 ```
 
 ## 8. Common crash patterns and post-mortem analysis
@@ -733,7 +765,7 @@ Fix: Create all subscriptions in constructor/on_configure, never in callbacks
 | "No executable found" for `ros2 run` | Package not built or not sourced | `colcon build`, `source install/setup.bash` |
 | Node shows in `ros2 node list` but no topics | Node created but not spinning | Verify `rclcpp::spin()` or executor is running |
 | Messages arrive with wrong timestamp | Clock skew between machines | Use NTP/PTP synchronization, or `use_sim_time` with `/clock` |
-| `ros2 topic echo` shows nothing | QoS mismatch (echo defaults to RELIABLE) | Use `ros2 topic echo --qos-reliability best_effort` for sensor topics |
+| `ros2 topic echo` shows nothing | Usually not echo's QoS: on Humble, echo with no `--qos-*` flags matches the existing publishers' reliability/durability ([ros2cli humble echo.py](https://github.com/ros2/ros2cli/blob/humble/ros2topic/ros2topic/verb/echo.py)). More likely: echo started before the publisher existed (then it uses the `sensor_data` profile = BEST_EFFORT/VOLATILE and misses latched data), discovery/`ROS_DOMAIN_ID`/`ROS_LOCALHOST_ONLY` mismatch, or the publisher isn't publishing | Start the publisher first or pass explicit flags, e.g. `--qos-reliability reliable --qos-durability transient_local` for latched topics; check `ros2 topic info -v` and the env vars |
 | GDB shows `<optimized out>` for variables | Release build | Build with `-DCMAKE_BUILD_TYPE=Debug` or `RelWithDebInfo` |
 | Bag playback too fast | Missing `--clock` flag | Add `--clock` and set `use_sim_time: true` on nodes |
 | Copied bag has no `metadata.yaml` or fewer messages | Copied while the recorder was still writing | Stop the recorder cleanly; verify with `ros2 bag info`; copy the finalized directory (§5) |

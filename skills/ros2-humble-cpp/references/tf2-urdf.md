@@ -1,8 +1,10 @@
 # TF2 and URDF/Xacro
 
 > **Distro stability:** APIs in this guide are stable across Humble, Jazzy,
-> Kilted, and Rolling. Code samples use the modern `.hpp` header layout
-> (Jazzy+); the `.h` shims still work on Humble for backwards compatibility.
+> Kilted, and Rolling. Code samples use the `.hpp` headers, which already exist on
+> Humble for `tf2_ros` and `tf2_geometry_msgs` (alongside the older `.h` files —
+> see [geometry2 humble tf2_ros/include](https://github.com/ros2/geometry2/tree/humble/tf2_ros/include/tf2_ros)).
+> `tf2/LinearMath/*` stays `.h` on Humble.
 
 ## Table of contents
 
@@ -594,4 +596,4 @@ map
 
 ---
 
-**See also:** `references/launch-system.md` for robot_state_publisher launch patterns and xacro processing, `references/multi-robot.md` for frame prefix isolation in multi-robot systems, `references/perception.md` for camera optical frame conventions.
+**See also:** `references/launch-system.md` for robot_state_publisher launch patterns and xacro processing, `references/perception.md` for camera optical frame conventions.

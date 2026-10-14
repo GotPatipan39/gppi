@@ -138,17 +138,28 @@ colcon list --topological-order
 
 | Feature | Humble (2022.05) | Jazzy (2024.05) | Kilted (2025.05) |
 |---|---|---|---|
-| `ament_target_dependencies()` | Primary method | Works, but modern CMake preferred | **Deprecated** (emits warning) |
-| `target_link_libraries()` with CMake targets | Not available for most ROS pkgs | **Primary method** (`rclcpp::rclcpp`, `${msg_TARGETS}`) | Primary method (same as Jazzy) |
-| `${pkg_TARGETS}` for message packages | Not available | Available (`${sensor_msgs_TARGETS}`) | Available |
-| `pkg::pkg` for non-message packages | Not available | Available (`rclcpp::rclcpp`) | Available |
+| `ament_target_dependencies()` | **Standard, recommended by the Humble ament_cmake guide** | Works, but modern CMake preferred | **Deprecated** (emits warning) |
+| `target_link_libraries()` with exported CMake targets | Works for packages that export targets via `ament_export_targets()` (e.g. `rclcpp::rclcpp`, `${sensor_msgs_TARGETS}`) | **Primary method** | Primary method (same as Jazzy) |
+| `${pkg_TARGETS}` for message packages | Available (set by `ament_cmake_export_targets`) | Available | Available |
+| `pkg::pkg` for non-message packages | Available when the package exports targets (`rclcpp::rclcpp`) | Available | Available |
 | rosbag2 default storage | SQLite3 | MCAP | MCAP |
 
-**Migration path:**
+**On Humble (this team's target):** use `ament_target_dependencies()` — it is
+what the Humble ament_cmake guide calls "the first and recommended way", and it
+is what `templates/CMakeLists.txt` uses. `target_link_libraries()` with
+exported targets (`rclcpp::rclcpp`, `${sensor_msgs_TARGETS}`) also works on
+Humble for packages that call `ament_export_targets()`; use it when the
+project already does, or to be forward-compatible with Kilted. For non-ROS
+libraries the guide says to prefer namespaced targets (e.g. `Eigen3::Eigen`).
+Keep one style per target: CMake rejects mixing the plain and keyword
+(`PUBLIC`/`PRIVATE`) signatures of `target_link_libraries()` on one target, and
+`ament_target_dependencies()` without a keyword uses the plain signature.
 
-- **Humble → Jazzy**: Replace `ament_target_dependencies(target dep1 dep2)` with `target_link_libraries(target PUBLIC dep1::dep1 ${dep2_TARGETS})`
-- **Jazzy → Kilted**: Same syntax; if you haven't migrated yet, the build will now emit deprecation warnings
-- **Cross-distro code**: `target_link_libraries()` with modern targets works on Jazzy+ only. For Humble compatibility, keep `ament_target_dependencies()` behind a version guard or maintain separate branches.
+**Migration path (when moving off Humble):**
+
+- **Humble → Jazzy**: Optional — replace `ament_target_dependencies(target dep1 dep2)` with `target_link_libraries(target PUBLIC dep1::dep1 ${dep2_TARGETS})`
+- **Jazzy → Kilted**: `ament_target_dependencies()` now emits deprecation warnings; migrate if you haven't
+- **Cross-distro code**: `target_link_libraries()` with exported targets works on Humble, Jazzy and Kilted, so it is the single form that builds everywhere without warnings.
 
 ### Minimal CMakeLists.txt for a library + node
 
@@ -177,19 +188,23 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
-# Modern CMake (Jazzy+ primary, forward-compatible with Kilted)
-# Use target_link_libraries with imported CMake targets
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC
-  rclcpp::rclcpp
-  rclcpp_lifecycle::rclcpp_lifecycle
-  ${sensor_msgs_TARGETS}
-  ${my_robot_interfaces_TARGETS}
+# Humble standard (recommended by the Humble ament_cmake guide):
+ament_target_dependencies(${PROJECT_NAME}_lib PUBLIC
+  rclcpp
+  rclcpp_lifecycle
+  sensor_msgs
+  my_robot_interfaces
 )
 
-# ament_target_dependencies() is deprecated in Kilted (2025.05) and must be
-# migrated to target_link_libraries() with modern CMake targets as shown above.
-# target_link_libraries works on all active distros (Humble+).
-# Only fall back to ament_target_dependencies() for deps that lack CMake target exports (rare).
+# Equivalent with exported targets — also builds on Humble, and is the form
+# Jazzy prefers (ament_target_dependencies is deprecated in Kilted).
+# Use one form or the other on a target, not both:
+# target_link_libraries(${PROJECT_NAME}_lib PUBLIC
+#   rclcpp::rclcpp
+#   rclcpp_lifecycle::rclcpp_lifecycle
+#   ${sensor_msgs_TARGETS}
+#   ${my_robot_interfaces_TARGETS}
+# )
 
 # Executable (thin wrapper around library)
 add_executable(driver_node src/driver_node_main.cpp)
@@ -222,7 +237,13 @@ ament_export_dependencies(rclcpp rclcpp_lifecycle sensor_msgs my_robot_interface
 ament_package()
 ```
 
-**Note**: For message packages, use `${package_TARGETS}` (e.g., `${sensor_msgs_TARGETS}`) which expands to the correct CMake target names. For non-message packages, use the `package::package` syntax (e.g., `rclcpp::rclcpp`).
+Headers are installed to `include/${PROJECT_NAME}` and the install include
+path is `include/${PROJECT_NAME}`, as the Humble ament_cmake guide recommends
+("The include directory is custom to support overlays in colcon"). Keep the
+source layout `include/<package_name>/...` so `#include "<package_name>/x.hpp"`
+works from both the build and the install tree.
+
+**Note** (when using the `target_link_libraries()` form): for message packages, use `${package_TARGETS}` (e.g., `${sensor_msgs_TARGETS}`) which expands to the correct CMake target names. For non-message packages, use the `package::package` syntax (e.g., `rclcpp::rclcpp`).
 
 ### Component registration (for composition)
 
@@ -231,14 +252,8 @@ ament_package()
 find_package(rclcpp_components REQUIRED)
 
 add_library(driver_component SHARED src/driver_component.cpp)
-target_link_libraries(driver_component
-  ${PROJECT_NAME}_lib
-  rclcpp::rclcpp
-  rclcpp_components::component
-)
-# NOTE: ament_target_dependencies() is deprecated in Kilted (2025.05) and will
-# be removed in a future distro. Migrate to target_link_libraries() with modern
-# CMake targets (e.g. rclcpp::rclcpp) as shown above.
+target_link_libraries(driver_component PUBLIC ${PROJECT_NAME}_lib)
+ament_target_dependencies(driver_component PUBLIC rclcpp rclcpp_components)  # Humble standard
 
 rclcpp_components_register_nodes(driver_component "my_robot_driver::DriverComponent")
 
@@ -360,7 +375,7 @@ or utilities in the same package.
 ROS 2 workspaces form a chain of overlays:
 
 ```text
-/opt/ros/jazzy/          ← underlay (system install)
+/opt/ros/humble/         ← underlay (system install)
   └── ~/ros2_ws/install/  ← overlay (your workspace)
        └── ~/dev_ws/install/ ← overlay (experimental)
 ```
@@ -385,7 +400,7 @@ running process actually inherited", "Source tree vs installed copy").
 
 ```bash
 # Team-shared stable workspace
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
 cd ~/team_ws && colcon build
 source ~/team_ws/install/setup.bash
 
@@ -438,7 +453,7 @@ The standard tool for profiling DDS middleware latency, jitter, and throughput. 
 
 ```bash
 # Build the tool
-sudo apt install ros-jazzy-performance-test
+sudo apt install ros-humble-performance-test
 # Run a 10-minute test: 1 publisher, 1 subscriber, 1KB message at 1000Hz using CycloneDDS
 ros2 run performance_test perf_test -c CycloneDDS -m Array1k -r 1000 -p 1 -s 1 --max_runtime 600
 ```
@@ -450,12 +465,11 @@ ros2 run performance_test perf_test -c CycloneDDS -m Array1k -r 1000 -p 1 -s 1 -
 The ultimate tool for pipeline latency. It profiles the exact microseconds it takes for your message to go from the UDP socket into your callback.
 
 ```bash
-sudo apt install ros-jazzy-ros2trace ros-jazzy-tracetools-launch
-# Start tracing with full ROS 2 instrumentation
-ros2 trace start my_trace
-# Run your nodes...
-ros2 trace stop
+sudo apt install ros-humble-ros2trace ros-humble-tracetools-launch
+# Humble: no start/stop subcommands — `ros2 trace` is interactive (press Enter to start, Enter to stop)
+ros2 trace -s my_trace
 ```
+On Humble the released binaries carry no tracepoints; see `references/debugging.md` §3 for building `tracetools` as an overlay first.
 
 *Analysis:* Use the `tracetools_analysis` Jupyter notebooks to generate flame graphs and callback duration histograms.
 
@@ -507,11 +521,11 @@ repositories:
   my_robot_driver:
     type: git
     url: https://github.com/org/my_robot_driver.git
-    version: jazzy
+    version: humble
   my_robot_interfaces:
     type: git
     url: https://github.com/org/my_robot_interfaces.git
-    version: jazzy
+    version: humble
 ```
 
 ```bash
@@ -524,7 +538,7 @@ vcs pull src
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Could not find package X` in CMake | Missing `find_package()` or `package.xml` dep | Add both `find_package(X REQUIRED)` and `<depend>X</depend>` |
-| Header not found despite package installed | Missing `target_include_directories` or `target_link_libraries` | Use `target_link_libraries` with modern CMake targets (e.g. `rclcpp::rclcpp`), which handles include paths automatically. `ament_target_dependencies` is deprecated in Kilted (2025.05). |
+| Header not found despite package installed | Missing `ament_target_dependencies` / `target_link_libraries` entry, or headers installed to the wrong path | On Humble, add the package to `ament_target_dependencies()` (or link its exported target, e.g. `rclcpp::rclcpp`); both propagate include paths. For your own headers, install to `include/${PROJECT_NAME}` with a matching `INSTALL_INTERFACE` (section 3). |
 | `setup.py` changes not reflected | Built without `--symlink-install` | Rebuild with `colcon build --symlink-install` |
 | "Package not found" after build | Forgot to source `install/setup.bash` | Source after every build, or use `direnv` |
 | Circular dependency error | Package A depends on B and B depends on A | Extract shared interfaces into a third package |

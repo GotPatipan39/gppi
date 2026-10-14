@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.2.4 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.3.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์
@@ -75,6 +75,9 @@ export ROS_DOMAIN_ID=<0-101>     # แยกจากระบบอื่น �
 | ros2_control, serial/CAN, hardware error recovery | [references/hardware-interface.md](references/hardware-interface.md) |
 | E-stop, command arbitration, ทดสอบการหยุด | [references/safety-estop.md](references/safety-estop.md) |
 | udev, systemd ให้รันตอนบูต, watchdog | [references/system-bringup.md](references/system-bringup.md) |
+| ติดตั้งลง mini PC, systemd/pm2 unit, `sd_notify`, rollback, ปิดอย่างปลอดภัย | [references/deployment.md](references/deployment.md) |
+| ระบบที่รันอยู่ใช้โค้ด/parameter ชุดไหนจริง (build ใหม่แล้วไม่เปลี่ยน, overlay บัง) | [references/runtime-provenance.md](references/runtime-provenance.md) |
+| ไล่หาสาเหตุข้าม boundary (PLC, RS-485, drive, USB, เวลา), link หลุดๆ ต่อๆ | [references/system-diagnostics.md](references/system-diagnostics.md) |
 | debug, rosbag2, tracing | [references/debugging.md](references/debugging.md) |
 | gtest, launch_testing, CI | [references/testing.md](references/testing.md) |
 | tf2, URDF | [references/tf2-urdf.md](references/tf2-urdf.md) |
@@ -82,7 +85,7 @@ export ROS_DOMAIN_ID=<0-101>     # แยกจากระบบอื่น �
 | message type, หน่วย, frame | [references/message-types.md](references/message-types.md) |
 | Web UI / dashboard ↔ ROS2 (rosbridge, bridge, teleop จาก browser) | skill `industrial-ui` → platforms/ros2-bridge.md |
 
-ไฟล์ใน `references/` มาจาก [ros2-engineering-skills](https://github.com/dbwls99706/ros2-engineering-skills) v1.6.2 (Apache-2.0) ส่วนที่อ้างถึง `scripts/*.py` ไม่ได้รวมมาด้วย ให้ใช้คำสั่ง `ros2` CLI แทน
+ไฟล์ใน `references/` ดัดแปลงจาก [ros2-engineering-skills](https://github.com/dbwls99706/ros2-engineering-skills) (Apache-2.0 — สำเนา license อยู่ที่ [references/LICENSE](references/LICENSE)): ชุดหลักจาก v1.6.2, `deployment.md` / `runtime-provenance.md` / `system-diagnostics.md` จาก commit 4ee4dea — แก้ให้เป็น Humble และกฎของทีม (รายการที่แก้อยู่ใน CHANGELOG); ไม่ได้รวม `scripts/*.py` และ reference ของ realtime / security / simulation / multi-robot / sensor-integration ให้ใช้คำสั่ง `ros2` CLI และ docs ของ Humble แทน
 
 ## Template
 | ไฟล์ | ใช้ทำ |
@@ -178,7 +181,7 @@ rqt_graph
 |---|---|
 | `Package '<x>' not found` | ยังไม่ได้ source `install/setup.bash` หรือ build ไม่ผ่าน |
 | `No executable found` | ลืม `install(TARGETS ...)` |
-| echo topic แล้วไม่มีข้อมูล | QoS ไม่ตรงกัน (reliable vs best_effort) — เช็ก `ros2 topic info -v` |
+| echo topic แล้วไม่มีข้อมูล | บน Humble `ros2 topic echo` ที่ไม่ใส่ `--qos-*` จะปรับ QoS ตาม publisher ที่มีอยู่เอง — ถ้า echo ก่อน publisher ขึ้น จะใช้ `sensor_data` (best_effort/volatile) และพลาดข้อมูลแบบ latched; หรือ discovery/env ไม่ตรง — เช็ก `ros2 topic info -v` (QoS ไม่ตรงกันระหว่าง node ของเราเองยังเป็นสาเหตุหลักที่ subscriber ไม่ได้ข้อมูล) |
 | `Permission denied: /dev/ttyUSB0` | user ยังไม่อยู่ในกลุ่ม `dialout` (`sudo usermod -aG dialout $USER` แล้ว logout) |
 | ชื่อพอร์ต USB สลับกันหลังรีบูต | ใช้ udev rule ตั้งชื่อคงที่ |
 | เห็น node ข้ามเครื่องไม่ได้ / เห็นของคนอื่น | ตั้ง `ROS_LOCALHOST_ONLY=1` อยู่ (ตั้งใจ), `ROS_DOMAIN_ID` ไม่ตรงกัน, firewall, หรือ WSL ใช้ NAT networking |

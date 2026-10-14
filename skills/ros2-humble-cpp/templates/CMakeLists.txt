@@ -20,12 +20,17 @@ include_directories(include)
 
 # ---- node ----
 add_executable(my_node src/my_node.cpp)
-ament_target_dependencies(my_node rclcpp geometry_msgs)   # Humble: ใช้แบบนี้ได้ตามปกติ
+ament_target_dependencies(my_node rclcpp geometry_msgs)   # Humble: วิธีมาตรฐาน (ament_cmake guide แนะนำ)
+# ทางเลือกที่ build ได้บน Humble เช่นกัน: target_link_libraries(my_node rclcpp::rclcpp ${geometry_msgs_TARGETS})
+# เลือกแบบใดแบบหนึ่งสำหรับ ROS dependency; ถ้าบรรทัดใดของ target ใส่ PUBLIC/PRIVATE ต้องใส่ทุกบรรทัดของ target นั้น (CMake ไม่ให้ผสม)
 # target_include_directories(my_node PRIVATE ${MODBUS_INCLUDE_DIRS})
 # target_link_libraries(my_node ${MODBUS_LIBRARIES})
 
 install(TARGETS my_node DESTINATION lib/${PROJECT_NAME})
-install(DIRECTORY include/ DESTINATION include)
+# Humble ament_cmake guide: ติดตั้ง header ไว้ใต้ include/${PROJECT_NAME} (รองรับ overlay ของ colcon)
+# header ใน source อยู่ที่ include/my_pkg/*.hpp → ปลายทางคือ install/my_pkg/include/my_pkg/my_pkg/*.hpp
+# ถ้าทำเป็น library ให้ package อื่นใช้ ให้ตั้ง INSTALL_INTERFACE เป็น include/${PROJECT_NAME} ด้วย (ดู references/workspace-build.md)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
 
 # ---- tests ----

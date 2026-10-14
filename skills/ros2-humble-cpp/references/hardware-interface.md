@@ -78,7 +78,7 @@ When creating a `<ros2_control>` tag, you must specify the `type`:
 | Controller `init()` | `init()` (no args) | `init(const ControllerInterfaceParams & params)` (Humble form deprecated) | `init(const ControllerInterfaceParams & params)` (Humble form removed) |
 | Lifecycle state methods | `get_state()` / `set_state()` | **Renamed**: `get_lifecycle_state()` / `set_lifecycle_state()` | Same as Jazzy |
 | Handle value access | `get_value()` / `set_value()` | `get_optional()` returns `std::optional<T>`; `set_value()` returns `bool` | Same as Jazzy |
-| Gripper controller | `gripper_action_controller` | **Replaced**: `parallel_gripper_action_controller` | Same as Jazzy |
+| Gripper controller | `gripper_controllers` (`position_controllers/GripperActionController`, `effort_controllers/GripperActionController`) | **Replaced**: `parallel_gripper_action_controller` | Same as Jazzy |
 | Hardware-layer joint limiters | Not available | Available (Jazzy 4.28+) | **Enabled by default** |
 | Async hardware scheduling | Not available | Not available | `synchronized` and `detached` policies |
 
@@ -89,27 +89,26 @@ When creating a `<ros2_control>` tag, you must specify the `type`:
 
 ## 2. Writing a hardware interface plugin
 
-### System interface (Jazzy 4.x API)
+### System interface (Humble 2.x API)
 
-In Jazzy, Command-/StateInterfaces are **automatically created and exported** by the
-framework based on the `<ros2_control>` URDF tag. You no longer need to override
-`export_state_interfaces()` / `export_command_interfaces()` or manage memory manually.
-
-The framework provides maps to access interfaces:
-
-- `joint_state_interfaces_` / `joint_command_interfaces_` — keyed by fully qualified name
-- `sensor_state_interfaces_` / `gpio_command_interfaces_` — for sensors and GPIO
-
-> **Kilted (5.x) changes to hardware/controller interfaces:**
->
-> - **Struct-based controller constructors:** Controllers now receive a `ControllerInterfaceParams` struct instead of individual arguments. Custom controllers must update their constructors accordingly.
-> - **Handle copy/move deleted:** `CommandInterface` and `StateInterface` handles can no longer be copied or moved. Store them by reference or pointer; passing by value will not compile.
-> - **Multiple data type support:** Interfaces are no longer limited to `double`. The framework supports additional data types (e.g., `bool`, `int`), enabling richer GPIO and sensor modeling without encoding everything as a `double`.
+On Humble the plugin owns the memory behind every interface: keep one
+`std::vector<double>` per interface type, and hand pointers to those vectors to
+the framework in `export_state_interfaces()` / `export_command_interfaces()`.
+Both overrides are pure virtual in Humble's `SystemInterface`, so the class
+does not compile without them. `info_` (the parsed `<ros2_control>` tag) is a
+protected member set by the base `on_init()`. The Humble base class has no
+`get_logger()` / `get_clock()` accessors, so the plugin creates its own logger
+and clock.
 
 ```cpp
+#include <cmath>
+#include <limits>
+#include <string>
+#include <vector>
+
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/rclcpp.hpp>
 
 namespace my_robot_driver
 {
@@ -117,7 +116,7 @@ namespace my_robot_driver
 class MyRobotHardware : public hardware_interface::SystemInterface
 {
 public:
-  // Called once at startup — parse URDF, validate config
+  // Called once at startup — parse URDF, validate config, allocate storage
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override
   {
@@ -127,20 +126,20 @@ public:
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    // Extract parameters from URDF <hardware><param>
-    // info_ is still available as a member variable
+    // Extract parameters from URDF <hardware><param>. No defaults in code:
+    // port and baud come from the project's hardware config, never guessed.
     auto it_port = info_.hardware_parameters.find("serial_port");
     auto it_baud = info_.hardware_parameters.find("baud_rate");
     if (it_port == info_.hardware_parameters.end() ||
         it_baud == info_.hardware_parameters.end()) {
-      RCLCPP_FATAL(get_logger(), "Missing required <param> in URDF: serial_port, baud_rate");
+      RCLCPP_FATAL(logger_, "Missing required <param> in URDF: serial_port, baud_rate");
       return hardware_interface::CallbackReturn::ERROR;
     }
     port_ = it_port->second;
     try {
       baud_ = std::stoi(it_baud->second);
     } catch (const std::exception & e) {
-      RCLCPP_FATAL(get_logger(), "Invalid baud_rate '%s': %s",
+      RCLCPP_FATAL(logger_, "Invalid baud_rate '%s': %s",
                    it_baud->second.c_str(), e.what());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -149,35 +148,44 @@ public:
     for (const auto & joint : info_.joints) {
       if (joint.command_interfaces.size() != 1 ||
           joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
-        RCLCPP_FATAL(get_logger(), "Joint '%s' needs exactly 1 position command interface",
+        RCLCPP_FATAL(logger_, "Joint '%s' needs exactly 1 position command interface",
                      joint.name.c_str());
         return hardware_interface::CallbackReturn::ERROR;
       }
     }
 
-    // No need to allocate std::vector<double> for states/commands —
-    // the framework manages interface memory in Jazzy 4.x
+    // Humble: the plugin owns interface memory. NaN marks "not read yet".
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    hw_positions_.assign(info_.joints.size(), nan);
+    hw_velocities_.assign(info_.joints.size(), nan);
+    hw_commands_.assign(info_.joints.size(), nan);
 
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
-  // NOTE: export_state_interfaces() and export_command_interfaces() are
-  // NO LONGER needed in Jazzy 4.x. The framework auto-generates them
-  // from the <ros2_control> URDF tag.
-  //
-  // To ADD custom interfaces beyond what the URDF defines (e.g., internal
-  // temperature, bus voltage), override on_export_state_interfaces():
-  //
-  //   std::vector<hardware_interface::StateInterface::ConstSharedPtr>
-  //   on_export_state_interfaces() override {
-  //     auto interfaces = SystemInterface::on_export_state_interfaces();
-  //     interfaces.push_back(std::make_shared<StateInterface>(
-  //         info_.joints[0].name, "temperature", &temperature_value_));
-  //     return interfaces;
-  //   }
-  //
-  // The base class implementation returns the auto-generated interfaces.
-  // Your override should call the base and extend, not replace.
+  // Required on Humble: expose pointers into the plugin's own storage.
+  // The names must match the <state_interface>/<command_interface> tags.
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  {
+    std::vector<hardware_interface::StateInterface> interfaces;
+    for (size_t i = 0; i < info_.joints.size(); i++) {
+      interfaces.emplace_back(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]);
+      interfaces.emplace_back(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]);
+    }
+    return interfaces;
+  }
+
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  {
+    std::vector<hardware_interface::CommandInterface> interfaces;
+    for (size_t i = 0; i < info_.joints.size(); i++) {
+      interfaces.emplace_back(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_commands_[i]);
+    }
+    return interfaces;
+  }
 
   // Open hardware connection
   hardware_interface::CallbackReturn on_activate(
@@ -188,12 +196,13 @@ public:
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    // Initialize commands to current positions to prevent jumps on activation.
-    // Iterate command interfaces (not state interfaces) — there may be fewer
-    // command interfaces than state interfaces (e.g. position cmd vs position+velocity state).
-    // The map key is the fully qualified name, e.g. "joint_1/position".
-    for (const auto & [name, descr] : joint_command_interfaces_) {
-      set_command(name, get_state(name));
+    // Read once, then initialize commands to current positions to prevent
+    // a jump on activation.
+    if (read(rclcpp::Time(0), rclcpp::Duration(0, 0)) != hardware_interface::return_type::OK) {
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    for (size_t i = 0; i < hw_commands_.size(); i++) {
+      hw_commands_[i] = hw_positions_[i];
     }
 
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -214,20 +223,14 @@ public:
     // Read encoder data from serial/CAN/EtherCAT
     auto data = read_encoders(serial_);
     if (!data.valid) {
-      RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
-                            "Failed to read encoder data");
+      RCLCPP_ERROR_THROTTLE(logger_, clock_, 1000, "Failed to read encoder data");
       return hardware_interface::return_type::ERROR;
     }
 
-    // Write values into framework-managed interfaces using set_state().
-    // IMPORTANT: joint_state_interfaces_ is an unordered_map — iteration order
-    // is NOT guaranteed. Always use explicit fully-qualified names to avoid
-    // mixing up position/velocity data.
+    // Index i matches info_.joints[i], the same order used in export_*().
     for (size_t i = 0; i < info_.joints.size(); i++) {
-      set_state(info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION,
-                data.positions[i]);
-      set_state(info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY,
-                data.velocities[i]);
+      hw_positions_[i] = data.positions[i];
+      hw_velocities_[i] = data.velocities[i];
     }
     return hardware_interface::return_type::OK;
   }
@@ -236,23 +239,34 @@ public:
   hardware_interface::return_type write(
     const rclcpp::Time &, const rclcpp::Duration &) override
   {
-    // Read commands from framework-managed interfaces using get_command()
-    std::vector<double> commands;
-    for (const auto & [name, descr] : joint_command_interfaces_) {
-      commands.push_back(get_command(name));
+    // Controllers wrote into hw_commands_ through the exported CommandInterfaces
+    // NaN = no command (startup, or a controller deactivating). Skipping the write is
+    // only safe because this example is a POSITION interface: the drive holds where it is.
+    // VELOCITY / EFFORT interfaces: skipping keeps the last setpoint = the machine keeps
+    // moving — there, send an explicit stop (0 / disable) instead and log it.
+    for (const double cmd : hw_commands_) {
+      if (std::isnan(cmd)) {
+        return hardware_interface::return_type::OK;  // position: hold
+      }
     }
-    if (!send_commands(serial_, commands)) {
-      RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
-                            "Failed to send commands to hardware");
+    if (!send_commands(serial_, hw_commands_)) {
+      RCLCPP_ERROR_THROTTLE(logger_, clock_, 1000, "Failed to send commands to hardware");
       return hardware_interface::return_type::ERROR;
     }
     return hardware_interface::return_type::OK;
   }
 
 private:
+  rclcpp::Logger logger_ = rclcpp::get_logger("MyRobotHardware");
+  rclcpp::Clock clock_{RCL_STEADY_TIME};
+
+  std::vector<double> hw_positions_;
+  std::vector<double> hw_velocities_;
+  std::vector<double> hw_commands_;
+
   std::string port_;
-  int baud_;
-  SerialPort serial_;
+  int baud_{0};
+  SerialPort serial_;  // placeholder for your transport class
 };
 
 }  // namespace my_robot_driver
@@ -262,26 +276,19 @@ PLUGINLIB_EXPORT_CLASS(my_robot_driver::MyRobotHardware,
                        hardware_interface::SystemInterface)
 ```
 
-### Humble (2.x) compatibility
+The pattern matches the Humble `ros2_control_demos` hardware examples
+(`hw_positions_` / `hw_commands_` vectors, `export_*_interfaces()` overrides,
+`rclcpp::get_logger(...)`).
 
-If targeting Humble, you must still manually override `export_state_interfaces()` and
-`export_command_interfaces()` and manage your own `std::vector<double>` for storage:
-
-```cpp
-// Humble 2.x — manual interface export (not needed in Jazzy 4.x)
-std::vector<hardware_interface::StateInterface> export_state_interfaces() override
-{
-  std::vector<hardware_interface::StateInterface> interfaces;
-  for (size_t i = 0; i < info_.joints.size(); i++) {
-    interfaces.emplace_back(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]);
-    interfaces.emplace_back(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]);
-  }
-  return interfaces;
-}
-// Also store: std::vector<double> hw_positions_, hw_velocities_, hw_commands_;
-```
+> **Jazzy differs (not for Humble code):** Jazzy (4.x) auto-exports interfaces
+> from the `<ros2_control>` tag, so the `export_*_interfaces()` overrides and
+> the storage vectors go away; values are accessed through
+> `set_state(name, value)` / `get_command(name)` and the
+> `joint_state_interfaces_` / `joint_command_interfaces_` maps, the base class
+> provides `get_logger()` / `get_clock()`, and the lifecycle accessor is renamed
+> `get_lifecycle_state()`. None of that exists on Humble; code written that way
+> does not build here. Kilted (5.x) additionally changes `on_init()` to take
+> `HardwareComponentInterfaceParams`. See the comparison table above.
 
 ### Plugin registration (CMakeLists.txt addition)
 
@@ -302,7 +309,9 @@ pluginlib_export_plugin_description_file(
 </library>
 ```
 
-**Hardware-layer joint limiters (Jazzy 4.28+ / Kilted 5.x):** ros2_control supports joint limits enforced directly at the hardware interface layer via `<limits>` tags in the URDF. These act as a safety net below the controller -- even if a controller sends an out-of-range command, the hardware interface clips it. In Kilted, joint limit enforcement is fully built into the framework and enabled by default; no additional controller-side configuration is needed. Configure in URDF:
+> **Jazzy differs — not available on Humble:** on Humble, enforce limits in the controllers and in the drive/firmware; the hardware-layer limiter described next does not exist in ros2_control 2.x.
+
+**Hardware-layer joint limiters (Jazzy 4.28+ / Kilted 5.x only):** ros2_control supports joint limits enforced directly at the hardware interface layer via `<limits>` tags in the URDF. These act as a safety net below the controller -- even if a controller sends an out-of-range command, the hardware interface clips it. In Kilted, joint limit enforcement is fully built into the framework and enabled by default; no additional controller-side configuration is needed. Configure in URDF:
 
 ```xml
 <joint name="joint_1">
@@ -323,13 +332,32 @@ pluginlib_export_plugin_description_file(
 | `forward_command_controller` | position/velocity/effort | Direct pass-through, simple control |
 | `diff_drive_controller` | velocity | Differential drive mobile base |
 | `joint_state_broadcaster` | (none — reads only) | Publish joint states for TF/visualization |
-| `parallel_gripper_action_controller` | position | Parallel gripper with action interface (Jazzy+; replaces deprecated `gripper_action_controller`) |
+| `gripper_controllers` | position or effort | Gripper with `control_msgs/GripperCommand` action; Humble plugin types `position_controllers/GripperActionController` / `effort_controllers/GripperActionController` |
 | `pid_controller` | effort | Low-level PID for torque control |
 | `admittance_controller` | position | Force-compliant manipulation |
-| `mecanum_drive_controller` | velocity | Mecanum-wheel omnidirectional base (Kilted 5.x+) |
-| `ackermann_steering_controller` | position/velocity | Ackermann-steered vehicles (Kilted 5.x+) |
-| `bicycle_steering_controller` | position/velocity | Bicycle-model steered robots (Kilted 5.x+) |
-| `tricycle_steering_controller` | position/velocity | Tricycle-steered mobile bases (Kilted 5.x+) |
+| `mecanum_drive_controller` | velocity | Mecanum-wheel omnidirectional base |
+| `ackermann_steering_controller` | position/velocity | Ackermann-steered vehicles (`steering_controllers_library`) |
+| `bicycle_steering_controller` | position/velocity | Bicycle-model steered robots (`steering_controllers_library`) |
+| `tricycle_steering_controller` | position/velocity | Tricycle-steered mobile bases (`steering_controllers_library`) |
+| `tricycle_controller` | position/velocity | Tricycle base (separate, older package) |
+| `gpio_controllers` | GPIO command interfaces | Expose GPIO command interfaces as a topic |
+
+All controllers in this table are in the Humble `ros2_controllers` branch and
+the Humble controller index (control.ros.org/humble). Check that the binary
+package (`ros-humble-<name>`) is installed on the target before relying on it.
+
+### diff_drive_controller on Humble: stamped vs unstamped cmd_vel
+
+On Humble, `use_stamped_vel` defaults to `true`. The controller then listens on
+`~/cmd_vel` for `geometry_msgs/msg/TwistStamped` only. A plain
+`geometry_msgs/msg/Twist` (what `teleop_twist_keyboard` and Nav2 on Humble
+publish) must go to `~/cmd_vel_unstamped`, which is used when
+`use_stamped_vel: false`. A `Twist` published on `~/cmd_vel` with the default
+never reaches the controller (type mismatch), so the base silently does not
+move. Either set `use_stamped_vel: false` and
+remap the Twist source to `<controller_name>/cmd_vel_unstamped`, or publish
+`TwistStamped`. (Jazzy removes the unstamped path: `~/cmd_vel` must be
+stamped.)
 
 ### Controller configuration (YAML)
 
@@ -366,36 +394,72 @@ arm_controller:
       goal_time: 0.0
 ```
 
-#### Migration: gripper_action_controller to parallel_gripper_action_controller (Jazzy)
+#### Jazzy differs: gripper controller migration (not for Humble)
 
-The `gripper_action_controller` is deprecated in Jazzy. Replace with `parallel_gripper_action_controller`:
+On Humble use `gripper_controllers` (table above); `parallel_gripper_action_controller`
+is not in the Humble `ros2_controllers` branch. When a project moves to Jazzy,
+the old `GripperActionController` types are deprecated there in favour of
+`parallel_gripper_action_controller`:
 
 - Action interface changes from `control_msgs/GripperCommand` to the same interface but with updated parameter naming
-- YAML change: `type: gripper_action_controller/GripperActionController` -> `type: parallel_gripper_action_controller/GripperActionController`
+- YAML change: `type: position_controllers/GripperActionController` (or `effort_controllers/...`) -> `type: parallel_gripper_action_controller/GripperActionController`
 - The `parallel_gripper` supports both position and effort control modes
 
 ## 4. Controller chaining and cascade control
 
-Controller chaining (Jazzy+) allows controllers to feed their output into other controllers, enabling cascade control architectures. A `ChainableController` exports **reference interfaces** that other controllers can write to.
+Controller chaining is available on Humble (serial chaining, documented under
+control.ros.org/humble → controller_manager → "Controller Chaining"). It allows
+controllers to feed their output into other controllers, enabling cascade
+control architectures. A `ChainableControllerInterface` exports **reference
+interfaces** that other controllers can write to. In Humble's
+`ros2_controllers`, `pid_controller` and `diff_drive_controller` are examples
+that can be chained.
 
-Example: A velocity PID controller that accepts reference commands from a joint_trajectory_controller:
+Example (Humble 2.x API): a velocity PID controller that accepts reference
+commands from a joint_trajectory_controller. `on_init()`,
+`on_configure()` (parameter loading, `reference_interfaces_.resize(n, NaN)`) and
+`on_activate()` are omitted for brevity — but the reference **must start as NaN**
+(= "no reference"), and `update_and_write_commands` below must turn NaN into a
+safe command. Never initialise references with an old value or leave them
+uninitialised: a velocity loop would drive toward whatever is there.
 
 ```cpp
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 #include <controller_interface/chainable_controller_interface.hpp>
+#include <control_toolbox/pid.hpp>
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 
 class VelocityPidController : public controller_interface::ChainableControllerInterface
 {
 public:
-  // Reference interfaces: what upstream controllers write TO this controller
+  // Reference interfaces: what upstream controllers write TO this controller.
+  // Humble: values must live in the base-class member reference_interfaces_
+  // (std::vector<double>), and the prefix must be this controller's name.
+  // Full name here: "<controller_name>/<joint>/velocity".
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> refs;
-    for (const auto & joint : joint_names_) {
+    for (size_t i = 0; i < joint_names_.size(); ++i) {
       refs.emplace_back(get_node()->get_name(),
-                        joint + "/velocity_reference",
-                        &reference_commands_[joint]);
+                        joint_names_[i] + "/" + hardware_interface::HW_IF_VELOCITY,
+                        &reference_interfaces_[i]);
     }
     return refs;
+  }
+
+  // Required (pure virtual): when NOT chained, take references from a
+  // subscriber instead. Here: no subscriber — so there is no source of fresh
+  // references; clear them to NaN (= stop) rather than keeping the last one,
+  // otherwise an old velocity setpoint stays in force indefinitely.
+  // If you add a subscriber, also add a timeout that sets NaN when it goes stale.
+  controller_interface::return_type update_reference_from_subscribers() override
+  {
+    std::fill(reference_interfaces_.begin(), reference_interfaces_.end(),
+              std::numeric_limits<double>::quiet_NaN());
+    return controller_interface::return_type::OK;
   }
 
   // State interfaces: what this controller reads (e.g., current velocity)
@@ -421,12 +485,18 @@ public:
   }
 
   controller_interface::return_type update_and_write_commands(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
     for (size_t i = 0; i < joint_names_.size(); ++i) {
-      double ref = reference_commands_[joint_names_[i]];
-      double vel = state_interfaces_[i].get_value();
-      double effort = pid_controllers_[i].computeCommand(ref - vel, period.seconds());
+      const double ref = reference_interfaces_[i];
+      if (!std::isfinite(ref)) {              // no reference yet / upstream stopped
+        pid_controllers_[i].reset();          // no integral wind-up carried into the next start
+        command_interfaces_[i].set_value(0.0);  // zero effort — check this is "safe" for YOUR axis (gravity!)
+        continue;
+      }
+      const double vel = state_interfaces_[i].get_value();    // Humble handle API
+      // Humble control_toolbox::Pid::computeCommand takes dt in nanoseconds (uint64_t)
+      const double effort = pid_controllers_[i].computeCommand(ref - vel, period.nanoseconds());
       command_interfaces_[i].set_value(effort);
     }
     return controller_interface::return_type::OK;
@@ -434,10 +504,13 @@ public:
 
 private:
   std::vector<std::string> joint_names_;
-  std::unordered_map<std::string, double> reference_commands_;
   std::vector<control_toolbox::Pid> pid_controllers_;
 };
 ```
+
+> **Jazzy differs:** handle access becomes `get_optional()` / `set_value()`
+> returning `bool`, and controller `init()` takes `ControllerInterfaceParams`.
+> Keep the Humble form above for Humble code.
 
 YAML configuration for chaining:
 
@@ -454,13 +527,17 @@ controller_manager:
 
 trajectory_controller:
   ros__parameters:
-    joints: [joint_1, joint_2]
-    command_interfaces: [velocity_pid/joint_1/velocity_reference,
-                         velocity_pid/joint_2/velocity_reference]
+    joints: [joint_1, joint_2]              # state interfaces are read from these
+    command_joints: [velocity_pid/joint_1,  # commands go to velocity_pid's references
+                     velocity_pid/joint_2]
+    command_interfaces: [velocity]          # JTC allows only position/velocity/acceleration/effort
     state_interfaces: [position, velocity]
 ```
 
-Activation order matters: activate the downstream controller (velocity_pid) before the upstream (trajectory_controller).
+`command_joints` is the Humble JTC parameter for chaining, used when the
+command interfaces have different prefixes from the state interfaces.
+
+Activation order matters: activate the downstream controller (velocity_pid) before the upstream (trajectory_controller), or both together with the spawner's `--activate-as-group`. Activating controllers moves a real robot: Claude shows these steps but asks the user before running a spawner or `ros2 control set_controller_state` against real hardware.
 
 ## 5. Hardware modularization
 
@@ -471,7 +548,7 @@ Split a robot into multiple independent `<ros2_control>` tags when subsystems ha
 <ros2_control name="ArmSystem" type="system">
   <hardware>
     <plugin>my_robot_driver/ArmHardware</plugin>
-    <param name="can_interface">can0</param>
+    <param name="can_interface">${arm_can_interface}</param>  <!-- from project config -->
   </hardware>
   <joint name="shoulder">...</joint>
   <joint name="elbow">...</joint>
@@ -480,7 +557,7 @@ Split a robot into multiple independent `<ros2_control>` tags when subsystems ha
 <ros2_control name="BaseSystem" type="system">
   <hardware>
     <plugin>my_robot_driver/BaseHardware</plugin>
-    <param name="serial_port">/dev/ttyUSB0</param>
+    <param name="serial_port">${base_serial_port}</param>  <!-- from project config -->
   </hardware>
   <joint name="left_wheel">...</joint>
   <joint name="right_wheel">...</joint>
@@ -508,7 +585,7 @@ hardware_interface::CallbackReturn on_init(
 {
   // GPIO interfaces are defined in URDF under <gpio> tags
   for (const auto & gpio : info_.gpios) {
-    RCLCPP_INFO(get_logger(), "GPIO: %s, cmd_ifs=%zu, state_ifs=%zu",
+    RCLCPP_INFO(logger_, "GPIO: %s, cmd_ifs=%zu, state_ifs=%zu",
                 gpio.name.c_str(),
                 gpio.command_interfaces.size(),
                 gpio.state_interfaces.size());
@@ -533,17 +610,34 @@ URDF GPIO definition:
 </ros2_control>
 ```
 
-Access in read()/write():
+Export and access on Humble (interfaces are `double`; the plugin owns the
+storage, as in section 2). Pin numbers are placeholders taken from the
+project's wiring/config, never guessed:
 
 ```cpp
+// Members: one slot per <gpio> interface, in URDF order
+std::vector<double> gpio_states_;    // estop_active, limit_switch_1
+std::vector<double> gpio_commands_;  // led_red, led_green
+
+// In export_state_interfaces() / export_command_interfaces(), append:
+const auto & gpio = info_.gpios[0];  // "digital_io"
+for (size_t i = 0; i < gpio.state_interfaces.size(); ++i) {
+  interfaces.emplace_back(gpio.name, gpio.state_interfaces[i].name, &gpio_states_[i]);
+}
+// (same loop over gpio.command_interfaces with &gpio_commands_[i])
+
 // In read():
-set_state("digital_io/estop_active", read_gpio_pin(ESTOP_PIN) ? 1.0 : 0.0);
-set_state("digital_io/limit_switch_1", read_gpio_pin(LIMIT_PIN) ? 1.0 : 0.0);
+gpio_states_[0] = read_gpio_pin(ESTOP_PIN) ? 1.0 : 0.0;   // digital_io/estop_active
+gpio_states_[1] = read_gpio_pin(LIMIT_PIN) ? 1.0 : 0.0;   // digital_io/limit_switch_1
 
 // In write():
-set_gpio_pin(LED_RED_PIN, get_command("digital_io/led_red") > 0.5);
-set_gpio_pin(LED_GREEN_PIN, get_command("digital_io/led_green") > 0.5);
+set_gpio_pin(LED_RED_PIN, gpio_commands_[0] > 0.5);       // digital_io/led_red
+set_gpio_pin(LED_GREEN_PIN, gpio_commands_[1] > 0.5);     // digital_io/led_green
 ```
+
+> **Jazzy differs:** the auto-exported form `set_state("digital_io/estop_active", ...)`
+> / `get_command("digital_io/led_red")` and `bool` interface types are Jazzy+
+> only.
 
 Use `gpio_command_controller` (from ros2_controllers) to expose GPIO as a ROS service/topic.
 
@@ -555,14 +649,16 @@ Use `gpio_command_controller` (from ros2_controllers) to expose GPIO as a ROS se
   <ros2_control name="MyRobotSystem" type="system">
     <hardware>
       <plugin>my_robot_driver/MyRobotHardware</plugin>
-      <param name="serial_port">/dev/ttyUSB0</param>
-      <param name="baud_rate">115200</param>
+      <!-- Placeholders: take port, baud and joint limits from the project's
+           hardware config / datasheet. Never guess them. -->
+      <param name="serial_port">${serial_port}</param>
+      <param name="baud_rate">${baud_rate}</param>
     </hardware>
 
     <joint name="joint_1">
       <command_interface name="position">
-        <param name="min">-3.14</param>
-        <param name="max">3.14</param>
+        <param name="min">-3.14</param>  <!-- example value -->
+        <param name="max">3.14</param>   <!-- example value -->
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -736,7 +832,7 @@ private:
 };
 ```
 
-Integration with ros2_control: call `process_cycle()` in `read()`, then extract encoder values from PDO inputs. In `write()`, write command values to PDO outputs, then `process_cycle()` sends them. EtherCAT requires deterministic timing -- pair with PREEMPT_RT and CPU isolation (see `references/realtime.md`).
+Integration with ros2_control: call `process_cycle()` in `read()`, then extract encoder values from PDO inputs. In `write()`, write command values to PDO outputs, then `process_cycle()` sends them. EtherCAT requires deterministic timing -- pair with PREEMPT_RT and CPU isolation (real-time kernel setup is outside this skill; follow the ros2_control and kernel documentation for the target machine).
 
 ## 8. Configuration and parameter loading
 
@@ -763,13 +859,20 @@ def generate_launch_description():
     ])
 
     return LaunchDescription([
+        # robot_state_publisher publishes the URDF on /robot_description
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            parameters=[{'robot_description': robot_description}],
+        ),
+        # Humble: passing robot_description as a controller_manager parameter
+        # is deprecated; the manager subscribes to ~/robot_description, so
+        # remap it to the topic robot_state_publisher publishes.
         Node(
             package='controller_manager',
             executable='ros2_control_node',
-            parameters=[
-                {'robot_description': robot_description},
-                controller_params,
-            ],
+            parameters=[controller_params],
+            remappings=[('~/robot_description', '/robot_description')],
             output='screen',
         ),
         Node(
@@ -788,6 +891,9 @@ def generate_launch_description():
     ])
 ```
 
+With a real hardware plugin in the URDF, this launch opens the hardware and the
+spawners activate controllers: Claude asks the user before running it.
+
 ## 9. Real hardware bring-up workflow
 
 1. **Start with mock hardware** — ros2_control has a built-in mock system:
@@ -799,9 +905,9 @@ def generate_launch_description():
 
    Verify controllers and TF work before touching real hardware.
 
-2. **Implement `on_init`** — validate URDF parsing and joint configuration.
-   In Jazzy 4.x, interface export is automatic; in Humble, also implement
-   `export_*_interfaces`.
+2. **Implement `on_init` and `export_*_interfaces`** — validate URDF parsing
+   and joint configuration, allocate the storage vectors, and export them
+   (required on Humble; see section 2).
 
 3. **Implement `on_activate`** — open the hardware connection. Test that
    the connection succeeds and fails gracefully.
@@ -820,7 +926,9 @@ def generate_launch_description():
 ### Transient vs fatal errors
 
 Not all hardware errors are equal. Distinguish between transient (retry-safe) and
-fatal (requires operator intervention) errors in `read()` and `write()`:
+fatal (requires operator intervention) errors in `read()` and `write()`
+(`logger_` / `clock_` are the members from the section 2 example; Humble's base
+class has no `get_logger()` / `get_clock()`):
 
 ```cpp
 hardware_interface::return_type MyHardware::read(
@@ -832,14 +940,14 @@ hardware_interface::return_type MyHardware::read(
 
     if (consecutive_read_failures_ <= MAX_TRANSIENT_FAILURES) {
       // Transient: use last known values (stale data is safer than no data)
-      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+      RCLCPP_WARN_THROTTLE(logger_, clock_, 1000,
         "Read failed (%d/%d) — using last known values",
         consecutive_read_failures_, MAX_TRANSIENT_FAILURES);
       return hardware_interface::return_type::OK;  // Don't crash the loop
     }
 
     // Fatal: too many consecutive failures — hardware is unreachable
-    RCLCPP_ERROR(get_logger(),
+    RCLCPP_ERROR(logger_,
       "Hardware unreachable after %d consecutive failures — requesting error transition",
       consecutive_read_failures_);
     return hardware_interface::return_type::ERROR;  // Triggers on_error()
@@ -857,7 +965,7 @@ hardware_interface::return_type MyHardware::read(
 hardware_interface::CallbackReturn on_error(
   const rclcpp_lifecycle::State & previous_state) override
 {
-  RCLCPP_ERROR(get_logger(), "Hardware error from state: %s", previous_state.label().c_str());
+  RCLCPP_ERROR(logger_, "Hardware error from state: %s", previous_state.label().c_str());
 
   // 1. Safe the hardware — send zero velocity / disable torque
   send_safe_command(serial_);
@@ -867,12 +975,12 @@ hardware_interface::CallbackReturn on_error(
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   if (serial_.reopen(port_, baud_)) {
-    RCLCPP_INFO(get_logger(), "Hardware reconnected — transitioning to Unconfigured");
+    RCLCPP_INFO(logger_, "Hardware reconnected — transitioning to Unconfigured");
     consecutive_read_failures_ = 0;
     return hardware_interface::CallbackReturn::SUCCESS;  // → Unconfigured (can reconfigure)
   }
 
-  RCLCPP_FATAL(get_logger(), "Hardware reconnection failed — manual intervention required");
+  RCLCPP_FATAL(logger_, "Hardware reconnection failed — manual intervention required");
   return hardware_interface::CallbackReturn::ERROR;  // → Finalized (dead)
 }
 ```
@@ -933,11 +1041,12 @@ and torque limits, and keep the physical e-stop in hand.
 |---|---|---|
 | Controller manager fails to load HW interface | Plugin not registered or not installed | Check `pluginlib_export_plugin_description_file`, rebuild, `source install/setup.bash` |
 | `command_interface not found` | URDF joint name doesn't match controller config | Exact string match required — check for typos and namespaces |
-| Controller reports "hardware not activated" | Lifecycle not transitioned | Use `ros2 control set_controller_state` or spawner |
+| Controller reports "hardware not activated" | Lifecycle not transitioned | Use `ros2 control set_controller_state` or spawner (on real hardware Claude asks the user first — activation can move the robot) |
 | Jitter in control loop | `read()` or `write()` takes too long | Profile with `ros2 control list_hardware_interfaces`, offload I/O to thread |
-| Robot jumps on activation | Initial command is 0.0, not current position | In `on_activate`, sync commands to state: `set_command(name, get_state(name))` (Jazzy) or `hw_commands_[i] = hw_positions_[i]` (Humble) |
+| Robot jumps on activation | Initial command is 0.0, not current position | In `on_activate`, read once and sync commands to state: `hw_commands_[i] = hw_positions_[i]` (Humble; Jazzy uses `set_command(name, get_state(name))`) |
 | Emergency stop doesn't work | `write()` still sends last command | Check for `is_active()` in write, send zero-velocity on deactivate; the stop path itself must be a downstream watchdog/hardware chain, not node code (`references/safety-estop.md`) |
 | Permission denied on serial port | User not in dialout group | `sudo usermod -aG dialout $USER`, re-login |
 | Controller chain activation fails | Downstream controller not activated before upstream | Activate in dependency order: hardware -> downstream controller -> upstream controller |
 | EtherCAT slave not reaching OP state | Incorrect PDO mapping or timing violation | Check ESI file, verify PDO sizes match slave documentation, ensure RT kernel |
-| GPIO values not updating | Using wrong fully-qualified name for set_state/get_command | Use exact name from URDF: "gpio_name/interface_name" (e.g., "digital_io/estop_active") |
+| GPIO values not updating | GPIO interfaces not exported, or exported under a name that differs from the URDF | Export every `<gpio>` interface in `export_*_interfaces()` with the exact URDF names: prefix = gpio name, interface = URDF interface name (e.g., "digital_io/estop_active") |
+| Base does not move, no error, `diff_drive_controller` active | Plain `Twist` sent to `~/cmd_vel` while `use_stamped_vel` is `true` (Humble default) | Send `Twist` to `~/cmd_vel_unstamped` with `use_stamped_vel: false`, or publish `TwistStamped` (section 3) |

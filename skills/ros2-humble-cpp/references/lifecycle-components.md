@@ -235,7 +235,7 @@ cleanup/reconfigure and active shutdown, not just the first activation.
 
 ### Exception-safe cleanup for resource owners
 
-[`rclcpp::TimerBase::cancel()` can throw](https://github.com/ros2/rclcpp/blob/jazzy/rclcpp/include/rclcpp/timer.hpp).
+[`rclcpp::TimerBase::cancel()` can throw](https://github.com/ros2/rclcpp/blob/humble/rclcpp/include/rclcpp/timer.hpp).
 Calling it unguarded inside a project-defined cleanup function such as
 `halt() noexcept` (not an rclcpp API) can invoke `std::terminate` before
 a later stop transmission or transport close is attempted. One `try` block
@@ -266,8 +266,8 @@ timeout/watchdog and independent stop path required by the ownership design;
 stop claims require remote acceptance evidence and measured response. Process
 cleanup is best effort and cannot replace those mechanisms after a crash.
 
-Inspect destructors as well as explicit cleanup calls. In the linked Jazzy
-implementation, `GenericTimer` calls `cancel()` again in its destructor. If
+Inspect destructors as well as explicit cleanup calls. In the linked Humble
+implementation (same in Jazzy), `GenericTimer` calls `cancel()` again in its destructor. If
 cancellation keeps failing, the last shared-pointer release can terminate the
 process instead of reaching an outer `catch`. Finish required stop/close attempts
 and retain their failure status before releasing the timer; an interrupted
@@ -453,6 +453,17 @@ def generate_launch_description():
     )
     return LaunchDescription([container])
 ```
+
+> **Humble caveat — `use_intra_process_comms: True` can crash a component at load.**
+> With intra-process enabled, every publisher/subscription in that node must be
+> `KEEP_LAST` + `VOLATILE`; a `KEEP_ALL` or `TRANSIENT_LOCAL` one makes
+> `create_publisher`/`create_subscription` throw `std::invalid_argument`
+> ([rclcpp humble publisher.hpp](https://github.com/ros2/rclcpp/blob/humble/rclcpp/include/rclcpp/publisher.hpp)),
+> so the component fails to load. Only set it on nodes whose QoS you have checked
+> (sensor/image pipelines are the usual fit), or opt the latched/`KEEP_ALL`
+> entities out with `use_intra_process_comm = rclcpp::IntraProcessSetting::Disable`
+> in their `PublisherOptions`/`SubscriptionOptions`. See
+> `references/nodes-executors.md` §4.
 
 ### Runtime composition (for dynamic systems)
 
@@ -706,6 +717,8 @@ void callback(const sensor_msgs::msg::Image::ConstSharedPtr msg)
 1. Both publisher and subscriber in the same process (e.g., same `ComposableNodeContainer` or same `main()`)
 2. Both have `use_intra_process_comms: true`
 3. Publisher uses `std::unique_ptr` with `publish(std::move(msg))`
+4. Humble: every intra-process publisher/subscription uses `KEEP_LAST` + `VOLATILE`
+   — `KEEP_ALL` or `TRANSIENT_LOCAL` throws at creation (see the caveat in §5)
 
 **Performance caveat:** If multiple subscribers exist, the first receives the original
 (zero-copy) and additional subscribers receive copies. Intra-process still works but
@@ -766,6 +779,7 @@ ros2 lifecycle set /lidar_processor shutdown
 | Transition hangs indefinitely | Blocking call in transition callback | Keep transitions fast; offload heavy init to a thread if needed |
 | Components crash container | Unhandled exception in one component | Catch all exceptions in component callbacks; consider `component_container_isolated` |
 | Intra-process not working | Missing `use_intra_process_comms` in extra_arguments | Add to launch description; verify both sides are in the same container |
+| Component fails to load with `std::invalid_argument` "intraprocess communication ... keep last / volatile durability" (Humble) | `use_intra_process_comms: True` on a node with a `KEEP_ALL` or `TRANSIENT_LOCAL` endpoint | Remove the flag for that node, or disable intra-process on that endpoint (`IntraProcessSetting::Disable`) |
 | Node restarts but won't reconfigure | Previous cleanup didn't release resources | Ensure `on_cleanup` and `on_shutdown` release all resources (reset shared_ptrs) |
 | State transition rejected | Invalid transition from current state | Check state machine diagram; you cannot go from Unconfigured directly to Active |
 

@@ -393,6 +393,13 @@ comes from the checklist, not from the lifecycle state alone.
 
 ### Configure-only recipe (Nav2 controller_server example)
 
+> **Team rule — Claude asks the user first.** On a machine connected to real
+> hardware, Claude does not run the `ros2 run` / `ros2 lifecycle set` commands
+> below itself. Show them, explain what each step does, and ask the user before
+> running anything (or let the user run them) — even configure-only, because a
+> vendor plugin's `on_configure` may still open ports or initialize hardware.
+> Read-only checks (`ros2 lifecycle get`, `ros2 topic info -v`, logs) are fine.
+
 ```bash
 # 1. Launch the node(s) under test with your candidate params — unmanaged
 #    by the lifecycle manager, so nothing auto-activates:
@@ -577,6 +584,41 @@ python -m pytest --cov=my_robot_monitor --cov-report=html test/
 
 ## 8. CI/CD pipeline design
 
+> **Team setup:** the team's code lives on **GitLab**, so CI is GitLab CI
+> (`.gitlab-ci.yml`, below). The GitHub Actions examples after it are kept for
+> projects hosted on GitHub; both target Humble (`ros:humble`, Ubuntu 22.04).
+
+### GitLab CI for ROS 2 Humble (team default)
+
+```yaml
+# .gitlab-ci.yml — minimal build + test in the official Humble image
+stages: [test]
+
+build-and-test:
+  stage: test
+  image: ros:humble
+  variables:
+    ROS_LOCALHOST_ONLY: "1"   # tests never put DDS traffic on the runner's network
+  before_script:
+    - source /opt/ros/humble/setup.bash
+    - apt-get update
+    - rosdep update
+    - rosdep install --from-paths . --ignore-src -y
+  script:
+    - colcon build --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic"
+    - source install/setup.bash
+    - colcon test --event-handlers console_cohesion+
+    - colcon test-result --verbose
+  artifacts:
+    when: always
+    reports:
+      junit: build/*/test_results/*/*.xml
+```
+
+`colcon test-result --verbose` exits non-zero when a test failed, which fails the
+job. If several jobs can share one runner host with host networking, also set a
+`ROS_DOMAIN_ID` per job so parallel test runs cannot see each other.
+
 ### GitHub Actions for ROS 2
 
 ```yaml
@@ -590,9 +632,9 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     container:
-      image: ros:jazzy
+      image: ros:humble
     defaults:
       run:
         shell: bash
@@ -609,13 +651,13 @@ jobs:
 
       - name: Build
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           colcon build --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic"
 
       - name: Test
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           source install/setup.bash
           colcon test --event-handlers console_cohesion+
           colcon test-result --verbose
@@ -635,7 +677,7 @@ jobs:
   industrial_ci:
     strategy:
       matrix:
-        ROS_DISTRO: [humble, jazzy]
+        ROS_DISTRO: [humble]   # add other distros only if the package must support them
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -655,12 +697,12 @@ Run Gazebo headless in CI for physics-based integration tests:
       - uses: actions/checkout@v4
       - uses: ros-industrial/industrial_ci@master
         env:
-          ROS_DISTRO: jazzy
+          ROS_DISTRO: humble
           DOCKER_RUN_OPTS: '-e DISPLAY=:99'
           BEFORE_INSTALL_TARGET_DEPENDENCIES: |
             apt-get update && apt-get install -y xvfb
             Xvfb :99 -screen 0 1024x768x24 &
-          ADDITIONAL_DEBS: 'ros-jazzy-ros-gz'
+          ADDITIONAL_DEBS: 'ros-humble-ros-gz'   # Humble pairs with Gazebo Fortress
 ```
 
 ### Key CI practices
@@ -682,22 +724,31 @@ Run Gazebo headless in CI for physics-based integration tests:
   cache ccache only and rebuild — ccache already recovers most of the time
 - **Use `colcon test-result --verbose`** — fail the CI if any test fails
 - **Run linters:** `ament_lint_auto` checks copyright, style, naming
-- **Test in container:** Use official `ros:jazzy` image for reproducibility
-- **Matrix builds:** Test across Humble + Jazzy if supporting both
+- **Test in container:** Use official `ros:humble` image for reproducibility
+- **Matrix builds:** Add other distros only if the package must support them; the team targets Humble
 
 ## 9. Rosbag-based regression testing
 
 ### Rosbag regression testing
 
-Record expected outputs as MCAP bags, then replay inputs and diff outputs:
+Record expected outputs as MCAP bags, then replay inputs and diff outputs.
+On Humble the default storage is `sqlite3`: MCAP needs the
+`ros-humble-rosbag2-storage-mcap` plugin (also in the CI image) and an explicit
+`-s mcap` ([rosbag2_storage_mcap](https://index.ros.org/p/rosbag2_storage_mcap/);
+[humble record.py](https://github.com/ros2/rosbag2/blob/humble/ros2bag/ros2bag/verb/record.py)).
 
 ```bash
+# Humble: one-time install of the MCAP storage plugin
+sudo apt install ros-humble-rosbag2-storage-mcap
+
 # Record baseline
-ros2 bag record /output_topic -o baseline_bag --compression-mode file --compression-format zstd
+ros2 bag record /output_topic -o baseline_bag -s mcap --compression-mode file --compression-format zstd
 
 # In CI: replay input, record output, compare
 ros2 bag play input_bag --clock &
-ros2 bag record /output_topic -o test_output --max-duration 30 &
+# Humble has no "stop after N seconds" record flag (--max-bag-duration only splits files);
+# stop with SIGINT so the bag is closed cleanly
+timeout -s INT 30 ros2 bag record /output_topic -o test_output -s mcap &
 # Compare with baseline using custom diff tool
 ```
 
@@ -776,7 +827,7 @@ does not establish powered-hardware or field behavior.
 | **L0** Static review | Reading code, config, and vendor docs | Internal consistency; that a named plugin/parameter exists in the installed version (Principle 11) | Anything about execution | File and line, installed package version |
 | **L1** Unit tests | gtest/pytest on isolated logic (sections 1–2) | Algorithms, boundary conditions, error paths | Integration, timing, QoS, the ROS graph | Test names, `colcon test-result` output |
 | **L2** Build + launch smoke | colcon build; nodes start; configure-only validation (section 4) | It compiles; plugins resolve; YAML parses; params load | That the system does anything useful once active | Build log, pluginlib "Created ..." lines |
-| **L3** Runtime, robot disconnected | Full graph on sim or mock hardware (section 5, `references/simulation.md`) | Topic/QoS matching, TF chain, rates, node interaction | Real timing, real sensor noise, real actuator response | `ros2 topic info -v`, `hz` output, bag of the run |
+| **L3** Runtime, robot disconnected | Full graph on sim or mock hardware (section 5; `mock_components` in `references/hardware-interface.md`) | Topic/QoS matching, TF chain, rates, node interaction | Real timing, real sensor noise, real actuator response | `ros2 topic info -v`, `hz` output, bag of the run |
 | **L4** Hardware powered, no actuation | Real robot, motors disabled or mechanically isolated | Provenance, real parameters, real sensor and driver state, TF from real hardware | Any motion behavior | Provenance checklist (`references/runtime-provenance.md`), driver diagnostics |
 | **L5** Controlled motion / fault injection | Bounded commissioning motion in an approved contained test area or restrained rig; high-risk faults only on a restrained platform, operator present | Motion response, stop-path behavior under injected faults | Behavior over a full duty cycle, in the real environment | Stop-path acceptance criteria (`references/safety-estop.md` §3), with the physical safety conditions in §6; measured stopping distance |
 | **L6** Supervised field operation | The real task, supervised, with recording on | Behavior in its actual environment and duty cycle | That untested edge cases are handled | Bag recordings, incident log, operator sign-off |
@@ -818,8 +869,7 @@ Rules for using the ladder:
 
 ---
 
-**See also:** `references/simulation.md` for headless simulation testing in CI,
-`references/launch-system.md` for launch_testing framework patterns,
+**See also:** `references/launch-system.md` for launch_testing framework patterns,
 `references/workspace-build.md` for colcon test configuration and CI/CD setup,
 and `references/runtime-provenance.md` for verifying what a running system
 actually loaded.

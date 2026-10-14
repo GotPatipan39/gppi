@@ -1,5 +1,23 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.3.0 — 2026-10-14
+ล้างเนื้อหาที่ผิดสำหรับ Humble (จากรีวิว docs/reviews/2026-10-14-skills.md กลุ่ม 2) — แก้เอกสารเท่านั้น ยังไม่ได้ build ตัวอย่าง C++ ใหม่กับ Humble จริง
+- **reference ที่หาย**: เพิ่ม `deployment.md` (systemd/pm2 บน mini PC, `sd_notify` + `NotifyAccess=all`, rollback, shutdown บน Humble), `runtime-provenance.md`, `system-diagnostics.md` ดัดแปลงจาก upstream @4ee4dea เป็น Humble; ตัดการอ้างถึง realtime/security/simulation/multi-robot/sensor-integration/engineering-principles และ `scripts/*.py`; เพิ่ม `references/LICENSE` (Apache-2.0)
+- **hardware-interface**: ตัวอย่างหลักเป็น ros2_control 2.x ของ Humble (เดิมเป็น API 4.x ของ Jazzy ซึ่ง build บน Humble ไม่ผ่าน); chaining และ mecanum/ackermann/bicycle/tricycle มีใน Humble แล้ว (เดิมบอก Jazzy+/Kilted+); gripper บน Humble คือ `gripper_controllers`; กับดัก `diff_drive_controller` `use_stamped_vel=true` → `~/cmd_vel_unstamped`
+- **systemd**: unit `Type=notify` ต้องมี `NotifyAccess=all` (node ใต้ `ros2 launch` เป็น child process) — ไม่มี sd_notify ให้ใช้ `Type=simple`; ทุก unit ตั้ง `ROS_LOCALHOST_ONLY=1` + `ROS_DOMAIN_ID` จาก CLAUDE.md; `ROS_DISTRO=jazzy` → humble
+- **executor/comm**: EventsExecutor ไม่มีใน Humble (Iron+); StaticSingleThreaded ไม่ deprecated ใน Humble; intra-process + KEEP_ALL/TRANSIENT_LOCAL บน Humble **throw**; content filter มีตั้งแต่ Humble แต่ CycloneDDS ไม่รองรับ; service introspection ไม่มีใน Humble
+- **CLI/tools**: `ros2 topic echo` บน Humble ปรับ QoS ตาม publisher; `ros2 trace` ไม่มี start/stop; MCAP ต้องลง plugin + `-s mcap`; `ros2 bag record` ไม่มี `--max-duration`/retention
+- **launch/build**: Python launch เป็นหลัก (ตรงกับ SKILL.md); `robot_description` ผ่าน topic ไม่ใช่ parameter; `ament_target_dependencies` เป็นแบบแนะนำของ Humble; template install header ไป `include/${PROJECT_NAME}`
+- **CI**: ตัวอย่างเป็น `ros:humble` + เพิ่ม `.gitlab-ci.yml` (ทีมใช้ GitLab)
+- **กฎทีม**: คำเตือน localhost-only ก่อนตัวอย่าง multi-machine/firewall; ถามผู้ใช้ก่อน `ros2 run`/`lifecycle set`/launch/activate controller บนเครื่องจริง; ค่า hardware ในตัวอย่างเป็น placeholder
+- รีวิวผิดหนึ่งข้อ: `parallel_gripper_action_controller` ไม่มีใน Humble — ไม่ได้ใส่
+- ตาม 🟡 ของ safety-reviewer (2 ชุด, ไม่มี 🔴):
+  - **auto-restart ของ driver ปิดเป็นค่าเริ่มต้น** ในตัวอย่าง systemd/pm2 — เปิดได้เมื่อยืนยันว่า driver เริ่มใน safe state และ drive มี comm timeout; `StartLimitBurst`/`max_restarts` จับได้แค่ crash loop ที่เร็ว
+  - watchdog ของ systemd kill ด้วย SIGABRT = **ไม่มีการสั่งหยุดอุปกรณ์** → Option B ต้องมี comm timeout ฝั่ง drive
+  - I/O อยู่ใน thread แยก → ping watchdog / heartbeat ต้องผูกกับความคืบหน้าของ I/O loop ไม่งั้น watchdog ไม่ fire; ตอนปิดต้องหยุด I/O thread ก่อนส่ง stop
+  - rollback = ทำ safe state + verify ซ้ำ และเช็กว่า config เข้ากับ release เก่า; build บนเครื่องจริงไปที่ release dir ใหม่ (ถามก่อน)
+  - ตัวอย่าง chaining: reference เริ่มเป็น NaN และไม่ค้างค่าเก่าเมื่อไม่มีแหล่ง reference (NaN → effort 0 + reset PID พร้อมคำเตือนเรื่องแรงโน้มถ่วง); `write()` ข้าม NaN ปลอดภัยเฉพาะ position interface
+
 ## 3.2.4 — 2026-10-14
 - description: เพิ่ม trigger ให้ตรงกับตาราง "ใช้ skill ตามงาน" ใน rules.md — Claude เลือก skill จาก description ถ้าไม่มีคำเหล่านี้ skill จะไม่ถูกโหลดในงานที่ตารางสั่งไว้ (จากรีวิว กลุ่ม 3): bringup/systemd, ros2_control, lifecycle, rosbag, e-stop/watchdog
 

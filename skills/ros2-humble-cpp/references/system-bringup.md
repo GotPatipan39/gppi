@@ -292,16 +292,36 @@ BindsTo=dev-lidar.device
 After=dev-lidar.device
 
 [Service]
+# Type=notify + WatchdogSec ONLY if the program sends sd_notify READY=1 and
+# WATCHDOG=1 (pattern in references/deployment.md §5). Otherwise use Type=simple
+# and drop WatchdogSec — see the warning below.
 Type=notify
+# The notifying node is a child of the wrapper/ros2 launch, not the main PID;
+# the default NotifyAccess=main would make systemd ignore its sd_notify.
+NotifyAccess=all
 User=robot_user
+# Team default: local-only DDS; domain ID from the project's CLAUDE.md
+Environment=ROS_LOCALHOST_ONLY=1
+Environment=ROS_DOMAIN_ID=<from project CLAUDE.md>
 ExecStart=/opt/robot/scripts/start_layer.sh base
-Restart=on-failure
-RestartSec=2
+# Hardware driver layer: auto-restart OFF until safe start state + device comm timeout
+# are confirmed (deployment.md §5) — a watchdog kill sends no stop to the device.
+# Restart=on-failure
+# RestartSec=2
 WatchdogSec=30
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> **Without `sd_notify` in the program, use `Type=simple` (and no `WatchdogSec`), or
+> systemd will kill the service.** With `Type=notify`, systemd waits for `READY=1` and
+> fails the start on timeout; with `WatchdogSec`, it kills the process when `WATCHDOG=1`
+> pings stop arriving ([systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html)).
+> A plain `ros2 launch` wrapper sends neither. When a node under `ros2 launch` does
+> send them, it is a child process, so the unit also needs `NotifyAccess=all` (the
+> default for `Type=notify` is `main`, which ignores children). The sd_notify pattern
+> lives in `references/deployment.md` §5.
 
 ```ini
 # /etc/systemd/system/ros2-autonomy.service — autonomy layer, starts after base
@@ -315,7 +335,12 @@ PartOf=ros2-base.service
 [Service]
 Type=simple
 User=robot_user
+# Must match the base layer exactly, or the layers will not see each other
+Environment=ROS_LOCALHOST_ONLY=1
+Environment=ROS_DOMAIN_ID=<from project CLAUDE.md>
 ExecStart=/opt/robot/scripts/start_layer.sh autonomy
+# Restart is acceptable here only because autonomy does not touch hardware directly —
+# the base layer's command watchdog must stop the machine while autonomy is down/restarting.
 Restart=on-failure
 RestartSec=5
 
@@ -349,8 +374,8 @@ sudo systemctl enable systemd-time-wait-sync.service         # with systemd-time
 Why time matters at bringup: if sensor drivers start stamping data before NTP/chrony
 steps the clock, the jump (often years, from RTC-less SBCs) breaks tf2 — consumers see
 extrapolation errors, and rosbag recordings straddle the step. On offline robots run a
-local chrony serving its own RTC, or gate bringup on a PPS/GPS source (see
-`references/sensor-integration.md` §3 for sensor-level clock sync).
+local chrony serving its own RTC, or gate bringup on a PPS/GPS source (sensor-level
+clock sync is driver-specific — check the sensor driver's documentation).
 
 ### Site-specific overrides with drop-ins
 
@@ -362,10 +387,12 @@ sudo systemctl edit ros2-base.service
 ```
 
 ```ini
-# override.conf — this robot has no autonomy compute, lower the watchdog
+# override.conf — this robot's stack is slower to answer: lengthen (relax) the watchdog
+# (a longer WatchdogSec = a hung process is detected later — pick it from measured loop times, not to silence restarts)
 [Service]
 WatchdogSec=60
-Environment=ROS_DOMAIN_ID=17
+# Use the value from the project's CLAUDE.md; set the same in every unit
+Environment=ROS_DOMAIN_ID=<from project CLAUDE.md>
 ```
 
 ### User vs system services
@@ -585,7 +612,10 @@ OnFailure=robot-safe-mode.service
 [Service]
 Type=oneshot
 User=robot_user
-Environment=ROS_DISTRO=jazzy
+Environment=ROS_DISTRO=humble
+# Must match the stack under test (see note below)
+Environment=ROS_LOCALHOST_ONLY=1
+Environment=ROS_DOMAIN_ID=<from project CLAUDE.md>
 ExecStart=/opt/robot/scripts/bringup_check.sh
 # Downstream units can order After=ros2-bringup-check.service to gate on health
 RemainAfterExit=yes
@@ -594,15 +624,17 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 ```
 
-> **Humble note:** on Humble hosts also export `ROS_LOCALHOST_ONLY` consistently with
-> the stack under test; on Jazzy+ use `ROS_AUTOMATIC_DISCOVERY_RANGE`. A mismatch
+> **Humble note:** export `ROS_LOCALHOST_ONLY=1` and the project's `ROS_DOMAIN_ID`
+> identically in every unit, as above (team default; only a project `CLAUDE.md` that
+> says multi-machine changes this). On Jazzy+ the equivalent is
+> `ROS_AUTOMATIC_DISCOVERY_RANGE` (distro comparison only). A mismatch
 > between the check script's environment and the services' environment makes the
 > check see an empty graph while the robot is actually fine.
 
 ### Continuous health: diagnostic_aggregator
 
-Drivers should publish to `/diagnostics` via `diagnostic_updater` (sensor-side setup
-in `references/sensor-integration.md` §6). Aggregate them into one operator-facing
+Drivers should publish to `/diagnostics` via `diagnostic_updater` (driver-side setup
+in `references/system-diagnostics.md`). Aggregate them into one operator-facing
 tree:
 
 ```yaml
@@ -626,9 +658,10 @@ ros2 run diagnostic_aggregator aggregator_node --ros-args --params-file config/d
 ros2 topic echo /diagnostics_agg --once   # one STALE/ERROR entry fails the fleet health poll
 ```
 
-The fleet health endpoint pattern (HTTP liveness for load balancers/monitoring) is in
-`references/deployment.md` §8 — feed it from `/diagnostics_agg` rather than a bare
-"process is up" check.
+A health-check service pattern (a C++ monitor that reports stale topics using the
+steady clock, exposed as a `Trigger` service) is in `references/deployment.md` §8.
+HMI/monitoring should read `/diagnostics_agg` or such a health service rather than a
+bare "process is up" check.
 
 ## 6. Common failures and fixes
 
@@ -643,6 +676,6 @@ The fleet health endpoint pattern (HTTP liveness for load balancers/monitoring) 
 | Units with `Wants=` still race | `Wants=`/`Requires=` do not imply ordering | Always pair with `After=` |
 | Autonomy keeps running against dead drivers | Layers not coupled | `PartOf=ros2-base.service` on the autonomy unit so base restarts cascade |
 | Watchdog says healthy while robot is frozen | Heartbeat published from a dedicated timer, not the work loop | Publish the heartbeat inside the control cycle; monitor with DEADLINE events (Section 4) |
-| Driver crash-loops and wears hardware | Unbounded `Restart=on-failure` | `StartLimitBurst` + `OnFailure=` escalation to a safe-mode unit |
+| Driver crash-loops and wears hardware | Unattended `Restart=on-failure` on the driver layer | Keep driver auto-restart off (deployment.md §5); `OnFailure=` escalation — `StartLimitBurst` only catches fast loops to a safe-mode unit |
 | `ros2 node list` empty in check script but robot works | CLI daemon cached a stale graph, or discovery env mismatch | `ros2 daemon stop && ros2 daemon start` in the script; align `ROS_DOMAIN_ID` and discovery range env |
 | Health check passes but no sensor data | Check only tested node presence | Assert data flow with `ros2 topic echo --once` / `ros2 topic hz`, not just `ros2 node list` (Section 5) |

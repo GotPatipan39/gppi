@@ -249,15 +249,18 @@ executor.spin();  // Uses std::thread::hardware_concurrency() threads
 Callbacks can run in parallel. You **must** pair this with callback groups to
 control which callbacks may overlap (see section 3).
 
-### StaticSingleThreadedExecutor (deprecated)
+### StaticSingleThreadedExecutor
 
-> **Deprecated in Jazzy/Kilted, removed in Rolling.** Migrate to
-> `SingleThreadedExecutor` or `EventsExecutor`. The performance gap between
-> `SingleThreadedExecutor` and `StaticSingleThreadedExecutor` has been largely
-> eliminated in recent releases.
+> **Humble: available and not deprecated.** It is still a plain class in
+> [rclcpp humble](https://github.com/ros2/rclcpp/blob/humble/rclcpp/include/rclcpp/executors/static_single_threaded_executor.hpp)
+> (and Jazzy). It is marked `[[deprecated]]` only from
+> [Kilted](https://github.com/ros2/rclcpp/blob/kilted/rclcpp/include/rclcpp/executors/static_single_threaded_executor.hpp),
+> because its optimizations were folded into the other executors, and it is gone
+> in Rolling. On Humble it is a valid choice; if the code must later move to
+> Kilted+, switch to `SingleThreadedExecutor`.
 
 ```cpp
-// Deprecated — shown for reference only
+// Humble: valid, no deprecation warning
 rclcpp::executors::StaticSingleThreadedExecutor executor;
 executor.add_node(node);
 executor.spin();
@@ -267,13 +270,21 @@ Like `SingleThreadedExecutor` but pre-computes the callback schedule at startup.
 Lower overhead per spin iteration — use for nodes with a fixed set of subscriptions
 and timers (no dynamic creation/destruction at runtime).
 
-### EventsExecutor (Jazzy+)
+### EventsExecutor (Iron+ — NOT available on Humble)
+
+> **Humble: does not exist.** `rclcpp::experimental::executors::EventsExecutor`
+> is not in [rclcpp humble](https://github.com/ros2/rclcpp/tree/humble/rclcpp/include/rclcpp/experimental)
+> — it first appears in the
+> [iron branch](https://github.com/ros2/rclcpp/tree/iron/rclcpp/include/rclcpp/experimental/executors/events_executor).
+> Code below will not compile on Humble. On Humble use `SingleThreadedExecutor`,
+> `StaticSingleThreadedExecutor`, or `MultiThreadedExecutor`. The rest of this
+> subsection is for reference when targeting Iron+.
 
 Event-driven instead of polling-based. Lower CPU usage when idle, faster wake-up
 on incoming data. Preferred for systems with many nodes and intermittent traffic.
 
-`EventsExecutor` remains in the experimental namespace across all current distros
-(Jazzy, Kilted, Rolling): `rclcpp::experimental::executors::EventsExecutor`.
+`EventsExecutor` remains in the experimental namespace in every distro that has it
+(Iron, Jazzy, Kilted, Rolling): `rclcpp::experimental::executors::EventsExecutor`.
 There is no rclpy port of `EventsExecutor` — it is C++ only.
 
 **Benchmark note:** Per the iRobot 2023 paper, `EventsExecutor` achieves approximately
@@ -289,20 +300,20 @@ pattern (section 5) lets you use `SingleThreadedExecutor` on the RT path and
 `EventsExecutor` on the non-RT path.
 
 ```cpp
-// All distros (Jazzy / Kilted / Rolling) — experimental namespace
+// Iron / Jazzy / Kilted / Rolling only — experimental namespace (not Humble)
 rclcpp::experimental::executors::EventsExecutor executor;
 executor.add_node(node);
 executor.spin();
 ```
 
-### Choosing an executor
+### Choosing an executor (Humble)
 
 | Scenario | Executor | Why |
 |---|---|---|
 | Simple node, few callbacks | `SingleThreadedExecutor` | Simplest, no thread-safety concerns |
-| Fixed callback set, low overhead | `EventsExecutor` (or `SingleThreadedExecutor`) | `StaticSingleThreadedExecutor` is deprecated; `EventsExecutor` offers similar benefits |
+| Fixed callback set, low overhead | `StaticSingleThreadedExecutor` (or `SingleThreadedExecutor`) | Not deprecated on Humble; pre-computes the entity list (no entities created/destroyed at runtime) |
 | Multiple nodes or slow callbacks | `MultiThreadedExecutor` | Prevents one slow callback from blocking others |
-| Many nodes, intermittent data | `EventsExecutor` | Lower CPU when idle |
+| Many nodes, intermittent data | `SingleThreadedExecutor` per process; measure CPU | `EventsExecutor` would be the answer on Iron+, but it does not exist on Humble |
 | Custom scheduling requirements | Custom executor | Full control over callback ordering and priority |
 
 ## 3. Callback groups
@@ -802,7 +813,28 @@ auto node = std::make_shared<MyNode>(options);
 
 - Publisher and subscriber must be in the same process
 - Use `std::unique_ptr<MessageT>` when publishing (transfers ownership)
-- Both must use compatible QoS (typically `KEEP_LAST`, depth 1)
+- On Humble, QoS **must** be `KEEP_LAST` + `VOLATILE` for every publisher and
+  subscription that has intra-process enabled — otherwise construction **throws**
+  `std::invalid_argument` (see below)
+
+> **Humble: intra-process + `KEEP_ALL` or `TRANSIENT_LOCAL` throws.** In
+> [rclcpp humble `publisher.hpp`](https://github.com/ros2/rclcpp/blob/humble/rclcpp/include/rclcpp/publisher.hpp)
+> and [`subscription.hpp`](https://github.com/ros2/rclcpp/blob/humble/rclcpp/include/rclcpp/subscription.hpp),
+> when intra-process is enabled `create_publisher`/`create_subscription` throws
+> `std::invalid_argument` with "intraprocess communication on topic '...' allowed
+> only with keep last history qos policy" or "intraprocess communication allowed
+> only with volatile durability". The node dies at startup — it does not silently
+> fall back to DDS. Typical victims: latched topics (`/robot_description`, maps,
+> status/permit topics using `TRANSIENT_LOCAL`) and `KEEP_ALL` command queues.
+> Fix per entity by opting it out, keeping intra-process for the rest of the node:
+>
+> ```cpp
+> rclcpp::PublisherOptions pub_opts;
+> pub_opts.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+> latched_pub_ = create_publisher<std_msgs::msg::String>(
+>   "status", rclcpp::QoS(1).transient_local(), pub_opts);
+> // Same for subscriptions: rclcpp::SubscriptionOptions::use_intra_process_comm
+> ```
 
 ```cpp
 // Publisher side — must publish unique_ptr for the copy-free path
@@ -828,7 +860,9 @@ void callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) {
 
 - Does not work across processes (falls back to DDS)
 - Every participating node must enable `use_intra_process_comms(true)` in its `NodeOptions`
-- `KEEP_ALL` history breaks zero-copy optimization
+- Humble: `KEEP_ALL` history or `TRANSIENT_LOCAL` durability on an intra-process
+  publisher/subscription **throws `std::invalid_argument`** at creation (not just
+  "loses zero-copy") — disable intra-process for that entity as shown above
 
 ## 5. Custom executors and alternatives
 
@@ -903,8 +937,8 @@ check the timer first and process it before taking the message.
 
 > **Note:** The `rclcpp::Executor` protected API varies across distros and is not
 > fully stable. The following shows the architectural pattern — adapt method names
-> to your target distro. For production, consider the `EventsExecutor` (Kilted+)
-> as a higher-performance alternative.
+> to your target distro. (On Iron+ the `EventsExecutor` is a higher-performance
+> alternative; it does not exist on Humble.)
 
 ```cpp
 #include <rclcpp/rclcpp.hpp>
@@ -1259,7 +1293,7 @@ class ImageProcessor : public rclcpp::Node
 - **Avoid `shared_ptr` cycles:** Node → Subscription → Callback → Node.
   Use `weak_ptr` or capture `this` as raw pointer with guaranteed lifetime.
 - **Pre-allocate messages** in real-time paths. Do not allocate in callbacks.
-- **Use `EventsExecutor`** when the callback set is fixed and idle CPU usage matters (`StaticSingleThreadedExecutor` is deprecated).
+- **Humble: use `StaticSingleThreadedExecutor`** (or `SingleThreadedExecutor`) when the callback set is fixed and per-spin overhead matters. It is not deprecated on Humble; `EventsExecutor` does not exist on Humble (Iron+).
 - **Measure with `ros2 topic delay`** and **tracing** before optimizing.
 - **Python GIL:** For CPU-bound Python nodes, use `ProcessPoolExecutor` for
   parallel computation, or rewrite the hot path in C++ as a component.
@@ -1270,9 +1304,9 @@ class ImageProcessor : public rclcpp::Node
   evaluation favors timers that are perpetually ready, leaving subscriptions
   unable to acquire execution slots. Mitigation: assign subscriptions and timers
   to separate callback groups on separate executors via `add_callback_group()`
-  (see the two-executor pattern in section 5), or use `EventsExecutor` which
-  dispatches based on actual events and is not susceptible to this starvation
-  pattern.
+  (see the two-executor pattern in section 5). (On Iron+, `EventsExecutor`
+  dispatches based on actual events and avoids this pattern; not available on
+  Humble.)
 
 ## 9. Common failures and fixes
 
@@ -1284,9 +1318,10 @@ class ImageProcessor : public rclcpp::Node
 | Callbacks run serially despite MultiThreadedExecutor | All in default MutuallyExclusive group | Assign Reentrant callback group explicitly |
 | Timer drifts under load | Wall timer + heavy callbacks | Use a dedicated callback group or reduce callback work |
 | Intra-process not working | Missing `use_intra_process_comms(true)` or nodes not in same process | Enable in NodeOptions for all participating nodes; ensure they run in the same process (composition, same main(), etc.) |
+| Node throws `std::invalid_argument` "intraprocess communication ... allowed only with keep last / volatile durability" at startup (Humble) | Intra-process enabled on a node that has a `KEEP_ALL` or `TRANSIENT_LOCAL` publisher/subscription | Set `use_intra_process_comm = rclcpp::IntraProcessSetting::Disable` in that entity's `PublisherOptions`/`SubscriptionOptions` (§4), or don't enable intra-process for that node |
 | Service call deadlocks executor | Synchronous wait on the future inside the callback | Register a response callback (`async_send_request(request, cb)` / `call_async` + `add_done_callback`) and return; move the client to a separate group only for unavoidable synchronous waits |
 | Cleanup skipped or run twice on SIGTERM | Handler raised into a callback or ran cleanup itself | Record the request in the handler; finish the spin; one idempotent cleanup (§1) |
 
 ---
 
-**See also:** `references/realtime.md` for callback group strategies under real-time constraints, `references/lifecycle-components.md` for lifecycle executors and component composition, `references/communication.md` for QoS and intra-process communication patterns.
+**See also:** `references/lifecycle-components.md` for lifecycle executors and component composition, `references/communication.md` for QoS and intra-process communication patterns.
