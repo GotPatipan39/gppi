@@ -56,6 +56,7 @@
 ## ตัวกันคำสั่ง (gppi 0.1.0)
 ทดสอบ 2026-10-14 บน Windows 11, Claude Code 2.1.296, node 24.21.0, plugin ติดตั้งจาก marketplace แบบโฟลเดอร์ในเครื่อง (`D:\ws\gppi`) — ทุกเคสกด No ยกเว้นที่ระบุ; WSL ยังไม่มี ROS2 จึงไม่มี message ถูกส่งจริงในทุกเคส
 ตรวจผลจาก log ของ session (`~/.claude/projects/<project>/<session>.jsonl`: `permission-mode`, `permissionDecision`, `hook_success`) ไม่ใช่จากคำบอกของ Claude ใน session นั้น — Claude มองไม่เห็น prompt ฝั่งผู้ใช้และเดาผิดได้
+log ไม่ได้บันทึก `hook_success` ของ PreToolUse ทุก session (เจอใน session bypass แต่ไม่เจอใน session auto ที่ทดสอบ docker) — เคสที่ผู้ใช้กด No ต้องดูข้อความ "Hook PreToolUse:... gppi: ..." บนหน้าจอประกอบ
 
 | surface / mode | คำสั่ง | ผล |
 |---|---|---|
@@ -67,6 +68,9 @@
 | CLI, auto (มี hook) | tool PowerShell: `ros2 topic pub ...` | ถาม "Hook PreToolUse:PowerShell ..." ✅ |
 | CLI, `bypassPermissions` | `wsl -- bash -lc '... ros2 topic pub ...'` | hook ตอบ ask → prompt ขึ้น → ผู้ใช้กด **Yes** (ตั้งใจ) → `"source":"user_temporary"` ✅ ถามได้แม้ใน bypass |
 | hook command ใน Git Bash, ไม่มี node ใน PATH | — | exit 2 + ข้อความ "gppi: ตัวกันคำสั่ง ... รันไม่ได้" (fail-closed) ✅ |
+| CLI, auto (หลังขยายขอบเขต, `fc8ab0d`) | tool PowerShell: `docker compose up -d` | ถาม "Hook PreToolUse:PowerShell ... gppi: ..." ✅ |
+| CLI, auto (หลังขยายขอบเขต) | `git commit --dry-run -m "fix safe shutdown sequence"` | ตัวกันไม่ถาม — classifier อนุมัติ (`reasonType: classifier`) ✅ ไม่ถามเกิน |
+| CI (GitHub Actions, ubuntu-22.04, node 22.18.0) | `claude plugin validate --strict`, `claude plugin test` (22 pass), hook ใต้ node | ผ่าน ไม่ต้อง login ✅ |
 
 ข้อสังเกต:
 - **ค่าเริ่มต้นของ CLI คือ auto mode** โดยไม่ได้ตั้งไว้ที่ไหน — เครื่องทีมที่ติดตั้งใหม่น่าจะเหมือนกัน
