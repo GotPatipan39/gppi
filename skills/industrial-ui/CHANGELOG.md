@@ -1,5 +1,11 @@
 # CHANGELOG — industrial-ui
 
+## 1.2.2 — 2026-10-14
+ข้อมูลล้าสมัย (จากรีวิว docs/reviews/2026-10-14-skills.md กลุ่ม 2)
+- `platforms/ros2-bridge.md`: rosbridge **มี** glob allowlist (`topics_glob` ฯลฯ) — ที่ไม่มีคือการยืนยันตัวตนผู้ใช้ (rosauth ไม่มีใน ROS 2) เดิมเขียนว่าจำกัด topic ไม่ได้
+- `platforms/node-red-dashboard.md`: Dashboard 2.0 v1.33.0; `ui-button` มี pointerdown/pointerup แล้ว แต่ event ปล่อยปุ่มหายได้ตอนหลุด → heartbeat ยังจำเป็น; confirm ด้วย `ui-notification` ต้องคง `msg._client` ไม่งั้นขึ้นทุกหน้าจอ
+- `platforms/web.md`: kiosk URL `/ui` → `/dashboard` (Dashboard 2.0)
+
 ## 1.2.1 — 2026-10-14
 แก้จุดที่ทำให้ operator เข้าใจสถานะเครื่องผิด (จากรีวิว docs/reviews/2026-10-14-skills.md)
 - `templates/hmi_template.html`:

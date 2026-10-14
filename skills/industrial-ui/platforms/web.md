@@ -31,7 +31,7 @@
 - `touch-action: manipulation` (ตัด delay ของ double-tap zoom), ปิด text selection บนปุ่ม (`user-select: none`)
 - ใช้ pointer events (`pointerdown/up`) ไม่ใช้ `click` อย่างเดียวสำหรับปุ่ม hold-to-run
 - ปิด context menu จากการกดค้าง (`contextmenu` → `preventDefault`) บนปุ่ม
-- Chrome kiosk: `chromium --kiosk --noerrdialogs --disable-pinch --overscroll-history-navigation=0 http://localhost:1880/ui`
+- Chrome kiosk: `chromium --kiosk --noerrdialogs --disable-pinch --overscroll-history-navigation=0 http://localhost:1880/dashboard` (Node-RED Dashboard 2.0 — `/ui` เป็น path ของ dashboard ตัวเก่าที่เลิกพัฒนาแล้ว)
 - ถ้าจอดับ/หลุด ให้หน้าเว็บโหลดใหม่ได้เองโดยไม่ต้องมีคนกด
 
 ## ทดสอบ

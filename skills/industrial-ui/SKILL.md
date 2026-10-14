@@ -5,7 +5,7 @@ description: ใช้เมื่อออกแบบหรือเขีย�
 
 # Industrial UI / UX
 
-> เวอร์ชัน 1.2.1 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.2 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ข้อมูลเฉพาะโปรเจกต์ (ชื่อ tag, ช่วงค่าปกติ, ผู้ใช้, ภาษา) อยู่ใน `CLAUDE.md` ของโปรเจกต์ — อ่านก่อนเสมอ ถ้าขัดกับ skill นี้ให้ยึดของโปรเจกต์
 
