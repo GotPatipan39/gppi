@@ -3,6 +3,20 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.3 — 2026-10-14
+Tested: unit test — gtest 16/16 ของ template ROS2 (g++ 11.4 = Ubuntu 22.04), client Modbus กับ libmodbus 3.1.6 + Modbus server จำลองบน localhost, ตัวกัน 23/23, CI — **ยังไม่ได้ build template กับ ROS2 Humble จริง และยังไม่ได้ลองกับ PLC/drive จริง**
+
+แก้จุดที่เสี่ยงต่อความปลอดภัยใน skill (จากการรีวิว [docs/reviews/2026-10-14-skills.md](docs/reviews/2026-10-14-skills.md)) — ใครที่ copy template ไปใช้แล้ว ควรเทียบกับรุ่นใหม่:
+- แก้: `ros2-humble-cpp` 3.2.3 — template node ที่สั่งมอเตอร์:
+  - watchdog เดิมใช้เวลาของ ROS — ตั้ง `use_sim_time:=true` บนเครื่องจริงแล้ว **watchdog ไม่ตัดเลย** → ใช้ steady clock
+  - คำสั่ง NaN เดิมผ่านไปถึง hardware; dt ที่เป็น NaN ทำให้ **ramp กระโดดถึงความเร็วเป้าหมายทันที** → ชะลอหา 0
+  - กลับทิศเดิมข้ามศูนย์ในรอบเดียว → หยุดที่ 0 หนึ่งรอบก่อน
+  - parameter ผิด (NaN, ≤ 0, timeout สั้นกว่า 3 รอบ timer) → node ไม่ start
+- แก้: `industrial-ui` 1.2.1 — HMI template เดิมขึ้น **"PLC เชื่อมต่อ" ทั้งที่ server หลุดจาก PLC**, แสดง RUNNING ค้างเมื่อข้อมูลหยุด, และ **ล็อกปุ่ม STOP** ระหว่างรอ ack
+- แก้: `modbus` 1.1.1 — client C++ ไม่ตัดสายเมื่ออุปกรณ์ตอบ exception (เดิม reconnect วนทุกรอบ); ตัวอย่างที่เขียนค่ามีคำเตือนชัด; `mbpoll` RTU ต้องถามก่อนเปิด serial
+- แก้: `safety-reviewer` 1.1.0 — **ไม่มี Bash แล้ว** (เดิมห้ามแค่ในข้อความ) + ตรวจเพิ่ม 6 เรื่อง (โหมดทดสอบค้างในของจริง, ขยับเองหลัง reset, overflow, race, QoS/ROS_DOMAIN_ID, safety function ย้ายไป software); `git-commit` 1.2.1 ส่ง diff ให้ผ่านไฟล์
+- เพิ่ม: `tools/test-templates.sh` ทดสอบ template ที่คุม hardware (รันใน CI)
+
 ## v0.1.2 — 2026-10-14
 Tested: unit test (23 pass), ตรวจลิงก์ในเอกสารและ skill — เปลี่ยนแค่เนื้อหา skill และเอกสาร ไม่แตะตัวกัน
 - แก้: skill `ros2-humble-cpp` 3.2.2 — เลิกอ้างถึงไฟล์ `evidence-progression.md` ที่ไม่มีอยู่จริง (4 จุดในเรื่อง e-stop และการทดสอบ) Claude จะไม่ถูกพาไปหาไฟล์ที่ไม่มีอีก
