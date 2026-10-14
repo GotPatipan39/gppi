@@ -1,0 +1,12 @@
+{
+  "modules": ["./mskills.ts"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "cat \"${CLAUDE_PLUGIN_ROOT}/rules.md\"", "timeout": 20 }
+        ]
+      }
+    ]
+  }
+}
