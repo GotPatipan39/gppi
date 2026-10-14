@@ -45,35 +45,23 @@ gppi มีสามชั้นที่ช่วยกัน ไม่มี�
 > ตัวกัน **ไม่จับ**: wrapper script (`./bringup.sh`, `make run`), โค้ดที่สั่งเครื่องจากข้างใน script ที่เป็นไฟล์ (`python write_plc.py`, node ที่เขียน register เอง), `kill <pid>`, alias/function ของ shell, `bash -c reboot` ที่ไม่มี quote, `doas -u x ...`, docker ที่มี global option ซึ่งไม่อยู่ในรายการ (`--tlscacert ca.pem run`), `nerdctl compose`, การเรียกผ่าน `$(which ros2)` หรือแยกคำด้วย quote — กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
 
 ## ติดตั้ง
-ต้องมีในทุกฝั่งที่ใช้ Claude Code (Windows และ WSL แยกกัน):
-- **Claude Code 2.1.287 ขึ้นไป** — mod ต้องใช้เวอร์ชันนี้ (`claude --version`)
-- **node 22.18 ขึ้นไป** ที่ hook มองเห็น — ใช้รัน PreToolUse hook; ไม่มี → Claude รันคำสั่ง shell ไม่ได้เลย (fail-closed)
-  - Ubuntu/WSL: ติดตั้งจาก NodeSource (`/usr/bin/node` อยู่ใน PATH ทุก shell) — apt ของ 22.04 ให้ node 12 ซึ่งเก่าเกิน; ถ้าใช้ `nvm` ต้องให้ node อยู่ใน PATH ของ shell ที่ไม่ใช่ interactive ด้วย (nvm ตั้ง PATH ใน `.bashrc`)
+**ทำตาม [docs/INSTALL.md](docs/INSTALL.md)** — ทีละขั้นตั้งแต่เครื่องเปล่า (Windows และ WSL) จนตรวจว่าตัวกันทำงาน พร้อมตารางปัญหาที่เจอบ่อย
+
+สรุปสิ่งที่ต้องมี — ทุกฝั่งที่ใช้ Claude Code (Windows และ WSL แยกกัน):
+- **Claude Code 2.1.287 ขึ้นไป** — mod ต้องใช้เวอร์ชันนี้
+- **node 22.18 ขึ้นไป** ที่ hook มองเห็น — ไม่มี → Claude รันคำสั่ง shell ไม่ได้เลย (fail-closed)
 - **Windows: Git for Windows** — ให้ hook รันด้วย Git Bash (ดูข้อยกเว้นใน [ความปลอดภัย](#ความปลอดภัย))
+- สิทธิ์อ่าน repo นี้ (private)
 
-1. ให้ git ในเครื่องเข้า repo นี้ได้ (repo เป็น private) — Claude Code รัน git แบบไม่ถามรหัส จึงต้องตั้ง credential ไว้ก่อน
-   - Windows: `gh auth login` แล้ว `gh auth setup-git`
-   - Ubuntu/WSL: fine-grained token แบบ read-only + `git config --global credential.helper store` แล้ว `git clone` ครั้งหนึ่งให้มันจำ token
-   - เครื่องที่ใช้ git ผ่าน HTTPS (ไม่ได้ตั้ง SSH key): ตั้ง `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` ก่อน
-2. ติดตั้ง:
-   ```bash
-   claude plugin marketplace add GotPatipan39/gppi
-   claude plugin install gppi@gppi
-   ```
-   หรือในแชท: `/plugin install gppi --marketplace GotPatipan39/gppi`
-3. เปิด auto-update: `/plugin` → Marketplaces → `gppi` → Enable auto-update — **ปิดอยู่เป็นค่าเริ่มต้น** สำหรับ marketplace ที่ไม่ใช่ของ Anthropic ถ้าไม่เปิดจะไม่ได้ของใหม่
-4. เปิดแชทใหม่ (VS Code: `Ctrl+Shift+P` → **Developer: Reload Window**)
-5. ตรวจว่าตัวกันทำงาน — สั่ง Claude ว่า `รัน ros2 topic pub /test std_msgs/msg/String "{}"` ต้อง **ถาม** แล้วกด **No** (ถ้าได้ข้อความ "ตัวกันคำสั่ง ... รันไม่ได้" แปลว่า node ยังไม่พร้อม)
-
-> [!IMPORTANT]
-> Windows กับ WSL มี `~/.claude` แยกกัน — ถ้าใช้ Claude Code ทั้งสองฝั่ง ต้องทำขั้น 1–4 **ทั้งสองฝั่ง**
-
-### เครื่องที่เคยใช้ mskills
-gppi มาแทน mskills — เปิดทั้งสองตัวพร้อมกันกฎจะซ้ำ 2 ชุด ตัวกันทำงานซ้ำ และ skill มีสองชุด:
+ติดตั้งแบบย่อสำหรับคนที่เครื่องพร้อมแล้ว:
 ```bash
-claude plugin uninstall mskills@mskills
-claude plugin marketplace remove mskills
+claude plugin marketplace add GotPatipan39/gppi
+claude plugin install gppi@gppi
 ```
+แล้วเปิด auto-update (`/plugin` → Marketplaces → `gppi` → Enable auto-update — **ปิดอยู่เป็นค่าเริ่มต้น**) และเปิดแชทใหม่
+
+### ของเก่าจาก mskills
+วิธีเอา plugin mskills ออกอยู่ใน [docs/INSTALL.md](docs/INSTALL.md) ขั้น 5
 เครื่องที่เคยใช้ installer รุ่นแรก (ก่อน 2026-10-12) ต้องเก็บของเก่าออกด้วย ไม่อย่างนั้น skill ใน `~/.claude/skills` จะบังตัวใน plugin **โดยไม่มีคำเตือน**:
 - ย้าย/ลบ `~/.claude/skills/<ชื่อ skill>` และ `~/.claude/agents/safety-reviewer.md`
 - ลบบล็อก `<!-- BEGIN claude-skills ... -->` … `<!-- END claude-skills -->` ใน `~/.claude/CLAUDE.md`
