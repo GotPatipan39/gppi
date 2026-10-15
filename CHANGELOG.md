@@ -3,6 +3,12 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.7 — 2026-10-15
+Tested: ตัวตรวจ CLAUDE.md กับสำเนาที่ทำให้เก่า 6 แบบ (จับได้ครบ), ตัวตรวจ flowchart กับ flowchart จริง 8 ไฟล์ของ fg-robot-pallet (อ่านอย่างเดียว), eval 17/17 (1 รอบต่อ case), ตัวกัน 23/23 — skill ใหม่ยังไม่ได้ใช้สร้าง CLAUDE.md ในโปรเจกต์จริง
+- เพิ่ม: skill `project-claude-md` 1.1.0 — สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware ชี้ไปไฟล์+key ไม่ copy ตัวเลข, จดสิ่งที่โค้ดไม่บอก (register ใครเขียน, อะไรทำให้เครื่องขยับ, เครื่องหน้างาน), ป้าย ✅/⚠️/❓, ตัวตรวจว่า CLAUDE.md ยังตรงกับโค้ด — **Claude จะถามก่อนสร้างเมื่อเปิดโปรเจกต์คุมเครื่องที่ไม่มี CLAUDE.md**; แนวคิดบางส่วนจาก anthropics/claude-plugins-official `claude-md-improver` (Apache-2.0)
+- เปลี่ยน: `flowchart` 1.2.0 — ตัวตรวจเตือนน้อยลงมาก (ทดสอบกับ flowchart จริงของทีม: ~60 → 7 ข้อที่เป็นของจริง), ทำตามสไตล์ของทีม (REGISTER OWNERSHIP, กล่อง "ทำไม", LEGEND), ใช้โฟลเดอร์ flowchart เดิมของโปรเจกต์ (เช่น `docs/api/`)
+- rules.md: เพิ่มแถว `project-claude-md` ในตาราง skill; ที่เก็บ flowchart ใช้ของเดิมของโปรเจกต์
+
 ## v0.1.6 — 2026-10-15
 Tested: ตัวตรวจ flowchart กับไฟล์ที่ตั้งใจทำผิด (จับได้ครบ) + export ด้วย draw.io 31.7 ดูรูปแล้ว, ลองใช้ skill จริงกับ poll loop ของ Modbus, eval 15/15 (1 รอบต่อ case), ตัวกัน 23/23 — ยังไม่ได้ใช้ในโปรเจกต์จริง
 - เพิ่ม (กฎใหม่ใน rules.md): **logic ที่มีลำดับหรือเงื่อนไข (state machine, sequence เครื่อง, start/stop/reset, alarm/interlock, retry/timeout) ต้องมี flowchart draw.io ที่ผู้ใช้ OK ก่อนเขียนโค้ด** — เก็บที่ `docs/flowcharts/<ชื่อ>.drawio` และ commit; แก้ logic ต้องแก้ flowchart ใน commit เดียวกัน; ไม่ต้องทำกับฟังก์ชันสั้นที่ไม่มีทางแยก หรือแก้บั๊กที่ไม่เปลี่ยน flow
