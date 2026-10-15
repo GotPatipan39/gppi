@@ -3,6 +3,11 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.10 — 2026-10-15
+Tested: test โค้ดใน skill (WSL), ลิงก์ทั้ง repo, validate, ตัวกัน 26/26 — เนื้อหาที่แก้มาจากการเทียบ skill กับ doc ผ่าน Context7
+- แก้ (จากการตรวจ skill ด้วย Context7): `ros2-humble-cpp` 3.4.2 — Humble `diff_drive_controller` chain ไม่ได้; `industrial-ui` 1.3.1 — touch panel จอเดียวใช้ layout Fixed ไม่ใช่ Grid; `modbus` 1.2.1 — comment เรื่อง errno; `tdd` 1.1.2 — ตัวเลขในตัวอย่าง
+- rules.md: ใช้วิธีดู API ตามเวอร์ชันจริง (+ Context7 ถ้ามี) ตอนตรวจ/รีวิวโค้ด เอกสาร และ skill ด้วย; แบ่งงานให้ subagent ต้องใส่เวอร์ชันเป้าหมายในคำสั่งงาน
+
 ## v0.1.9 — 2026-10-15
 Tested: ลิงก์ทั้ง repo, validate, ตัวกัน 26/26, eval 3 case ที่เกี่ยวกับ library ผ่าน, คำสั่งเพิ่ม Context7 ระดับผู้ใช้ทดสอบใน config แยก (Connected) และถาม Context7 จริงว่ามี doc รุ่นไหน
 - เพิ่ม (rules.md): **API ของ library ดูจากเวอร์ชันที่โปรเจกต์ใช้จริง** — ถ้ามี MCP `context7` ให้ถามพร้อมเวอร์ชัน แต่ doc ส่วนใหญ่เป็นรุ่นล่าสุด (ไม่มี rclcpp Humble, pymodbus รุ่นเก่า, OpenCV เก่าสุด 4.6.0) จึงยึด header/`--help` ในเครื่องเมื่อไม่ตรง; คำถามห้ามมีข้อมูลโปรเจกต์
