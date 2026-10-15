@@ -22,13 +22,13 @@ bash tools/test-templates.sh         # โค้ด template ที่คุม 
 CI ([`.github/workflows/validate.yml`](../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
 
 ### eval การเลือก skill
-[`evals/`](../evals/) มี 11 case วัดว่า Claude โหลด skill ถูกตัวไหม: 6 case ต่อ skill, 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) — รันเมื่อแก้ `description` ของ skill หรือตารางใน `rules.md`
+[`evals/`](../evals/) มี 12 case วัดว่า Claude โหลด skill ถูกตัวไหม: 7 case ต่อ skill (รวมอุปกรณ์ Modbus ที่ไม่มีไฟล์ใน `devices/`), 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) — รันเมื่อแก้ `description` ของ skill หรือตารางใน `rules.md`
 ```bash
 claude plugin eval . --ablation none --disallow-tools Agent --no-publish --runs 3
 claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-tools Agent --no-publish   # case เดียว
 ```
 - `--ablation none` จำเป็น: ค่าเริ่มต้นรันแบบไม่มี plugin เทียบด้วย และในโหมดนั้นตัวตรวจ `tool: Skill` ไม่ถูกนับคะแนน
-- ใช้ credential ของคนรัน — 11 case × 1 รอบ ≈ $2 (วัด 2026-10-14 ผ่าน 11/11 กับ Claude Code 2.1.299); `--runs 3` ราว 3 เท่า ใส่ `--max-cost-usd` ถ้าต้องการเพดาน
+- ใช้ credential ของคนรัน — 12 case × 1 รอบ ≈ $2 (วัด 2026-10-14/15 ผ่าน 12/12 กับ Claude Code 2.1.299) — ถ้าชน usage limit case จะได้ 0 พร้อม error "session limit" ไม่ใช่เลือก skill ผิด ให้ดู `error` ใน JSON ก่อน; `--runs 3` ราว 3 เท่า ใส่ `--max-cost-usd` ถ้าต้องการเพดาน
 - case ใช้ได้แค่ `Read, Glob, Grep, Skill` (ไม่มี Bash/Write) และ `--disallow-tools Agent` กัน subagent — eval จึงสั่งอะไรไม่ได้ แต่ hook ของ plugin ทำงานจริง (นอก sandbox) ห้ามเพิ่ม `--allow-tools Bash` และ**ห้ามรันบนเครื่องที่ต่อ PLC/serial**
 - `--no-publish` กันไม่ให้ report ขึ้น claude.ai; ผลอยู่ใน `evals/results/` (อยู่ใน `.gitignore`)
 - ยังไม่อยู่ใน CI เพราะต้องมี API key และมีค่าใช้จ่ายทุกครั้ง

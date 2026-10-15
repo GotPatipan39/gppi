@@ -3,6 +3,17 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.4 — 2026-10-14
+Tested: unit test — gtest ของ template ROS2 16/16 + odometry 9/9 (g++ 11.4), client Modbus กับ libmodbus 3.1.6 + server จำลอง, ตัวกัน 23/23, eval การเลือก skill 12 case (1 รอบต่อ case) — **ตัวอย่าง C++ ใหม่ใน references ของ ROS2 ยังไม่ได้ build กับ ROS2 Humble จริง และยังไม่ได้ลองกับหุ่น/PLC/drive จริง**
+
+ล้างเนื้อหาที่ผิดหรือล้าสมัย และเติมช่องว่าง (รีวิว [docs/reviews/2026-10-14-skills.md](docs/reviews/2026-10-14-skills.md) กลุ่ม 2–3):
+- แก้: `ros2-humble-cpp` 3.4.1 — references ถูกต้องสำหรับ Humble (เดิมปน API ของ Jazzy ที่ build บน Humble ไม่ผ่าน); เพิ่ม deployment / runtime-provenance / system-diagnostics; **ตัวอย่าง systemd ปิด auto-restart ของ driver เป็นค่าเริ่มต้น** (watchdog kill ไม่ได้สั่งหยุดอุปกรณ์); เพิ่ม `references/odometry.md`; `ParameterDescriptor` สำหรับ parameter ด้านความปลอดภัย; คำสั่งที่ทำให้เครื่องขยับทำตาม rules.md ยกเว้น fault injection ทางกายภาพที่ผู้ใช้รันเองเท่านั้น
+- เปลี่ยน: `modbus` 1.2.0 — เน้นหลักการที่ใช้ได้กับอุปกรณ์ทุกรุ่น + ขั้นตอนเจออุปกรณ์ใหม่ที่หน้างาน; `devices/` เป็นบันทึกรุ่นที่เคยใช้; pymodbus 3.13+, ASDA-B3 timeout
+- แก้: `tdd` 1.1.0 — ตัวอย่าง `node --test test/` ใช้ไม่ได้บน Node 22/24 → `node --test`; Claude ไม่ restart Node-RED เอง; เพิ่ม property-based test
+- เพิ่ม: `git-commit` 1.3.0 breaking change → major และเช็ก README/CLAUDE.md ก่อน commit; `project-readme` 1.1.0 template ภาษาไทย; `industrial-ui` 1.2.3 (rosbridge, Dashboard 2.0 v1.33, kiosk `/dashboard`); `opencv` 1.0.2 (BarcodeDetector 4.5 vs 4.8); `grilling` อัปเดตจากต้นทาง
+- เพิ่ม: `evals/` วัดว่า Claude เลือก skill ถูก (`claude plugin eval`), `THIRD_PARTY_NOTICES.md`
+- rules.md: แถว Modbus เป็น "อุปกรณ์ Modbus ทุกรุ่น"
+
 ## v0.1.3 — 2026-10-14
 Tested: unit test — gtest 16/16 ของ template ROS2 (g++ 11.4 = Ubuntu 22.04), client Modbus กับ libmodbus 3.1.6 + Modbus server จำลองบน localhost, ตัวกัน 23/23, CI — **ยังไม่ได้ build template กับ ROS2 Humble จริง และยังไม่ได้ลองกับ PLC/drive จริง**
 
