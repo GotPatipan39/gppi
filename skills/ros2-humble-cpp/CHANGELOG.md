@@ -1,5 +1,8 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.4.2 — 2026-10-15
+- แก้ `references/hardware-interface.md`: บน Humble `diff_drive_controller` chain ไม่ได้ (เดิมเขียนว่าได้) — ตัวที่มี reference interface บน Humble คือ steering controllers และ `mecanum_drive_controller` (พบจากการตรวจด้วย context7 เทียบหน้า Humble ของ control.ros.org)
+
 ## 3.4.1 — 2026-10-14
 - SKILL.md: คำสั่งที่ทำให้ hardware ขยับ ทำตาม rules.md (Claude รันได้เมื่อผู้ใช้สั่งชัดเจน) — เดิมเขียนว่า "ผู้ใช้เท่านั้น" ซึ่งเข้มกว่ากฎของทีมโดยไม่มีเหตุผลกำกับ
 - คงความเข้มไว้เฉพาะ **fault injection ทางกายภาพ** (kill/ตัดไฟระหว่างเครื่องเดิน, ดึงสาย, ทดสอบ e-stop/stop path, spoof, วัดระยะหยุด): ผู้ใช้รันเองเท่านั้นแม้สั่งให้ Claude ทำ — ตรงกับ `safety-estop.md` §6 ที่มีอยู่แล้ว (ผู้ใช้ตัดสิน Q28 แบบ a)

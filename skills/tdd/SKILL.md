@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน logic ใหม่หรื
 
 # Test-Driven Development
 
-> เวอร์ชัน 1.1.1 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.2 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 TDD คือวน: เขียน test ที่ fail → เขียนโค้ดเท่าที่ทำให้ผ่าน → refactor ตอนที่ test เขียวอยู่ → test ถัดไป
 skill นี้บอกว่า test แบบไหนควรเก็บไว้ test ไว้ตรงไหน และกฎของลูป — ใช้ทุกรอบ ไม่ใช่อ่านทีหลัง

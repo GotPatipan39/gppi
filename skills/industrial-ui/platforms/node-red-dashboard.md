@@ -11,7 +11,7 @@
 
 ## โครงสร้าง Dashboard 2.0
 - **Base** (ตั้งค่ารวม) → **Page** (หน้า) → **Group** (กล่อง) → **Widget**
-- แต่ละ Page ตั้ง layout ได้ (grid / fixed / notebook) — touch panel ใช้ grid ขนาดคงที่ตามความละเอียดจอ
+- แต่ละ Page ตั้ง layout ได้ (grid / fixed / notebook; รุ่นใหม่มี tabs) — **Grid** ปรับตามความกว้างจอ (12 คอลัมน์), **Fixed** กว้างคงที่ (หน่วย 48 px) — touch panel ที่จอขนาดเดียวตายตัวใช้ Fixed ให้ปุ่มอยู่ที่เดิมทุกครั้ง; เปิดหลายขนาดจอใช้ Grid
 - Theme: ตั้งสีให้ตรงกับ tokens.css (พื้นเทา, สี alarm ตามระดับ) ที่ Theme config ไม่ตั้งสีทีละ widget
 - `ui-template` ใช้ Vue (ไม่ใช่ Angular แบบตัวเก่า) — โค้ด template ของตัวเก่า copy มาใช้ตรงๆ ไม่ได้
 

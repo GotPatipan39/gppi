@@ -411,9 +411,12 @@ Controller chaining is available on Humble (serial chaining, documented under
 control.ros.org/humble → controller_manager → "Controller Chaining"). It allows
 controllers to feed their output into other controllers, enabling cascade
 control architectures. A `ChainableControllerInterface` exports **reference
-interfaces** that other controllers can write to. In Humble's
-`ros2_controllers`, `pid_controller` and `diff_drive_controller` are examples
-that can be chained.
+interfaces** that other controllers can write to. On Humble,
+`diff_drive_controller` is **not** chainable (it only subscribes to `~/cmd_vel` /
+`~/cmd_vel_unstamped`; chained mode arrived in later distros), while the
+steering controllers (`steering_controllers_library`) and
+`mecanum_drive_controller` expose reference interfaces — check the installed
+controller's docs before designing a chain around it.
 
 Example (Humble 2.x API): a velocity PID controller that accepts reference
 commands from a joint_trajectory_controller. `on_init()`,

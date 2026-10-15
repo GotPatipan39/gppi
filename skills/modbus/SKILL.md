@@ -5,7 +5,7 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
 
 # Modbus RTU / TCP
 
-> เวอร์ชัน 1.2.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ข้อมูลเฉพาะโปรเจกต์ (address map, slave ID ที่ตั้งไว้, ผังระบบ) อยู่ใน `CLAUDE.md` ของโปรเจกต์นั้น ให้อ่านก่อนเสมอ ถ้าขัดกับไฟล์ใน skill นี้ ให้ยึดของโปรเจกต์
 

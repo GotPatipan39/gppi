@@ -87,14 +87,14 @@ claude plugin install gppi@gppi
 ## skill และ subagent
 | skill | เวอร์ชัน | ใช้กับ |
 |---|---|---|
-| `ros2-humble-cpp` | 3.4.1 | งาน ROS2 Humble + C++ |
-| `modbus` | 1.2.0 | หลักการ Modbus RTU/TCP ที่ใช้ได้กับอุปกรณ์ทุกรุ่น + client (C++, Node-RED, Python) + บันทึกรุ่นที่เคยใช้ |
-| `industrial-ui` | 1.3.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
+| `ros2-humble-cpp` | 3.4.2 | งาน ROS2 Humble + C++ |
+| `modbus` | 1.2.1 | หลักการ Modbus RTU/TCP ที่ใช้ได้กับอุปกรณ์ทุกรุ่น + client (C++, Node-RED, Python) + บันทึกรุ่นที่เคยใช้ |
+| `industrial-ui` | 1.3.1 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.2 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.1.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
 | `project-claude-md` | 1.2.0 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
-| `tdd` | 1.1.1 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
+| `tdd` | 1.1.2 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `flowchart` | 1.2.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |

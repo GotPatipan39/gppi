@@ -1,7 +1,7 @@
 // Template: ตัวห่อ libmodbus สำหรับ Modbus TCP (ใช้กับ FX5UC)
 // - ไม่ throw ออกไปนอก class: ทุกฟังก์ชันคืน bool, ข้อความ error อยู่ใน last_error()
 // - reconnect แบบมีช่วงพัก (เรียก ensure_connected() ทุกรอบ timer ได้เลย)
-// - อุปกรณ์ตอบ exception (address/ค่าผิด ฯลฯ) = connection ยังดี ไม่ตัด; error อื่น (timeout, CRC, สายหลุด) = ตัดแล้วต่อใหม่
+// - errno ตระกูล Modbus exception (address/ค่าผิด ฯลฯ) = connection ยังดี ไม่ตัด; error อื่น (timeout, CRC, สายหลุด) = ตัดแล้วต่อใหม่
 // - helper แปลง int16 (ค่าติดลบ) และ 32-bit แบบ Mitsubishi (low word ก่อน)
 #pragma once
 
@@ -126,7 +126,9 @@ private:
     return false;
   }
   // error ระหว่างใช้งาน:
-  // - อุปกรณ์ตอบ exception (EMBXILFUN..EMBXGTAR) → connection ยังดี คงไว้ (ตัดทิ้งจะ reconnect วนทุกรอบ และปน "address ผิด" กับ "สายหลุด")
+  // - errno ในช่วง EMBXILFUN..EMBXGTAR → connection ยังดี คงไว้ (ตัดทิ้งจะ reconnect วนทุกรอบ และปน "address ผิด" กับ "สายหลุด")
+  //   มาได้ 2 ทาง: อุปกรณ์ตอบ exception กลับมา หรือ libmodbus ปฏิเสธเองโดยไม่ส่ง request
+  //   (เช่น EMBXILVAL เมื่อจำนวน register เกิน MODBUS_MAX_READ/WRITE_REGISTERS) — ทั้งสองทางไม่ใช่สายหลุด
   // - อย่างอื่น (timeout, CRC/ข้อมูลตอบกลับผิดรูป, socket error) → ปิด ให้ ensure_connected() ต่อใหม่รอบหน้า
   //   ข้อมูลตอบกลับผิดรูปอาจแปลว่า stream เลื่อนแล้ว — ต่อใหม่ปลอดภัยกว่าอ่านต่อ
   bool drop(const std::string & what)

@@ -44,8 +44,8 @@ def test_positive_current():
 ```
 
 ```python
-# BAD (tautological): ถ้าโค้ดลืมแปลงเป็น signed จะได้ 6553.4
-# และ raw * 0.1 ก็ได้ 6553.4 เหมือนกัน — test ผ่าน ทั้งที่ค่าผิด
+# BAD (tautological): ถ้าโค้ดลืมแปลงเป็น signed จะได้ 6552.6 (65526 × 0.1)
+# และ raw * 0.1 ก็ได้ 6552.6 เหมือนกัน — test ผ่าน ทั้งที่ค่าผิด
 def test_scaled():
     raw = 0xFFF6
     assert to_signed_scaled(raw, scale=0.1) == pytest.approx(raw * 0.1)
