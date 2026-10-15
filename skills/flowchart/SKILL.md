@@ -5,7 +5,7 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 
 # Flowchart (draw.io) ก่อนเขียน logic
 
-> เวอร์ชัน 1.1.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ผู้ใช้สรุป logic เป็น flowchart ใน draw.io ก่อนเขียนโค้ดเสมอ — ให้ทั้งผู้ใช้และ Claude เห็นภาพเดียวกัน และคุยกันผ่านรูปได้
 ไฟล์ `.drawio` เป็น XML: Claude เขียนเองได้ และอ่านไฟล์ที่ผู้ใช้แก้ใน draw.io กลับมาได้
@@ -16,8 +16,8 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 - ใช้คู่กับ skill อื่นได้: flowchart บอกว่า logic **ทำอะไรตามลำดับไหน**, `tdd` พิสูจน์ว่าโค้ดทำตามนั้น, `modbus`/`ros2-humble-cpp` บอกว่าคุยกับอุปกรณ์อย่างไร
 
 ## ขั้นตอน
-1. **อ่านก่อน**: `CLAUDE.md` ของโปรเจกต์ (address, timeout, ชื่อ state) และ flowchart เดิมใน `docs/flowcharts/` — มีอยู่แล้วให้แก้ไฟล์เดิม ไม่สร้างซ้ำ
-2. **เขียน** `docs/flowcharts/<ชื่อ logic>.drawio` (ไม่บีบอัด) ตามหัวข้อ "เนื้อหา" และ "รูปแบบ" ข้างล่าง
+1. **อ่านก่อน**: `CLAUDE.md` ของโปรเจกต์ (address, timeout, ชื่อ state) และหา flowchart เดิม (`git ls-files "*.drawio*"`) — โปรเจกต์มีที่เก็บอยู่แล้ว (เช่น `docs/api/`) ให้ใช้ที่เดิมและสไตล์เดิม; ไม่มีให้ใช้ `docs/flowcharts/`; flow นี้มีไฟล์อยู่แล้วให้แก้ไฟล์เดิม ไม่สร้างซ้ำ
+2. **เขียน** `<ที่เก็บ flowchart>/<ชื่อ logic>.drawio` (ไม่บีบอัด) — ข้างล่างเขียนเป็น `docs/flowcharts/` เพื่อย่อ ตามหัวข้อ "เนื้อหา" และ "รูปแบบ" ข้างล่าง
 3. **ตรวจ**: `node <skill นี้>/tools/check_drawio.mjs docs/flowcharts/<ชื่อ>.drawio` — error ต้องเป็น 0; warning (กล่องทับกัน, เส้นวิ่งทับกล่อง, เส้นตัดกัน, กล่องค้าง) ให้แก้ หรืออธิบายได้ว่าตั้งใจ — ตัวตรวจดูจากพิกัดจริง แม่นกว่าการดูรูปด้วยตาซึ่งทั้งพลาดและเห็นปัญหาที่ไม่มี
 4. **ดูรูปเอง** ถ้าเครื่องมี draw.io desktop (Windows: `C:\Program Files\draw.io\draw.io.exe`, Linux: `drawio`):
    `"<draw.io>" -x -f png -o <scratchpad>/<ชื่อ>.png docs/flowcharts/<ชื่อ>.drawio` แล้วเปิดรูปดู — ป้ายทับเส้น, ข้อความล้นกล่อง, อ่านยาก ให้แก้แล้ว export ใหม่ **ไม่เกิน 2 รอบ** ที่เหลือให้ผู้ใช้จัดใน draw.io
@@ -39,6 +39,19 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 - **การสื่อสารหลุด** (PLC, Modbus, ROS2 topic เงียบ) ถ้า logic อ่านค่าจากภายนอก
 - **ค่า hardware** (address, timeout, ระยะ) ใช้ชื่อตัวแปร (`T_clamp`) แล้วหมายเหตุว่ามาจาก CLAUDE.md — ไม่รู้ค่าใส่ `❓` ห้ามเดา
 - ไม่ต้องวาดรายละเอียดระดับบรรทัดโค้ด — 1 กล่อง = 1 ขั้นที่คนหน้างานเข้าใจ
+
+## สไตล์ของทีม (จาก flowchart ที่ผู้ใช้วาดเองใน fg-robot-pallet `docs/api/*.drawio`)
+ถ้าโปรเจกต์มี flowchart อยู่แล้ว **ทำตามสไตล์ของไฟล์เดิม** ก่อนตารางข้างล่าง — ที่ผู้ใช้ทำประจำ:
+- **หัวเรื่องบนสุด** บอกชื่อ flow และไฟล์โค้ดที่เกี่ยวข้อง (`scannerTriggerWatcher.js · scanner.py · scanService.js`)
+- **แถบหัวข้อคั่นช่วง** ต่อ loop/ไฟล์ (`LOOP 1 — scannerTriggerWatcher (polls every 200 ms)`) — สีตาม component
+- **LEGEND** อธิบายสีตามผู้กระทำ: PLC เขียน/เราอ่าน, เราเขียน/PLC อ่าน, process ภายนอก (scanner), ทาง NG/ปฏิเสธ
+- **แผง REGISTER OWNERSHIP** สำหรับ handshake กับ PLC: register ไหนฝั่งไหนเขียน ฝั่งไหนอ่านอย่างเดียว พร้อมความหมายของค่า (`D102 scan result (2 = OK, 99 = NG)`) — สำคัญมาก เพราะสองฝั่งเขียน register เดียวกัน = race
+- **กล่องเหลือง "ทำไม"** บันทึกเหตุผลที่ดูแปลก/บั๊กเก่าพร้อมวันที่ (`D100 is cleared by the PLC, not by us (PLC team request, 2026-08-21)`)
+- ใส่ชื่อ register/ฟังก์ชันจริงในกล่อง (`Read D100`, `waitForRobotReady('PICK')`) และ timeout จริง — ค่าจาก CLAUDE.md/`.env`/โค้ด ห้ามเดา
+- จบที่กล่องผลลัพธ์ได้ (`✅ START success`, `ABORT ...`) ไม่จำเป็นต้องเป็นวงรี; ป้ายเส้นใช้ค่าจริง (`== 5`, `timeout / error`, `AbortError`)
+- ภาษาตามไฟล์เดิมของโปรเจกต์
+
+ไฟล์ที่ผู้ใช้วาดเอง: ตัวตรวจเจอ error (เช่น ทางแยกที่มีทางออกเดียว) → **บอกผู้ใช้ ไม่แก้เอง** — อาจเป็นสไตล์ที่ตั้งใจ (กล่องข้าวหลามตัดใช้เป็น "gate") หรือทางที่ลืมวาดจริง ให้ผู้ใช้ตัดสิน
 
 ## รูปแบบ
 | ความหมาย | style | สี |

@@ -133,17 +133,15 @@ for (const { name, body } of pages) {
     }
   }
   const starts = vertices.filter((v) => inc.get(v.id) === 0);
-  const ends = vertices.filter((v) => out.get(v.id).length === 0);
-  if (vertices.length && starts.length === 0) warn('ไม่มีจุดเริ่ม (ทุกกล่องมีเส้นเข้า) — ถ้าเป็นวงวนทั้งหมด ให้ใส่กล่อง "เริ่ม/เปิดเครื่อง"');
-  // จุดเริ่มที่วาดเป็นวงรี (เปิดเครื่อง, เหตุการณ์อย่างกด STOP) ตั้งใจให้ไม่มีเส้นเข้า — กล่องอื่นที่ไม่มีเส้นเข้าคือลืมลาก
-  const isTerminal = (v) => /(^|;)(ellipse|terminator)(;|$)|arcSize=50|shape=(terminator|startState)/.test(style(v));
-  const orphans = starts.filter((v) => !isTerminal(v));
-  if (orphans.length && starts.length > 1) warn(`กล่องที่ไม่มีเส้นเข้า: ${orphans.map(label).join(' | ')} — ลืมลากเส้นเข้าหรือเปล่า (จุดเริ่ม/เหตุการณ์ให้วาดเป็นวงรี)`);
-  for (const v of ends) {
-    if (!/(^|;)(ellipse|terminator)(;|$)|arcSize=50|shape=(terminator|endState)/.test(style(v)) && !/จบ|end|หยุด|stop/i.test(label(v))) {
-      warn(`"${label(v)}" ไม่มีเส้นออก แต่ไม่ได้เป็นกล่องจบ — ลืมลากเส้นต่อหรือเปล่า`);
-    }
+  // กล่องที่ไม่มีเส้นเลย = คำอธิบาย/legend/แถบหัวข้อ ไม่ใช่ส่วนของ flow
+  const touched = new Set(edges.flatMap((e) => [e.source, e.target]));
+  const isolated = new Set(vertices.filter((v) => !touched.has(v.id)).map((v) => v.id));
+  if (vertices.some((v) => !isolated.has(v.id)) && !vertices.some((v) => !isolated.has(v.id) && inc.get(v.id) === 0)) {
+    warn('ไม่มีจุดเริ่ม (ทุกกล่องมีเส้นเข้า) — ถ้าเป็นวงวนทั้งหมด ให้ใส่กล่อง "เริ่ม/เปิดเครื่อง"');
   }
+  // ไม่เตือนจุดเริ่มหลายจุด หรือกล่องที่ไม่มีเส้นออก: flowchart จริงของทีมมีหลายเหตุการณ์เริ่ม และจบที่กล่องผลลัพธ์
+  // (✅ success / ABORT) เป็นเรื่องปกติ — ทดสอบกับ flowchart 8 ไฟล์ของ fg-robot-pallet แล้วเตือนแบบนี้เป็นเสียงรบกวนเกือบทั้งหมด
+  // ทางที่ขาดจริงจับได้จากทางแยกที่ทางออกไม่ครบ; --outline แสดงกล่องจบ (■) ให้คนดู
 
   // ตำแหน่ง (แนวคิดจาก Agents365-ai/drawio-skill validate.py, MIT): การดูรูปด้วยตาพลาดได้ทั้งสองทาง จึงตรวจจากพิกัด
   // เส้นตรวจเฉพาะเส้นที่มีจุดหัก (<Array as="points">) — เส้นที่ draw.io เดินเองไม่มีพิกัดในไฟล์ จึงไม่เดา
@@ -165,6 +163,9 @@ for (const { name, body } of pages) {
   for (let i = 0; i < leaves.length; i++) {
     for (let j = i + 1; j < leaves.length; j++) {
       const a = leaves[i].r, b = leaves[j].r;
+      // กรอบที่ครอบกล่องอื่นทั้งกล่อง (LEGEND, แผงคำอธิบาย) ตั้งใจวาง — ไม่ใช่การทับ
+      const contains = (p, q) => p.x <= q.x && p.y <= q.y && p.x + p.w >= q.x + q.w && p.y + p.h >= q.y + q.h;
+      if (contains(a, b) || contains(b, a)) continue;
       if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) {
         warn(`"${name_(leaves[i].c)}" กับ "${name_(leaves[j].c)}" วางทับกัน — ขยับให้ห่างกัน`);
       }
@@ -198,6 +199,8 @@ for (const { name, body } of pages) {
   const jumps = (e) => /jumpStyle=(arc|gap|sharp|line)/.test(e.style ?? '');
   for (const { e, pts } of routed) {
     for (const { c, r } of leaves) {
+      // แถบหัวข้อ/คำอธิบายที่ไม่มีเส้นต่อ เส้น flow วิ่งผ่านได้โดยตั้งใจ (เช่น แถบ "LOOP 1 —" ที่คั่นช่วง)
+      if (isolated.has(c.id) || !vertices.some((v) => v.id === c.id) && !/edgeLabel/.test(style(c)) && /(^|;)text(;|$)/.test(style(c))) continue;
       if (c.id !== e.source && c.id !== e.target && hits(pts, r)) warn(`เส้น ${e.id} วิ่งทับกล่อง "${name_(c)}" — เพิ่ม/ย้ายจุดหักให้อ้อม`);
     }
   }
