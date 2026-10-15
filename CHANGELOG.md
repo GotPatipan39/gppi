@@ -3,6 +3,10 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.11 — 2026-10-15
+Tested: ลิงก์ทั้ง repo, validate, ตัวกัน 26/26 — แก้เอกสาร/comment เท่านั้น; ข้อ controller `init()` เทียบกับ header จริงของ ros2_control ทุก branch
+- แก้ (ข้อที่เหลือจากการตรวจด้วย Context7): `ros2-humble-cpp` 3.4.3 ตาราง controller `init()` ตาม header จริง; `tdd` 1.1.3 Node ≥ 22; `industrial-ui` 1.3.2 rosbridge `topics_sub_glob`; `modbus` 1.2.2 pin pymodbus `<4` พอ; `opencv` 1.0.3 ชนิดที่ `detectAndDecodeWithType` คืน
+
 ## v0.1.10 — 2026-10-15
 Tested: test โค้ดใน skill (WSL), ลิงก์ทั้ง repo, validate, ตัวกัน 26/26 — เนื้อหาที่แก้มาจากการเทียบ skill กับ doc ผ่าน Context7
 - แก้ (จากการตรวจ skill ด้วย Context7): `ros2-humble-cpp` 3.4.2 — Humble `diff_drive_controller` chain ไม่ได้; `industrial-ui` 1.3.1 — touch panel จอเดียวใช้ layout Fixed ไม่ใช่ Grid; `modbus` 1.2.1 — comment เรื่อง errno; `tdd` 1.1.2 — ตัวเลขในตัวอย่าง
