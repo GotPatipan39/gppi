@@ -1,11 +1,11 @@
 ---
 name: modbus
-description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485) หรือ Modbus TCP — อ่าน/เขียน register, แปลง data type (int16, int32, float32, word order), ตั้งค่า slave ID/baud, debug การสื่อสาร, เขียน client ด้วย C++ libmodbus, Node-RED หรือ Python pymodbus และงานกับอุปกรณ์ เช่น PLC Mitsubishi FX5, servo Delta ASDA-B3, encoder JY-ME02-485, smart meter ME231
+description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485) หรือ Modbus TCP — อ่าน/เขียน register, แปลง data type (int16, int32, float32, word order), ตั้งค่า slave ID/baud, debug การสื่อสาร, เขียน client ด้วย C++ libmodbus, Node-RED หรือ Python pymodbus และงานกับอุปกรณ์ Modbus รุ่นใดก็ได้ที่เจอหน้างาน (PLC, servo, encoder, meter, inverter, sensor) รวมถึงตัวที่เคยใช้ เช่น Mitsubishi FX5, Delta ASDA-B3, JY-ME02-485, ME231
 ---
 
 # Modbus RTU / TCP
 
-> เวอร์ชัน 1.1.2 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.0 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ข้อมูลเฉพาะโปรเจกต์ (address map, slave ID ที่ตั้งไว้, ผังระบบ) อยู่ใน `CLAUDE.md` ของโปรเจกต์นั้น ให้อ่านก่อนเสมอ ถ้าขัดกับไฟล์ใน skill นี้ ให้ยึดของโปรเจกต์
 
@@ -18,12 +18,24 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
 | Node-RED (`node-red-contrib-modbus`) | [clients/node-red.md](clients/node-red.md) |
 | Python / สคริปต์ทดสอบ | [clients/python-pymodbus.md](clients/python-pymodbus.md) |
 | ทดสอบโดยไม่ต่ออุปกรณ์จริง | [tools/modbus_sim.py](tools/modbus_sim.py) |
+
+อุปกรณ์เปลี่ยนไปตามหน้างาน — **หลักการในไฟล์นี้ใช้ได้กับทุกรุ่น** ไฟล์ใน `devices/` เป็นบันทึกของรุ่นที่ทีมเคยใช้ ใช้เป็นตัวอย่างและจุดเริ่ม ไม่ใช่ค่าของเครื่องใหม่:
+
+| รุ่นที่เคยใช้ | ไฟล์ |
+|---|---|
 | PLC Mitsubishi FX5U / FX5UC | [devices/mitsubishi-fx5.md](devices/mitsubishi-fx5.md) |
 | Servo Delta ASDA-B3 | [devices/delta-asda-b3.md](devices/delta-asda-b3.md) |
 | Encoder WitMotion JY-ME02-485 | [devices/jy-me02-485.md](devices/jy-me02-485.md) |
 | Smart meter ME231 | [devices/me231.md](devices/me231.md) |
 
-อุปกรณ์ที่ยังไม่มีไฟล์: ขอ datasheet/register map จากผู้ใช้ ห้ามเดา address และเสนอให้สร้างไฟล์ใน `devices/` เพิ่ม
+## อุปกรณ์ใหม่ / รุ่นที่ไม่มีไฟล์
+ทำตามลำดับนี้ ข้อไหนยังไม่รู้ให้ถามผู้ใช้หรือขอ datasheet — ห้ามเดา:
+1. **การเชื่อมต่อ**: RTU (baud, parity, stop bit, slave ID) หรือ TCP (IP, port, unit ID) — ค่าที่ตั้งอยู่จริงดูจากหน้าจอ/DIP switch/software ของอุปกรณ์ หรือ CLAUDE.md ของโปรเจกต์ (ค่าจากโรงงานในคู่มืออาจถูกเปลี่ยนไปแล้ว)
+2. **register map**: เขียน address แบบไหน (0-based, 4xxxx, hex) → แปลงตามหัวข้อ Address ข้างล่าง; FC ที่รองรับ (holding หรือ input)
+3. **ค่าแต่ละตัว**: data type, word order, signed/unsigned, scale, หน่วย
+4. **ลองด้วยการอ่านอย่างเดียว** กับค่าที่รู้คำตอบอยู่แล้ว (แรงดัน ~230 V, มุมที่หมุนไว้, ค่าบนหน้าจออุปกรณ์) จนถอดได้ถูก — RTU ถามก่อนเปิด port (หัวข้อเครื่องมือ debug)
+5. **การเขียน** (ถ้าต้องมี): register ไหนทำให้เครื่องขยับ, ค่าไหนลง EEPROM, มี communication timeout/watchdog ฝั่งอุปกรณ์ไหม — เขียนครั้งแรกเฉพาะเมื่อผู้ใช้สั่ง
+6. **จดผล** ลง `CLAUDE.md` ของโปรเจกต์ (ค่าของหน้างานนั้น พร้อม ✅ ยืนยันแล้ว / ⚠️ ต้องยืนยัน / ❓ ยังไม่รู้) — ถ้าเป็นรุ่นที่น่าจะเจออีก เสนอเพิ่มไฟล์ใน `devices/` เป็นตัวอย่างด้วย
 
 ## กฎที่ต้องทำตามเสมอ
 1. **ห้ามเดา address, slave ID, scaling หรือ data type** ถ้าไม่มีใน datasheet หรือไฟล์โปรเจกต์ ให้ถาม
@@ -89,7 +101,7 @@ description: ใช้เมื่อทำงานกับ Modbus RTU (RS-485
 - `mbpoll` (Linux, `sudo apt install mbpoll`):
   ```bash
   mbpoll -m tcp -p 502 -a 1 -r 1 -c 10 192.168.1.10          # อ่าน holding 10 ตัว (-r เป็น 1-based!)
-  mbpoll -m rtu -b 9600 -P none -a 80 -r 18 -c 1 /dev/ttyUSB0  # RTU
+  mbpoll -m rtu -b <baud> -P <parity> -a <slave ID> -r 1 -c 1 /dev/ttyUSB0  # RTU — ค่าจาก CLAUDE.md/อุปกรณ์
   ```
   ระวัง: `mbpoll -r` นับ register เริ่มที่ 1 ส่วนในโค้ดเริ่มที่ 0 (ใช้ `-0` ถ้าอยากให้เริ่มที่ 0)
   - **RTU: ถามผู้ใช้ก่อนเปิด serial port ทุกครั้ง แม้แค่อ่าน** — ถ้ามี master ตัวอื่น (PLC, ROS2 node, Node-RED) ใช้ bus อยู่ คำสั่งจะชนกันบนสาย RS-485 และ port อาจถูกจองอยู่ (ตัวกันของ gppi ถามก่อนรันอยู่แล้ว แต่ Claude ต้องบอกเหตุผลให้ผู้ใช้ตัดสินใจได้)

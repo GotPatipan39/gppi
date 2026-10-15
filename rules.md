@@ -9,7 +9,7 @@
 | งาน | skill |
 |---|---|
 | ROS2 (node, package, launch, colcon, QoS, odometry, bringup) | `ros2-humble-cpp` |
-| Modbus RTU/TCP, PLC, register, RS-485, อุปกรณ์ (FX5, ASDA-B3, JY-ME02, ME231) | `modbus` |
+| Modbus RTU/TCP, PLC, register, RS-485, อุปกรณ์ Modbus ทุกรุ่น (เช่น FX5, ASDA-B3, JY-ME02, ME231) | `modbus` |
 | กล้อง/งานภาพ: OpenCV, นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, camera calibration | `opencv` |
 | หน้าจอ HMI, dashboard, หน้า config, Node-RED Dashboard, Grafana, Web UI ↔ ROS2 | `industrial-ui` |
 | เขียน/แก้/ตรวจ README, หรือแก้โค้ดที่ทำให้สิ่งที่ README อธิบายไว้เปลี่ยน | `project-readme` |
