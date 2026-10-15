@@ -3,6 +3,12 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.9 — 2026-10-15
+Tested: ลิงก์ทั้ง repo, validate, ตัวกัน 26/26, eval 3 case ที่เกี่ยวกับ library ผ่าน, คำสั่งเพิ่ม Context7 ระดับผู้ใช้ทดสอบใน config แยก (Connected) และถาม Context7 จริงว่ามี doc รุ่นไหน
+- เพิ่ม (rules.md): **API ของ library ดูจากเวอร์ชันที่โปรเจกต์ใช้จริง** — ถ้ามี MCP `context7` ให้ถามพร้อมเวอร์ชัน แต่ doc ส่วนใหญ่เป็นรุ่นล่าสุด (ไม่มี rclcpp Humble, pymodbus รุ่นเก่า, OpenCV เก่าสุด 4.6.0) จึงยึด header/`--help` ในเครื่องเมื่อไม่ตรง; คำถามห้ามมีข้อมูลโปรเจกต์
+- เพิ่ม (INSTALL.md ไม่บังคับ): เพิ่ม Context7 ระดับผู้ใช้ — `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp`
+- เปลี่ยน: template MCP ย้ายไป `mcp/` ที่ root (เดิม `project-setup/mcp/`); กฎ ask ของ git สำรอง (เดิม `permissions.json`) อยู่ใน docs/GUARD.md
+
 ## v0.1.8 — 2026-10-15
 Tested: ตัวกัน 26/26 + end-to-end กับ MCP server ปลอม (bypassPermissions + allow rule: tool เขียนไม่ถูกเรียก — ดูจาก log ของ server), Claude Code อ่าน template MCP ทุกตัวได้, deny rule ซ่อน tool เขียนได้จริง, ลิงก์ทั้ง repo, test โค้ดใน skill (WSL) — ยังไม่ได้ต่อ MCP server จริง (Grafana/PostgreSQL/ROS2/Modbus)
 - เพิ่ม (ตัวกัน): **ถามก่อนเรียก MCP tool ที่ชื่อบอกว่าเขียน/สั่ง** (`write_register`, `ros2_topic_publish`, `deploy`, `merge` ...) ไม่ว่า server จะชื่ออะไร ถามแม้โหมด bypass — ทีมจะเห็นคำถามเพิ่มเมื่อมี MCP ในโปรเจกต์
