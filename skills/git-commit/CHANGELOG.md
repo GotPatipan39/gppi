@@ -1,5 +1,8 @@
 # CHANGELOG — git-commit
 
+## 1.3.1 — 2026-10-15
+- เอกสารตามโค้ด: logic ที่มี flowchart ใน `docs/flowcharts/` เปลี่ยนแต่ `.drawio` ไม่อยู่ใน diff → ตรวจ/เสนอแก้ก่อน commit (กฎใหม่ใน rules.md)
+
 ## 1.3.0 — 2026-10-14
 - breaking change: `!` + footer `BREAKING CHANGE: <ต้องทำอะไร>` สำหรับการเปลี่ยนที่เครื่องต้องทำตาม; ตอน release หา commit พวกนี้ → major (0.x ขึ้น minor ได้) และ footer กลายเป็นบรรทัด "⚠ ติดตั้ง"
 - ก่อน commit: diff เปลี่ยนพฤติกรรมที่คนเห็นแต่ไม่มี README/CLAUDE.md → อ่านแล้วเสนอแก้ในงานเดียวกัน (ตาม rules.md)

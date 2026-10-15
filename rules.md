@@ -14,11 +14,12 @@
 | หน้าจอ HMI, dashboard, หน้า config, Node-RED Dashboard, Grafana, Web UI ↔ ROS2 | `industrial-ui` |
 | เขียน/แก้/ตรวจ README, หรือแก้โค้ดที่ทำให้สิ่งที่ README อธิบายไว้เปลี่ยน | `project-readme` |
 | commit, release / ออกเวอร์ชัน, tag | `git-commit` |
+| เขียน/แก้ logic ที่มีลำดับหรือเงื่อนไข (state machine, sequence เครื่อง, start/stop/reset, alarm/interlock, retry/timeout), flowchart, draw.io | `flowchart` |
 | เขียน logic ใหม่หรือแก้บั๊กที่ test ได้ (แปลงค่า register/scale, คำนวณ, state machine, parser, alarm/interlock, timeout) | `tdd` (ถามก่อนถ้าไม่แน่ใจว่าคุ้มทำแบบ TDD) |
 | วางแผน/ออกแบบสิ่งใหม่ที่ยังมีเรื่องต้องตัดสินใจหลายข้อ | `grilling` (ถามผู้ใช้ก่อนว่าจะให้ grill ไหม) |
 | การตัดสินใจที่ย้อนกลับยาก + คนอ่านทีหลังจะสงสัย + มีทางเลือกจริง | `domain-modeling` (เสนอจด ADR) |
 
-งานหนึ่งอาจใช้หลาย skill พร้อมกัน (เช่น bridge ROS2 → PLC = `ros2-humble-cpp` + `modbus`; แก้ฟังก์ชันแปลงค่า register = `modbus` + `tdd`) — skill ความรู้ของอุปกรณ์/งานไม่แทน `tdd` ให้โหลดครบทุกตัวที่ตรงก่อนเริ่ม
+งานหนึ่งอาจใช้หลาย skill พร้อมกัน (เช่น bridge ROS2 → PLC = `ros2-humble-cpp` + `modbus`; แก้ฟังก์ชันแปลงค่า register = `modbus` + `tdd`; sequence ของเครื่อง = `flowchart` ก่อน แล้ว `tdd`) — skill ความรู้ของอุปกรณ์/งานไม่แทน `tdd` ให้โหลดครบทุกตัวที่ตรงก่อนเริ่ม
 บอกผู้ใช้สั้นๆ ตอนเริ่มงานว่าใช้ skill อะไร
 
 ## กฎที่ใช้เสมอ
@@ -29,6 +30,7 @@
 - **ห้ามลดเกณฑ์ความปลอดภัย** (timeout, limit, watchdog, interlock) เพื่อให้ test ผ่าน — เพราะค่าที่หลวมลงจะไปถึงเครื่องหน้างานด้วย; test แดงให้แก้โค้ดหรือถามผู้ใช้
 - **รายงานระดับการทดสอบให้ชัด**: build / unit test / simulator / hardware ไม่มีโหลด / ใช้งานจริง
 - **แก้โค้ดที่เปลี่ยนพฤติกรรม → อัปเดต README และ CLAUDE.md ของโปรเจกต์ในงานเดียวกัน**
+- **logic ที่มีลำดับหรือเงื่อนไขต้องมี flowchart draw.io ที่ผู้ใช้ OK ก่อนเขียนโค้ด** — state machine, sequence ของเครื่อง, start/stop/reset, alarm/interlock, retry/timeout, flow หลายทางแยก — เก็บที่ `docs/flowcharts/<ชื่อ>.drawio` และ commit; แก้ logic → แก้ flowchart ใน commit เดียวกัน; โค้ดกับรูปไม่ตรงกัน → ถามผู้ใช้ว่าอันไหนถูก (วิธีทำอยู่ใน skill `flowchart`) — ไม่ต้องทำ: ฟังก์ชันสั้นที่ไม่มีทางแยก (แปลงค่า, สูตร), แก้บั๊กที่ไม่เปลี่ยน flow — เพราะผู้ใช้กับ Claude ต้องเห็น flow เดียวกันก่อน โดยเฉพาะทาง timeout/หยุดเครื่องที่หลุดง่ายเมื่ออ่านแต่โค้ด
 - **แก้ UI/UX ต้องทำ mockup ให้ผู้ใช้ดูและรอ OK ก่อนแก้โค้ดจริง** — ครอบคลุมหน้าจอใหม่, layout, ปุ่ม, สี, ขนาด, flow การกด/ยืนยัน ไม่ว่าจะโหลด skill `industrial-ui` หรือไม่ (วิธีทำ mockup อยู่ใน skill นั้น) — mockup เป็นไฟล์ HTML แบบ static ที่ผู้ใช้เปิดใน browser ได้ ใช้ข้อมูลปลอม และไม่ต่อ PLC/ROS2/Node-RED/WebSocket ใดๆ — ไม่ต้องทำเมื่อแก้แค่คำผิดในข้อความบนจอ หรือแก้บั๊กที่ไม่เปลี่ยนหน้าตา; ไม่แน่ใจว่าเปลี่ยนหน้าตาไหมให้ถามก่อน — เพราะหน้าจอที่ operator ใช้คุมเครื่อง ถ้าออกมาไม่ตรงที่คิด ต้องแก้ซ้ำหลายรอบ และปุ่มที่ย้ายที่อาจทำให้กดผิดหน้างาน
 - อธิบายเป็นภาษาไทย ใช้ศัพท์เทคนิคเป็นภาษาอังกฤษ; เอกสารในโปรเจกต์ใช้ภาษาเดียวกับเอกสารเดิม
 

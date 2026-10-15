@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน logic ใหม่หรื
 
 # Test-Driven Development
 
-> เวอร์ชัน 1.1.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 TDD คือวน: เขียน test ที่ fail → เขียนโค้ดเท่าที่ทำให้ผ่าน → refactor ตอนที่ test เขียวอยู่ → test ถัดไป
 skill นี้บอกว่า test แบบไหนควรเก็บไว้ test ไว้ตรงไหน และกฎของลูป — ใช้ทุกรอบ ไม่ใช่อ่านทีหลัง
@@ -22,6 +22,8 @@ skill นี้บอกว่า test แบบไหนควรเก็บ�
 - งาน ROS2: วิธีเขียน gtest/launch_testing/mock_components อยู่ใน skill `ros2-humble-cpp` (`references/testing.md`) — skill นี้บอกว่า test อะไร skill นั้นบอกว่าต่อเข้า colcon อย่างไร
 
 ## 1. ตกลง seam กับผู้ใช้ก่อนเขียน test
+logic ที่มีลำดับ/เงื่อนไขต้องมี flowchart ที่ผู้ใช้ OK แล้วก่อน (skill `flowchart`) — ใช้รูปนั้นเป็นรายการ test: ทุกทางออกของทุกทางแยกอย่างน้อย 1 test โดยเฉพาะทาง timeout/fault
+
 **seam** คือขอบที่เราสังเกตพฤติกรรมได้โดยไม่ต้องล้วงเข้าไปข้างใน (function/class/topic/register ที่คนอื่นเรียก) — test อยู่ที่ seam เท่านั้น
 ก่อนเขียน test ตัวแรก เสนอรายการ seam ให้ผู้ใช้ยืนยัน แต่ละข้อมีโน้ตบรรทัดเดียวว่า **จับอะไรได้ / จับอะไรไม่ได้**:
 

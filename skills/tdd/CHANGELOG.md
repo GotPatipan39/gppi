@@ -1,5 +1,8 @@
 # CHANGELOG — tdd
 
+## 1.1.1 — 2026-10-15
+- logic ที่มีลำดับ/เงื่อนไข: ใช้ flowchart ที่ผู้ใช้ OK (skill `flowchart`) เป็นรายการ test — ทุกทางออกของทุกทางแยก
+
 ## 1.1.0 — 2026-10-14
 - แก้: ตัวอย่าง `node --test test/` fail บน Node 22/24 (ไม่ค้นใน directory) → `node --test` ไม่ใส่ argument; ใช้ Node ≥ 20
 - restart Node-RED หลังแก้ `lib/*.js` = หยุด flow ที่คุมเครื่อง → Claude ไม่ restart เอง บอกผู้ใช้แทน

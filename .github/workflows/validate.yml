@@ -30,6 +30,13 @@ jobs:
           out=$(echo '{"tool_name":"Bash","tool_input":{"command":"ros2 topic list"}}' | node hooks/pretooluse.ts)
           test -z "$out"
           echo 'not json' | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'
+      # ตัวตรวจ flowchart: ตัวอย่างต้องผ่าน และไฟล์ที่ทางแยกไม่มีป้ายต้องไม่ผ่าน
+      - name: flowchart checker
+        run: |
+          ex=skills/flowchart/examples/clamp-press-cycle.drawio
+          node skills/flowchart/tools/check_drawio.mjs "$ex"
+          sed 's/id="e_dclamp_yes" value="ใช่"/id="e_dclamp_yes" value=""/' "$ex" > "$RUNNER_TEMP/bad.drawio"
+          ! node skills/flowchart/tools/check_drawio.mjs "$RUNNER_TEMP/bad.drawio"
 
   # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — Ubuntu 22.04 = รุ่นเดียวกับเครื่อง runtime
   templates:
