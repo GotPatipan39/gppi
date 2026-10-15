@@ -1,5 +1,8 @@
 # CHANGELOG — modbus
 
+## 1.2.2 — 2026-10-15
+- `tools/modbus_sim.py`: datastore เดิมถูกถอดใน pymodbus 4.0 — `<4` ในคำสั่งติดตั้งพอแล้ว เลิกแนะนำ pin `<3.16` (จากการตรวจด้วย context7)
+
 ## 1.2.1 — 2026-10-15
 - แก้ comment ใน `clients/modbus_client.hpp`: errno ช่วง `EMBX*` มาได้ทั้งจากอุปกรณ์ตอบ exception และจาก libmodbus ปฏิเสธเองก่อนส่ง (เช่น `EMBXILVAL` เมื่อจำนวน register เกิน) — พฤติกรรมของโค้ดไม่เปลี่ยน (พบจากการตรวจด้วย context7)
 

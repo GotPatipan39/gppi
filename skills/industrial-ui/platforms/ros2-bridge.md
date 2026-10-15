@@ -17,7 +17,7 @@
 |---|---|---|
 | ใช้เมื่อ | dev, ทดสอบ, ดูข้อมูลด้วย Foxglove | ใช้งานจริงกับเครื่องที่ขยับได้ |
 | เริ่มได้เร็ว | ✅ launch แล้วใช้ได้เลย | ต้องเขียนเอง |
-| จำกัด topic ที่เปิดให้ | ⚠ มี glob allowlist (`topics_glob`, `services_glob`, `params_glob`; รุ่นใหม่มี `topics_pub_glob` แยกฝั่ง publish — เช็กกับรุ่นที่ติดตั้ง) แต่ **ค่าเริ่มต้นเปิดทุก topic/service** — ไม่ตั้ง = ใครก็ได้ใน LAN publish `/cmd_vel` ได้ | ✅ allowlist |
+| จำกัด topic ที่เปิดให้ | ⚠ มี glob allowlist (`topics_glob`, `services_glob`, `params_glob`; รุ่นใหม่แยกเป็น `topics_pub_glob` / `topics_sub_glob` และ `topics_glob` แบบเดิมใช้กับทั้งสองฝั่ง — เช็กกับรุ่นที่ติดตั้ง; ค่า `""` = ไม่กรองเลย, `"[]"` = ไม่เปิดให้สักตัว) แต่ **ค่าเริ่มต้นเปิดทุก topic/service** — ไม่ตั้ง = ใครก็ได้ใน LAN publish `/cmd_vel` ได้ | ✅ allowlist |
 | watchdog / ack / rate limit | ❌ ต้องทำเองที่ฝั่ง robot | ✅ ทำที่ bridge |
 | สิทธิ์ผู้ใช้ | ❌ **ไม่มีการยืนยันตัวตน** — rosauth ไม่มีใน ROS 2, glob ใช้กับทุกคนที่ต่อ port ได้เหมือนกันหมด | ทำได้เต็มที่ |
 

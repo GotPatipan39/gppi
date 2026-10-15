@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน logic ใหม่หรื
 
 # Test-Driven Development
 
-> เวอร์ชัน 1.1.2 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.3 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 TDD คือวน: เขียน test ที่ fail → เขียนโค้ดเท่าที่ทำให้ผ่าน → refactor ตอนที่ test เขียวอยู่ → test ถัดไป
 skill นี้บอกว่า test แบบไหนควรเก็บไว้ test ไว้ตรงไหน และกฎของลูป — ใช้ทุกรอบ ไม่ใช่อ่านทีหลัง
@@ -18,7 +18,7 @@ skill นี้บอกว่า test แบบไหนควรเก็บ�
 
 ## 0. ดูของที่โปรเจกต์มีก่อน
 - หา test เดิมและ framework ที่ใช้อยู่ (`test/`, `tests/`, `CMakeLists.txt` ที่มี `ament_add_gtest`/`GTest`, `pytest.ini`/`setup.cfg`, `package.json`) แล้วใช้แบบเดียวกัน
-- ไม่มี framework: เสนอตัวที่ไม่ต้องโหลดจาก internet ตอน build — C++ ใช้ `libgtest-dev` ของระบบ (ไม่ใช้ `FetchContent` ดึง gtest), Python ใช้ `pytest` (ถ้ายังไม่มี ให้ถามก่อนติดตั้ง), JS ใช้ `node --test` ที่มากับ Node (ใช้ Node ≥ 20 — runner เป็น stable ตั้งแต่ 20 และ 18 หมดอายุแล้ว; รันแบบไม่ใส่ argument ให้มันหาไฟล์ `*.test.js` เอง)
+- ไม่มี framework: เสนอตัวที่ไม่ต้องโหลดจาก internet ตอน build — C++ ใช้ `libgtest-dev` ของระบบ (ไม่ใช้ `FetchContent` ดึง gtest), Python ใช้ `pytest` (ถ้ายังไม่มี ให้ถามก่อนติดตั้ง), JS ใช้ `node --test` ที่มากับ Node (ใช้ Node ≥ 22 — runner เป็น stable ตั้งแต่ 20 แต่ 20 หมดอายุแล้ว (2026-04) และเครื่องทีมใช้ ≥ 22.18 สำหรับ gppi อยู่แล้ว; รันแบบไม่ใส่ argument ให้มันหาไฟล์ `*.test.js` เอง — บน 22+ `node --test test/` ใช้ไม่ได้)
 - งาน ROS2: วิธีเขียน gtest/launch_testing/mock_components อยู่ใน skill `ros2-humble-cpp` (`references/testing.md`) — skill นี้บอกว่า test อะไร skill นั้นบอกว่าต่อเข้า colcon อย่างไร
 
 ## 1. ตกลง seam กับผู้ใช้ก่อนเขียน test

@@ -1,5 +1,8 @@
 # CHANGELOG — opencv
 
+## 1.0.3 — 2026-10-15
+- BarcodeDetector 4.8+: `detectAndDecodeWithType` คืนชนิดเป็น string ไม่ใช่ enum `BarcodeType` (จากการตรวจด้วย context7)
+
 ## 1.0.2 — 2026-10-14
 - `references/tasks.md`: BarcodeDetector ของ 4.5.x (contrib) กับ 4.8+ API ต่างกัน (`detectAndDecode` + `BarcodeType` vs `detectAndDecodeWithType`) — ตัวอย่างจาก internet ส่วนใหญ่ใช้กับ 4.5.4 ของ Humble ไม่ได้
 

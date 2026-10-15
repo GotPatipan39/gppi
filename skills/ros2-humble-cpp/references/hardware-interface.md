@@ -75,7 +75,7 @@ When creating a `<ros2_control>` tag, you must specify the `type`:
 | Interface data types | `double` only | `double`, `bool` + `float32`, `uint8/16/32`, `int8/16/32` | Same expanded types as Jazzy |
 | Interface maps | N/A (manual vectors) | `joint_state_interfaces_`, `joint_command_interfaces_`, `sensor_state_interfaces_`, `gpio_command_interfaces_` | Same maps |
 | `on_init()` signature | `on_init(const HardwareInfo & info)` | Same as Humble | **Changed**: `on_init(const HardwareComponentInterfaceParams & params)` — access `HardwareInfo` via `params.hardware_info` |
-| Controller `init()` | `init()` (no args) | `init(const ControllerInterfaceParams & params)` (Humble form deprecated) | `init(const ControllerInterfaceParams & params)` (Humble form removed) |
+| Controller `init()` | `init(controller_name, namespace_ = "", node_options)` | `init(const ControllerInterfaceParams & params)`; the multi-argument form (name, urdf, update rate, namespace, options) is still present, marked deprecated in a comment | `init(const ControllerInterfaceParams & params)`; multi-argument form still present with `[[deprecated]]` (checked in `controller_interface_base.hpp` on each branch, 2026-10-15) — controllers override `on_init()` and normally never call `init()` |
 | Lifecycle state methods | `get_state()` / `set_state()` | **Renamed**: `get_lifecycle_state()` / `set_lifecycle_state()` | Same as Jazzy |
 | Handle value access | `get_value()` / `set_value()` | `get_optional()` returns `std::optional<T>`; `set_value()` returns `bool` | Same as Jazzy |
 | Gripper controller | `gripper_controllers` (`position_controllers/GripperActionController`, `effort_controllers/GripperActionController`) | **Replaced**: `parallel_gripper_action_controller` | Same as Jazzy |

@@ -1,5 +1,8 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.4.3 — 2026-10-15
+- แก้ตาราง controller `init()` ใน `references/hardware-interface.md` ตาม `controller_interface_base.hpp` ของแต่ละ branch: Humble รับ `(controller_name, namespace_, node_options)` (เดิมเขียนว่าไม่มี argument), Kilted ยังมีแบบหลาย argument ติด `[[deprecated]]` (เดิมเขียนว่าถูกลบ)
+
 ## 3.4.2 — 2026-10-15
 - แก้ `references/hardware-interface.md`: บน Humble `diff_drive_controller` chain ไม่ได้ (เดิมเขียนว่าได้) — ตัวที่มี reference interface บน Humble คือ steering controllers และ `mecanum_drive_controller` (พบจากการตรวจด้วย context7 เทียบหน้า Humble ของ control.ros.org)
 

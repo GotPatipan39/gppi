@@ -1,5 +1,8 @@
 # CHANGELOG — industrial-ui
 
+## 1.3.2 — 2026-10-15
+- rosbridge: เพิ่ม `topics_sub_glob` และความต่างของค่า `""` (ไม่กรอง) กับ `"[]"` (ไม่เปิดสักตัว) (จากการตรวจด้วย context7)
+
 ## 1.3.1 — 2026-10-15
 - แก้ `platforms/node-red-dashboard.md`: Grid ของ Dashboard 2.0 ปรับตามความกว้างจอ ส่วน Fixed คือแบบกว้างคงที่ (เดิมเขียนว่า "grid ขนาดคงที่") — touch panel จอเดียวใช้ Fixed (พบจากการตรวจด้วย context7)
 
