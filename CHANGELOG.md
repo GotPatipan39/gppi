@@ -3,6 +3,12 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.6 — 2026-10-15
+Tested: ตัวตรวจ flowchart กับไฟล์ที่ตั้งใจทำผิด (จับได้ครบ) + export ด้วย draw.io 31.7 ดูรูปแล้ว, ลองใช้ skill จริงกับ poll loop ของ Modbus, eval 15/15 (1 รอบต่อ case), ตัวกัน 23/23 — ยังไม่ได้ใช้ในโปรเจกต์จริง
+- เพิ่ม (กฎใหม่ใน rules.md): **logic ที่มีลำดับหรือเงื่อนไข (state machine, sequence เครื่อง, start/stop/reset, alarm/interlock, retry/timeout) ต้องมี flowchart draw.io ที่ผู้ใช้ OK ก่อนเขียนโค้ด** — เก็บที่ `docs/flowcharts/<ชื่อ>.drawio` และ commit; แก้ logic ต้องแก้ flowchart ใน commit เดียวกัน; ไม่ต้องทำกับฟังก์ชันสั้นที่ไม่มีทางแยก หรือแก้บั๊กที่ไม่เปลี่ยน flow
+- เพิ่ม: skill `flowchart` 1.1.0 — วิธีเขียน `.drawio` ที่ draw.io เปิดได้, สิ่งที่ flowchart ของเครื่องต้องมี (timeout ทุกการรอ, ทาง fault/STOP, ไม่เดินเองหลัง reset), ตัวตรวจ `tools/check_drawio.mjs` (ทางแยกขาด/ไม่มีป้าย, เส้นลอย, กล่องทับ, เส้นทับกล่อง/ตัดกัน, `--outline` อ่านไฟล์ที่ผู้ใช้แก้), ให้ draw.io จัดวางเองเมื่อเกิน ~15 กล่อง, ตัวอย่าง 2 ไฟล์ — แนวคิดบางส่วนจาก Agents365-ai/drawio-skill (MIT)
+- `tdd` 1.1.1: ทุกทางออกของทางแยกใน flowchart = test; `git-commit` 1.3.1: เช็กว่าแก้ flowchart ตาม logic
+
 ## v0.1.5 — 2026-10-15
 Tested: eval — แก้ layout แล้ว Claude เสนอ mockup และรอ OK (กรรมการ 3/3), แก้คำผิดไม่ต้องทำ mockup (กรรมการ 2/1); ตัวกัน 23/23 — ยังไม่ได้ลองในโปรเจกต์ UI จริง
 - เพิ่ม (กฎใหม่ใน rules.md): **แก้ UI/UX ต้องทำ mockup เป็นไฟล์ HTML static ให้ผู้ใช้เปิดดูใน browser และรอ OK ก่อนแก้โค้ดจริง** — ข้อมูลปลอม ไม่ต่อเครื่อง; ยกเว้นแก้คำผิดหรือบั๊กที่ไม่เปลี่ยนหน้าตา
