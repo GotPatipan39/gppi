@@ -10,6 +10,7 @@
 | `skills/git-commit/` | [github/awesome-copilot](https://github.com/github/awesome-copilot) `git-commit` @ 143a3d9 (ดัดแปลง) | MIT | [ข้างล่าง](#mit--github-inc) |
 | `skills/project-readme/` (แนวคิดบางส่วน) | github/awesome-copilot `create-readme` | MIT | [ข้างล่าง](#mit--github-inc) |
 | `skills/flowchart/` (แนวคิดบางส่วน: การตรวจพิกัด, การจัดวางด้วย draw.io CLI) | [Agents365-ai/drawio-skill](https://github.com/Agents365-ai/drawio-skill) @ 5727082 | MIT | [ข้างล่าง](#mit--agents365-ai) |
+| `skills/project-claude-md/` (แนวคิดบางส่วน: ตรวจว่ายังตรงกับโค้ด, รายงานก่อนแก้, diff พร้อมเหตุผล) | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) `claude-md-improver` @ c2bdb42 | Apache-2.0 | ข้อความ license เดียวกับ [`ros2-humble-cpp/references/LICENSE`](skills/ros2-humble-cpp/references/LICENSE) |
 | `skills/ros2-humble-cpp/references/` | [dbwls99706/ros2-engineering-skills](https://github.com/dbwls99706/ros2-engineering-skills) | Apache-2.0 | [`references/LICENSE`](skills/ros2-humble-cpp/references/LICENSE) |
 | `skills/industrial-ui/platforms/ros2-bridge.md` | [arpitg1304/robotics-agent-skills](https://github.com/arpitg1304/robotics-agent-skills) `ros2-web-integration` | Apache-2.0 | ข้อความ license เดียวกับ [`ros2-humble-cpp/references/LICENSE`](skills/ros2-humble-cpp/references/LICENSE) |
 | `skills/industrial-ui/` (แนวคิดบางส่วน) | [anthropics/skills](https://github.com/anthropics/skills) `frontend-design` | Apache-2.0 | เหมือนข้างบน |

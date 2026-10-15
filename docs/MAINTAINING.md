@@ -22,7 +22,7 @@ bash tools/test-templates.sh         # โค้ด template ที่คุม 
 CI ([`.github/workflows/validate.yml`](../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
 
 ### eval การเลือก skill
-[`evals/`](../evals/) มี 16 case: 13 case วัดว่า Claude โหลด skill ถูกตัวไหม (tag `selection`): 8 case ต่อ skill (รวมอุปกรณ์ Modbus ที่ไม่มีไฟล์ใน `devices/`), 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) และ 3 case วัดพฤติกรรม (tag `behavior`, ใช้กรรมการ LLM): แก้ UI ต้องเสนอ mockup ก่อน / แก้คำผิดไม่ต้อง / logic แบบ sequence ต้องเสนอ flowchart draw.io ก่อน (ฟังก์ชันแปลงค่าและ script ใช้ครั้งเดียวต้องไม่ดึง `flowchart`) — รันเมื่อแก้ `description` ของ skill หรือกฎใน `rules.md`
+[`evals/`](../evals/) มี 17 case: 14 case วัดว่า Claude โหลด skill ถูกตัวไหม (tag `selection`): 9 case ต่อ skill (รวมอุปกรณ์ Modbus ที่ไม่มีไฟล์ใน `devices/`), 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) และ 3 case วัดพฤติกรรม (tag `behavior`, ใช้กรรมการ LLM): แก้ UI ต้องเสนอ mockup ก่อน / แก้คำผิดไม่ต้อง / logic แบบ sequence ต้องเสนอ flowchart draw.io ก่อน (ฟังก์ชันแปลงค่าและ script ใช้ครั้งเดียวต้องไม่ดึง `flowchart`) — รันเมื่อแก้ `description` ของ skill หรือกฎใน `rules.md`
 ```bash
 claude plugin eval . --ablation none --disallow-tools Agent --no-publish --runs 3
 claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-tools Agent --no-publish   # case เดียว
@@ -75,6 +75,7 @@ claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-t
 ### ตรวจแล้ว ไม่ใช้ หรือใช้แค่บางส่วน
 | skill | ผล |
 |---|---|
+| anthropics/claude-plugins-official `claude-md-improver` @ c2bdb42 (Apache-2.0) | บางส่วน — ดัดแปลงเข้า `project-claude-md` 1.1.0: ตรวจว่ายังตรงกับโค้ด (ทำเป็นตัวตรวจ pointer `ไฟล์`: `KEY`), รายงานก่อนแก้, diff พร้อมเหตุผล, เก็บความรู้ท้ายงาน — ไม่ติดตั้งตัวนั้นเพิ่ม: ทั้งสองตัวถูกเรียกจากคำว่า "CLAUDE.md" จะแย่งกันจนไม่รู้ว่าได้ตัวไหน, เป็นคำแนะนำทั่วไปภาษาอังกฤษไม่รู้เรื่องเครื่อง (ค่า hardware, อะไรทำให้ขยับ, ป้าย ✅/⚠️/❓), คะแนน A–F ไม่ช่วยตัดสินใจอะไร, เคล็ดลับบางข้อยังไม่ได้ตรวจกับ Claude Code รุ่นปัจจุบัน (ชื่อไฟล์ `.claude.local.md`, ปุ่ม `#`) |
 | Agents365-ai/drawio-skill @ 5727082 (MIT) | บางส่วน — ดัดแปลงเข้า `flowchart` 1.1.0: ตรวจกล่องทับกัน/เส้นวิ่งทับกล่อง/เส้นตัดกันจากพิกัด (เฉพาะเส้นที่มีจุดหัก), ห้ามใช้ id 0/1, เส้นต้องมี mxGeometry, `--layout verticalFlow` และ Mermaid → `.drawio` ของ draw.io ≥ 30, export ไว้ดูเองไม่ใส่ `-e`, ดูรูปแก้ไม่เกิน 2 รอบ — ไม่ copy ทั้งตัว: ใหญ่มาก (script Python ~16,000 บรรทัด + MCP server) ต้องมี python3 ซึ่งเครื่อง Windows ของทีมไม่มี, `allowed-tools: Bash` ไม่จำกัด, `disable-model-invocation` (Claude โหลดเองไม่ได้), เน้น diagram สถาปัตยกรรม/cloud ไม่ใช่ logic ของเครื่อง |
 | mattpocock/skills `grill-me`, `grill-with-docs`, `handoff` | เคย copy มา ถอดออกตอนย้ายเป็น gppi — สองตัวแรกเป็นแค่ตัวเรียก `grilling` / `domain-modeling`, `handoff` ทีมยังไม่ได้ใช้ |
 | omer-metin/skills-for-antigravity `ros2-robotics` | ไม่ใช้ — description เสีย (`Use when ", " mentioned.`), เนื้อหาบางส่วนผิด, น่าจะสร้างอัตโนมัติ |

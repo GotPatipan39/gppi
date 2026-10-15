@@ -1,0 +1,147 @@
+<mxfile host="gppi" type="device">
+  <diagram id="cycle" name="รอบการทำงาน">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="start" value="เปิดเครื่อง / หลัง reset" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="290" y="20" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="idle" value="&lt;b&gt;IDLE&lt;/b&gt;&lt;br&gt;ไม่สั่ง output ใดๆ&lt;br&gt;(ไม่เดินเองหลัง reset)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="110" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_start" value="กด START?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="220" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_ready" value="ประตูปิด และ&lt;br&gt;ไม่มี alarm ค้าง?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="350" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="refuse" value="ไม่เริ่มรอบ&lt;br&gt;แสดงสาเหตุบน HMI" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="365" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="clamp" value="&lt;b&gt;S1 CLAMP&lt;/b&gt;&lt;br&gt;สั่งเปิดวาล์ว clamp" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="480" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_clamp" value="sensor clamp ON&lt;br&gt;ภายใน T_clamp?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="580" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="press" value="&lt;b&gt;S2 PRESS&lt;/b&gt;&lt;br&gt;สั่งกดลง" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="710" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_press" value="ถึงตำแหน่งล่าง&lt;br&gt;ภายใน T_press?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="810" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="release" value="&lt;b&gt;S3 RELEASE&lt;/b&gt;&lt;br&gt;ถอย press แล้วปลด clamp" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="940" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_release" value="press บนสุด และ clamp ปลด&lt;br&gt;ภายใน T_release?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="265" y="1040" width="230" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="count" value="นับชิ้นงาน +1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1180" width="200" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fault" value="&lt;b&gt;FAULT&lt;/b&gt;&lt;br&gt;ปิด output ทั้งหมด&lt;br&gt;alarm + บอกขั้นที่ค้าง" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="580" y="815" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="stop" value="กด STOP&lt;br&gt;(ได้ทุกขั้น)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="590" y="960" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="reset" value="รอผู้ใช้แก้สาเหตุ&lt;br&gt;แล้วกด RESET" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="595" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="T_clamp, T_press, T_release: ค่าจาก CLAUDE.md ของโปรเจกต์ (ห้ามเดา)&lt;br&gt;E-stop ตัดไฟ output ทาง hardware เอง ไม่ผ่าน logic นี้" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1170" width="320" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_start_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="start" target="idle">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_idle_dstart" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="idle" target="d_start">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dstart_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_start" target="d_ready">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dstart_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.7;" edge="1" parent="1" source="d_start" target="idle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220" y="265"/>
+              <mxPoint x="220" y="159"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ready_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_ready" target="clamp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_ready_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="d_ready" target="refuse">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_refuse_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;entryX=1;entryY=0.3;" edge="1" parent="1" source="refuse" target="idle">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_clamp_d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="clamp" target="d_clamp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dclamp_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_clamp" target="press">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dclamp_no" value="ไม่ใช่ (timeout)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0.25;entryY=0;strokeColor=#b85450;" edge="1" parent="1" source="d_clamp" target="fault">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="625"/>
+              <mxPoint x="540" y="780"/>
+              <mxPoint x="625" y="780"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_press_d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="press" target="d_press">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dpress_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_press" target="release">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dpress_no" value="ไม่ใช่ (timeout)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#b85450;" edge="1" parent="1" source="d_press" target="fault">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_release_d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="release" target="d_release">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_drel_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_release" target="count">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_drel_no" value="ไม่ใช่ (timeout)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;strokeColor=#b85450;" edge="1" parent="1" source="d_release" target="fault">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="1090"/>
+              <mxPoint x="820" y="855"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_count_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="count" target="idle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="1205"/>
+              <mxPoint x="180" y="131"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_stop_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;" edge="1" parent="1" source="stop" target="fault">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_fault_reset" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.75;exitY=0;entryX=0.75;entryY=1;" edge="1" parent="1" source="fault" target="reset">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_reset_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=1;entryY=0.7;" edge="1" parent="1" source="reset" target="idle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="625"/>
+              <mxPoint x="860" y="159"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

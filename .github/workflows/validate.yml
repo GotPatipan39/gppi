@@ -37,6 +37,14 @@ jobs:
           ex=skills/flowchart/examples/clamp-press-cycle.drawio
           sed 's/id="e_dclamp_yes" value="ใช่"/id="e_dclamp_yes" value=""/' "$ex" > "$RUNNER_TEMP/bad.drawio"
           ! node skills/flowchart/tools/check_drawio.mjs "$RUNNER_TEMP/bad.drawio"
+      # ตัวตรวจ CLAUDE.md: ตัวอย่างต้องผ่าน และสำเนาที่ key ถูกเปลี่ยนชื่อต้องไม่ผ่าน
+      - name: CLAUDE.md checker
+        run: |
+          ex=skills/project-claude-md/examples/conveyor-sorter
+          node skills/project-claude-md/tools/check_claude_md.mjs "$ex/CLAUDE.example.md"
+          cp -r "$ex" "$RUNNER_TEMP/stale"
+          sed -i "s/PLC_TIMEOUT_MS/PLC_RESPONSE_TIMEOUT/" "$RUNNER_TEMP/stale/api/.env.example"
+          ! node skills/project-claude-md/tools/check_claude_md.mjs "$RUNNER_TEMP/stale/CLAUDE.example.md"
 
   # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — Ubuntu 22.04 = รุ่นเดียวกับเครื่อง runtime
   templates:
