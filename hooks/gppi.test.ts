@@ -445,3 +445,67 @@ test('ไม่ผ่อน deny ที่ engine ตัดสินไว้', 
   on('tool.check', () => ({ decision: 'deny', reason: 'blocked' }))
   expect((await $.tool.check({ tool: 'Bash', input: { command: 'git push' } })).decision).toBe('deny')
 })
+
+// MCP: ตัวกันเดิมดูแค่ Bash/PowerShell — MCP tool ที่เขียนค่า/สั่งอุปกรณ์ต้องถามด้วย
+// ตัดสินจากชื่อ tool (ส่วนหลัง `__` ตัวสุดท้าย) ไม่ใช่ชื่อ server — deny rule ที่ผูกชื่อ server พลาดได้เมื่อโปรเจกต์ตั้งชื่ออื่น
+const MCP_ASK = [
+  'mcp__ros2__ros2_topic_publish',
+  'mcp__ros2__ros2_publish_multiple_topics',
+  'mcp__ros2__ros2_service_call',
+  'mcp__ros2__ros2_send_action_goal',
+  'mcp__ros2__ros2_cancel_action_goal',
+  'mcp__modbus_line1__write_register',
+  'mcp__modbus__write_registers',
+  'mcp__modbus__write_coil',
+  'mcp__modbus__write_point',
+  'mcp__modbus__apply_safe_state',
+  'mcp__plugin_acme_modbus__write_coil',
+  'mcp__gitlab__merge_merge_request',
+  'mcp__gitlab__create_pipeline',
+  'mcp__gitlab__push_files',
+  'mcp__gitlab__retry_pipeline_job',
+  'mcp__nodered__nr_safe_deploy',
+  'mcp__nodered__nr_inject',
+  'mcp__nodered__start_flow',
+  'mcp__snap7__plc_stop',
+  'mcp__robot__set_parameter',
+  'mcp__serial__serial_write',
+  'mcp__grafana__update_dashboard',
+]
+const MCP_SAFE = [
+  'mcp__ros2__ros2_topic_subscribe',
+  'mcp__ros2__ros2_topic_list',
+  'mcp__ros2__ros2_action_request_result',
+  'mcp__modbus__read_registers',
+  'mcp__modbus__read_points',
+  'mcp__modbus__list_points',
+  'mcp__modbus__get_command_log',
+  'mcp__gitlab__get_merge_request',
+  'mcp__gitlab__list_pipelines',
+  'mcp__grafana__search_dashboards',
+  'mcp__grafana__query_prometheus',
+  'mcp__postgres__execute_sql',
+  'mcp__context7__query-docs',
+  'mcp__context7__resolve-library-id',
+]
+const mcpInput = (tool_name: string) => ({ tool_name, tool_input: { anything: 1 } })
+
+test('MCP: tool ที่เขียน/สั่งอุปกรณ์ → ask ไม่ว่า server จะชื่ออะไร', () => {
+  for (const t of MCP_ASK) {
+    const out = preToolUseDecision(mcpInput(t)) as any
+    expect({ t, d: out?.hookSpecificOutput?.permissionDecision }).toEqual({ t, d: 'ask' })
+    expect(out.hookSpecificOutput.permissionDecisionReason).toContain('MCP')
+  }
+})
+
+test('MCP: tool อ่านอย่างเดียว → ไม่ตัดสิน', () => {
+  for (const t of MCP_SAFE) expect({ t, out: preToolUseDecision(mcpInput(t)) }).toEqual({ t, out: undefined })
+})
+
+test('MCP: ชื่อแปลก/ไม่ใช่ MCP → ไม่ตัดสิน และไม่ช้า', () => {
+  expect(preToolUseDecision(mcpInput('mcp__x'))).toBeUndefined()
+  expect(preToolUseDecision(mcpInput('Write'))).toBeUndefined()
+  const t0 = performance.now()
+  preToolUseDecision(mcpInput('mcp__s__' + 'a_'.repeat(20000) + 'x'))
+  expect(performance.now() - t0 < 200).toBe(true)
+})

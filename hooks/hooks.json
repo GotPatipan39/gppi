@@ -14,6 +14,12 @@
         "hooks": [
           { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse.ts\" || { echo 'gppi: ตัวกันคำสั่ง (node hooks/pretooluse.ts) รันไม่ได้ จึงบล็อกคำสั่ง shell ทุกตัวไว้ก่อน — ต้องมี node 22.18 ขึ้นไปใน PATH; บอกผู้ใช้ให้แก้ตามหัวข้อ \"ติดตั้ง\" ใน README ของ gppi แล้วเปิด session ใหม่' >&2; exit 2; }", "timeout": 30 }
         ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse.ts\" || { echo 'gppi: ตัวกัน (node hooks/pretooluse.ts) รันไม่ได้ จึงบล็อก MCP tool ไว้ก่อน — ต้องมี node 22.18 ขึ้นไปใน PATH แล้วเปิด session ใหม่' >&2; exit 2; }", "timeout": 30 }
+        ]
       }
     ]
   }

@@ -124,16 +124,35 @@ export const askReason = (command: string): string | undefined =>
   : isRiskyGit(command) ? 'gppi: คำสั่ง git ที่ย้อนกลับยาก ต้องให้ผู้ใช้ยืนยัน'
   : undefined
 
+// MCP tool (`mcp__<server>__<tool>`) ที่เขียนค่า/สั่งอุปกรณ์ — ตัดสินจากชื่อ tool ไม่ใช่ชื่อ server
+// (deny rule ใน settings ผูกชื่อ server ซึ่งโปรเจกต์ตั้งต่างกันได้) — ชื่อที่ขึ้นต้นด้วยคำอ่าน (get_merge_request) ไม่ถาม
+// ถามเกินได้ (เช่น ros2_stream_start) ดีกว่าปล่อยผ่าน; execute_sql ไม่ถาม — ป้องกันด้วย DB role อ่านอย่างเดียว (templates/mcp)
+const MCP_READ_VERB = /^(?:get|list|read|search|query|find|describe|show|fetch|resolve|subscribe|view|count|check|explain|analyze|inspect)$/i
+const MCP_WRITE_WORD = /^(?:write|publish|call|send|goal|cancel|safe|deploy|inject|merge|push|create|update|delete|remove|set|start|stop|restart|play|retry|trigger|run|reset|install|upload|move|jog|enable|disable)$/i
+export const isMcpWriteTool = (toolName: string): boolean => {
+  if (!toolName.startsWith('mcp__')) return false
+  const parts = toolName.split('__')
+  if (parts.length < 3) return false
+  const words = parts[parts.length - 1].split(/[_-]/).filter(Boolean)
+  if (words.length === 0 || MCP_READ_VERB.test(words[0])) return false
+  return words.some(w => MCP_WRITE_WORD.test(w))
+}
+
+const ask = (reason: string) => ({
+  hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: reason },
+})
+
 // คำตอบของ PreToolUse hook (hooks/pretooluse.ts) — hook `ask` บังคับถามคนแม้ใน auto mode ซึ่ง mod `tool.check` ทำไม่ได้
 // undefined = ไม่ตัดสิน ปล่อยให้ระบบ permission ปกติ (ไม่ตอบ allow เด็ดขาด เพราะจะข้าม prompt)
 export const preToolUseDecision = (input: unknown): object | undefined => {
   const { tool_name, tool_input } = (input ?? {}) as { tool_name?: unknown; tool_input?: { command?: unknown } }
+  if (typeof tool_name === 'string' && isMcpWriteTool(tool_name)) {
+    return ask('gppi: MCP tool นี้อาจเขียนค่าหรือสั่งอุปกรณ์/ระบบ (ตัวกันคำสั่ง shell ไม่ครอบคลุม MCP) ต้องให้ผู้ใช้ยืนยัน')
+  }
   const command = tool_input?.command
   if (typeof tool_name !== 'string' || !GUARDED_TOOLS.includes(tool_name) || typeof command !== 'string') return undefined
   const reason = askReason(command)
-  return reason && {
-    hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: reason },
-  }
+  return reason && ask(reason)
 }
 
 export const register: Register = on => {

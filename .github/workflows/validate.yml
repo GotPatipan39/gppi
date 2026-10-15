@@ -30,6 +30,9 @@ jobs:
           out=$(echo '{"tool_name":"Bash","tool_input":{"command":"ros2 topic list"}}' | node hooks/pretooluse.ts)
           test -z "$out"
           echo 'not json' | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'
+          echo '{"tool_name":"mcp__plc_line1__write_register","tool_input":{}}' | node hooks/pretooluse.ts | grep -q '"permissionDecision":"ask"'
+          out=$(echo '{"tool_name":"mcp__plc__read_registers","tool_input":{}}' | node hooks/pretooluse.ts)
+          test -z "$out"
       # ตัวตรวจ flowchart: ตัวอย่างต้องผ่าน และไฟล์ที่ทางแยกไม่มีป้ายต้องไม่ผ่าน
       - name: flowchart checker
         run: |

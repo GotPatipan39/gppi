@@ -26,6 +26,7 @@
 | หยุด process / ปิดเครื่อง | `pkill`, `killall`, `reboot`, `shutdown`, `poweroff`, `halt`, `init 0/6`, `systemctl reboot/poweroff`, `wsl --shutdown/-t`; Windows: `taskkill`, `Stop-Process`, `Start/Stop/Restart-Service`, `sc`/`nssm stop/start/restart`, `Restart/Stop-Computer` |
 | COM port ฝั่ง Windows | `usbipd attach/detach` (ดึง USB-RS485 ไป/กลับ WSL), `mode COM<n>` |
 | git ที่ย้อนกลับยาก | `push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` |
+| MCP tool (ตั้งแต่ v0.1.8) | tool ใดก็ได้ของ MCP server ใดก็ได้ ที่ชื่อมีคำว่า `write`, `publish`, `call`, `send`, `goal`, `cancel`, `safe`, `deploy`, `inject`, `merge`, `push`, `create`, `update`, `delete`, `remove`, `set`, `start`, `stop`, `restart`, `play`, `retry`, `trigger`, `run`, `reset`, `install`, `upload`, `move`, `jog`, `enable`, `disable` — ยกเว้นชื่อที่ขึ้นต้นด้วยคำอ่าน (`get_`, `list_`, `read_`, `search_`, `query_` ...) |
 
 ## ตั้งใจให้เป็นแบบนี้
 - **ถาม ไม่บล็อก** — งานทดสอบเครื่องหน้างานต้องรันคำสั่งพวกนี้จริง
@@ -48,6 +49,7 @@
 > - wrapper script: `./bringup.sh`, `make run`
 > - โค้ดที่สั่งเครื่องจากข้างใน script ที่เป็นไฟล์: `python write_plc.py`, node ที่เขียน register เอง
 > - `kill <pid>`, alias/function ของ shell, การเรียกผ่าน `$(which ros2)`, การแยกคำด้วย quote (`ros2 "launch"`)
+> - MCP tool ที่ชื่อไม่บอกว่าเขียน (`execute_sql` เขียนได้แต่ไม่ถาม) — ป้องกันด้วยโหมดอ่านอย่างเดียวของ server + deny rule + สิทธิ์ฝั่งระบบ ([templates/mcp](../templates/mcp/README.md))
 > - `bash -c reboot` ที่ไม่มี quote, `doas -u x ...`, docker ที่มี global option ซึ่งไม่อยู่ในรายการ (`--tlscacert ca.pem run`), `nerdctl compose`
 >
 > กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
