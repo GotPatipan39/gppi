@@ -15,4 +15,4 @@ desktop.ini
 .DS_Store
 
 # ผลของ claude plugin eval
-evals/results/
+dev/evals/results/

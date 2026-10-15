@@ -22,6 +22,7 @@ jobs:
       - run: npm install -g @anthropic-ai/claude-code@2.1.296
       - run: claude plugin validate . --strict
       - run: claude plugin test .
+      - run: node dev/check-links.mjs   # ลิงก์ในเอกสารยังชี้ไฟล์ที่มีอยู่
       # PreToolUse hook รันด้วย node จริง (ไม่ใช่ runtime ของ claude plugin test) — ตรวจว่า node รุ่นขั้นต่ำรัน .ts ได้และตอบ ask
       - name: PreToolUse hook answers ask under node
         run: |
@@ -55,4 +56,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y g++ libgtest-dev libmodbus-dev
-      - run: bash tools/test-templates.sh
+      - run: bash dev/test-skill-code.sh

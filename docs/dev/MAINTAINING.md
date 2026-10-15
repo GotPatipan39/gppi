@@ -4,25 +4,26 @@
 ทีมเสนอแก้ผ่าน issue / pull request — เจ้าของ repo เป็นคน merge และออก release
 
 ## แก้ skill หรือ agent
-- **skill**: แก้ใน `skills/<ชื่อ>/` แล้วขึ้นเวอร์ชันในบรรทัด `> เวอร์ชัน` ของ `SKILL.md` + `CHANGELOG.md` ของ skill นั้น + ตาราง skill ใน [README](../README.md#skill-และ-subagent) — commit แบบ `<skill> vX.Y.Z: <สรุป>`
-- **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules.md`](../rules.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
+- **skill**: แก้ใน `skills/<ชื่อ>/` แล้วขึ้นเวอร์ชันในบรรทัด `> เวอร์ชัน` ของ `SKILL.md` + `CHANGELOG.md` ของ skill นั้น + ตาราง skill ใน [README](../../README.md#skill-และ-subagent) — commit แบบ `<skill> vX.Y.Z: <สรุป>`
+- **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules.md`](../../rules.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
 - **agent**: เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตาราง README และเขียนเหตุผลใน commit message
 - `safety-reviewer` **ไม่มี Bash** (ตั้งแต่ 1.1.0) — plugin subagent ใช้ `permissionMode`/`hooks` ใน frontmatter ไม่ได้ การห้ามในข้อความจึงบังคับไม่ได้จริง ทางเดียวที่บังคับได้คือไม่ให้ tool นั้น; ผู้เรียกเขียน diff ไว้ที่ `.git/gppi-review.diff` ให้แทน — ห้ามเพิ่ม Bash กลับโดยไม่มีทางจำกัดที่ระบบบังคับ
 - skill ที่มีไฟล์ `LICENSE` ของตัวเอง (`grilling`, `domain-modeling`) มาจากภายนอก — **ห้ามแก้เนื้อหา** อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์
-- แก้ตัวกันคำสั่ง: ดู [GUARD.md](GUARD.md#แก้ตัวกัน)
+- แก้ตัวกันคำสั่ง: ดู [GUARD.md](../GUARD.md#แก้ตัวกัน)
 
 ## ทดสอบ
 ```bash
 claude plugin validate . --strict
 claude plugin test .                 # test ของตัวกันคำสั่ง (hooks/gppi.test.ts)
 claude --plugin-dir .                # ลองของที่แก้แต่ยังไม่ release — ปิด gppi ที่ติดตั้งไว้ก่อน ไม่อย่างนั้นจะโหลดซ้ำ
-bash tools/test-templates.sh         # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — รันใน WSL/Ubuntu
+bash dev/test-skill-code.sh         # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — รันใน WSL/Ubuntu
+node dev/check-links.mjs             # ลิงก์ในเอกสารทั้ง repo — ย้าย/เปลี่ยนชื่อไฟล์แล้วต้องรัน
 ```
-`tools/test-templates.sh` ต้องมี `g++ libgtest-dev libmodbus-dev` (Ubuntu: `sudo apt-get install -y g++ libgtest-dev libmodbus-dev`) — ไม่ต้องมี ROS2 และไม่แตะอุปกรณ์จริง (Modbus server จำลองบน 127.0.0.1); แก้ template ที่คุม hardware ต้องเพิ่ม test ที่แดงก่อนแก้ (skill `tdd`)
-CI ([`.github/workflows/validate.yml`](../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
+`dev/test-skill-code.sh` ต้องมี `g++ libgtest-dev libmodbus-dev` (Ubuntu: `sudo apt-get install -y g++ libgtest-dev libmodbus-dev`) — ไม่ต้องมี ROS2 และไม่แตะอุปกรณ์จริง (Modbus server จำลองบน 127.0.0.1); แก้ template ที่คุม hardware ต้องเพิ่ม test ที่แดงก่อนแก้ (skill `tdd`)
+CI ([`.github/workflows/validate.yml`](../../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
 
 ### eval การเลือก skill
-[`evals/`](../evals/) มี 17 case: 14 case วัดว่า Claude โหลด skill ถูกตัวไหม (tag `selection`): 9 case ต่อ skill (รวมอุปกรณ์ Modbus ที่ไม่มีไฟล์ใน `devices/`), 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) และ 3 case วัดพฤติกรรม (tag `behavior`, ใช้กรรมการ LLM): แก้ UI ต้องเสนอ mockup ก่อน / แก้คำผิดไม่ต้อง / logic แบบ sequence ต้องเสนอ flowchart draw.io ก่อน (ฟังก์ชันแปลงค่าและ script ใช้ครั้งเดียวต้องไม่ดึง `flowchart`) — รันเมื่อแก้ `description` ของ skill หรือกฎใน `rules.md`
+[`dev/evals/`](../../dev/evals/) มี 17 case: 14 case วัดว่า Claude โหลด skill ถูกตัวไหม (tag `selection`): 9 case ต่อ skill (รวมอุปกรณ์ Modbus ที่ไม่มีไฟล์ใน `devices/`), 2 case ที่ต้องโหลดสองตัว (modbus + tdd, ros2 + modbus), 3 case ที่ต้องไม่โหลด (คำถามทั่วไป, แปลภาษา, script ใช้ครั้งเดียว — ต้องไม่ดึง `tdd`/`modbus`) และ 3 case วัดพฤติกรรม (tag `behavior`, ใช้กรรมการ LLM): แก้ UI ต้องเสนอ mockup ก่อน / แก้คำผิดไม่ต้อง / logic แบบ sequence ต้องเสนอ flowchart draw.io ก่อน (ฟังก์ชันแปลงค่าและ script ใช้ครั้งเดียวต้องไม่ดึง `flowchart`) — รันเมื่อแก้ `description` ของ skill หรือกฎใน `rules.md`
 ```bash
 claude plugin eval . --ablation none --disallow-tools Agent --no-publish --runs 3
 claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-tools Agent --no-publish   # case เดียว
@@ -30,7 +31,7 @@ claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-t
 - `--ablation none` จำเป็น: ค่าเริ่มต้นรันแบบไม่มี plugin เทียบด้วย และในโหมดนั้นตัวตรวจ `tool: Skill` ไม่ถูกนับคะแนน
 - ใช้ credential ของคนรัน — 16 case × 1 รอบ ≈ $3.2 (วัด 2026-10-15 ผ่าน 16/16 กับ Claude Code 2.1.299) — ถ้าชน usage limit case จะได้ 0 พร้อม error "session limit" ไม่ใช่เลือก skill ผิด ให้ดู `error` ใน JSON ก่อน; `--runs 3` ราว 3 เท่า ใส่ `--max-cost-usd` ถ้าต้องการเพดาน
 - case ใช้ได้แค่ `Read, Glob, Grep, Skill` (ไม่มี Bash/Write) และ `--disallow-tools Agent` กัน subagent — eval จึงสั่งอะไรไม่ได้ แต่ hook ของ plugin ทำงานจริง (นอก sandbox) ห้ามเพิ่ม `--allow-tools Bash` และ**ห้ามรันบนเครื่องที่ต่อ PLC/serial**
-- `--no-publish` กันไม่ให้ report ขึ้น claude.ai; ผลอยู่ใน `evals/results/` (อยู่ใน `.gitignore`)
+- `--no-publish` กันไม่ให้ report ขึ้น claude.ai; ผลอยู่ใน `dev/evals/results/` (อยู่ใน `.gitignore`)
 - ยังไม่อยู่ใน CI เพราะต้องมี API key และมีค่าใช้จ่ายทุกครั้ง
 - case ใหม่: `claude plugin eval init --bare <ชื่อ>` — prompt ต้องเป็นคำขอแบบที่ทีมพิมพ์จริง ไม่เอ่ยชื่อ skill
 
@@ -39,8 +40,8 @@ claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-t
 
 ## ออกเวอร์ชัน
 ทำตาม skill `git-commit` หัวข้อ "ข้อยกเว้น: repo gppi" — สรุป:
-1. เลขอยู่ที่ [`.claude-plugin/plugin.json`](../.claude-plugin/plugin.json) (`"version"`) **ที่เดียว**
-2. เพิ่มหัวข้อใน [`CHANGELOG.md`](../CHANGELOG.md) — เขียนให้คนที่จะอัปเดตเครื่องอ่าน พร้อมระดับการทดสอบ
+1. เลขอยู่ที่ [`.claude-plugin/plugin.json`](../../.claude-plugin/plugin.json) (`"version"`) **ที่เดียว**
+2. เพิ่มหัวข้อใน [`CHANGELOG.md`](../../CHANGELOG.md) — เขียนให้คนที่จะอัปเดตเครื่องอ่าน พร้อมระดับการทดสอบ
 3. validate + test ต้องผ่าน
 4. commit `vX.Y.Z: <สรุป>` แล้ว `claude plugin tag .` (ได้ tag `gppi--vX.Y.Z`)
 5. push ทั้ง main และ tag
@@ -58,7 +59,7 @@ claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-t
 ## รับ skill จากภายนอก
 ไม่ติดตั้งด้วย `npx skills add` หรือ `/plugin install` ของคนอื่นตรงๆ — ให้ Claude อ่านก่อนทุกครั้ง แล้วเลือกอย่างใดอย่างหนึ่ง:
 - **copy มาตรงๆ** เมื่อเนื้อหาดีและไม่ขัดกับหลักของเรา — วางไว้ที่ `skills/<ชื่อ>/` พร้อมไฟล์ `LICENSE` ของต้นทางในโฟลเดอร์เดียวกัน, บันทึกที่มา, commit/วันที่, license ในตาราง skill ของ README
-- **ดัดแปลงเข้า skill ของเรา** เมื่อดีบางส่วน — บันทึกใน CHANGELOG ว่าเอาอะไรมาจากไหน และไม่เอาอะไรเพราะอะไร และเพิ่มแถว + ข้อความ license ของต้นทางใน [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) (แปล/เรียบเรียงใหม่ก็ยังนับเป็นงานดัดแปลง — ไม่ต้องตัดสินว่าเอามามากพอจะเป็น "substantial portions" ไหม)
+- **ดัดแปลงเข้า skill ของเรา** เมื่อดีบางส่วน — บันทึกใน CHANGELOG ว่าเอาอะไรมาจากไหน และไม่เอาอะไรเพราะอะไร และเพิ่มแถว + ข้อความ license ของต้นทางใน [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) (แปล/เรียบเรียงใหม่ก็ยังนับเป็นงานดัดแปลง — ไม่ต้องตัดสินว่าเอามามากพอจะเป็น "substantial portions" ไหม)
 - **ไม่ใช้** — จดเหตุผลไว้ในตารางข้างล่าง กันพิจารณาซ้ำ
 
 ชื่อ skill ห้ามซ้ำกับตัวที่มีอยู่ เพราะ plugin รวมเป็นชุดเดียว

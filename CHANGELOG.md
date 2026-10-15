@@ -23,7 +23,7 @@ Tested: eval — แก้ layout แล้ว Claude เสนอ mockup แล
 ## v0.1.4 — 2026-10-14
 Tested: unit test — gtest ของ template ROS2 16/16 + odometry 9/9 (g++ 11.4), client Modbus กับ libmodbus 3.1.6 + server จำลอง, ตัวกัน 23/23, eval การเลือก skill 12 case (1 รอบต่อ case) — **ตัวอย่าง C++ ใหม่ใน references ของ ROS2 ยังไม่ได้ build กับ ROS2 Humble จริง และยังไม่ได้ลองกับหุ่น/PLC/drive จริง**
 
-ล้างเนื้อหาที่ผิดหรือล้าสมัย และเติมช่องว่าง (รีวิว [docs/reviews/2026-10-14-skills.md](docs/reviews/2026-10-14-skills.md) กลุ่ม 2–3):
+ล้างเนื้อหาที่ผิดหรือล้าสมัย และเติมช่องว่าง (รีวิว [docs/reviews/2026-10-14-skills.md](docs/dev/reviews/2026-10-14-skills.md) กลุ่ม 2–3):
 - แก้: `ros2-humble-cpp` 3.4.1 — references ถูกต้องสำหรับ Humble (เดิมปน API ของ Jazzy ที่ build บน Humble ไม่ผ่าน); เพิ่ม deployment / runtime-provenance / system-diagnostics; **ตัวอย่าง systemd ปิด auto-restart ของ driver เป็นค่าเริ่มต้น** (watchdog kill ไม่ได้สั่งหยุดอุปกรณ์); เพิ่ม `references/odometry.md`; `ParameterDescriptor` สำหรับ parameter ด้านความปลอดภัย; คำสั่งที่ทำให้เครื่องขยับทำตาม rules.md ยกเว้น fault injection ทางกายภาพที่ผู้ใช้รันเองเท่านั้น
 - เปลี่ยน: `modbus` 1.2.0 — เน้นหลักการที่ใช้ได้กับอุปกรณ์ทุกรุ่น + ขั้นตอนเจออุปกรณ์ใหม่ที่หน้างาน; `devices/` เป็นบันทึกรุ่นที่เคยใช้; pymodbus 3.13+, ASDA-B3 timeout
 - แก้: `tdd` 1.1.0 — ตัวอย่าง `node --test test/` ใช้ไม่ได้บน Node 22/24 → `node --test`; Claude ไม่ restart Node-RED เอง; เพิ่ม property-based test
@@ -34,7 +34,7 @@ Tested: unit test — gtest ของ template ROS2 16/16 + odometry 9/9 (g++ 11
 ## v0.1.3 — 2026-10-14
 Tested: unit test — gtest 16/16 ของ template ROS2 (g++ 11.4 = Ubuntu 22.04), client Modbus กับ libmodbus 3.1.6 + Modbus server จำลองบน localhost, ตัวกัน 23/23, CI — **ยังไม่ได้ build template กับ ROS2 Humble จริง และยังไม่ได้ลองกับ PLC/drive จริง**
 
-แก้จุดที่เสี่ยงต่อความปลอดภัยใน skill (จากการรีวิว [docs/reviews/2026-10-14-skills.md](docs/reviews/2026-10-14-skills.md)) — ใครที่ copy template ไปใช้แล้ว ควรเทียบกับรุ่นใหม่:
+แก้จุดที่เสี่ยงต่อความปลอดภัยใน skill (จากการรีวิว [docs/reviews/2026-10-14-skills.md](docs/dev/reviews/2026-10-14-skills.md)) — ใครที่ copy template ไปใช้แล้ว ควรเทียบกับรุ่นใหม่:
 - แก้: `ros2-humble-cpp` 3.2.3 — template node ที่สั่งมอเตอร์:
   - watchdog เดิมใช้เวลาของ ROS — ตั้ง `use_sim_time:=true` บนเครื่องจริงแล้ว **watchdog ไม่ตัดเลย** → ใช้ steady clock
   - คำสั่ง NaN เดิมผ่านไปถึง hardware; dt ที่เป็น NaN ทำให้ **ramp กระโดดถึงความเร็วเป้าหมายทันที** → ชะลอหา 0

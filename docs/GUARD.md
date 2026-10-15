@@ -49,7 +49,7 @@
 > - wrapper script: `./bringup.sh`, `make run`
 > - โค้ดที่สั่งเครื่องจากข้างใน script ที่เป็นไฟล์: `python write_plc.py`, node ที่เขียน register เอง
 > - `kill <pid>`, alias/function ของ shell, การเรียกผ่าน `$(which ros2)`, การแยกคำด้วย quote (`ros2 "launch"`)
-> - MCP tool ที่ชื่อไม่บอกว่าเขียน (`execute_sql` เขียนได้แต่ไม่ถาม) — ป้องกันด้วยโหมดอ่านอย่างเดียวของ server + deny rule + สิทธิ์ฝั่งระบบ ([templates/mcp](../templates/mcp/README.md))
+> - MCP tool ที่ชื่อไม่บอกว่าเขียน (`execute_sql` เขียนได้แต่ไม่ถาม) — ป้องกันด้วยโหมดอ่านอย่างเดียวของ server + deny rule + สิทธิ์ฝั่งระบบ ([templates/mcp](../project-setup/mcp/README.md))
 > - `bash -c reboot` ที่ไม่มี quote, `doas -u x ...`, docker ที่มี global option ซึ่งไม่อยู่ในรายการ (`--tlscacert ca.pem run`), `nerdctl compose`
 >
 > กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
@@ -57,7 +57,7 @@
 ## ทำงานอย่างไร (ข้างใน)
 logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เดียว ถูกเรียกผ่านสองทาง:
 
-1. **PreToolUse hook** — `node hooks/pretooluse.ts` (ตั้งใน [`hooks/hooks.json`](../hooks/hooks.json)) ตอบ `ask` — เป็นทางเดียวที่ docs ของ Claude Code รับประกันว่าบังคับถามคนได้แม้ใน auto mode ([ADR-0003](adr/0003-guard-hook-plus-mod.md))
+1. **PreToolUse hook** — `node hooks/pretooluse.ts` (ตั้งใน [`hooks/hooks.json`](../hooks/hooks.json)) ตอบ `ask` — เป็นทางเดียวที่ docs ของ Claude Code รับประกันว่าบังคับถามคนได้แม้ใน auto mode ([ADR-0003](dev/adr/0003-guard-hook-plus-mod.md))
 2. **mod** (`tool.check`) — สำรองไว้ตอน hook ไม่ได้ทำงาน; ถ้า hook ตอบ ask ไปแล้ว mod ไม่แตะ (Claude Code ไม่ยอมให้ plugin เขียนทับ ask ของ hook)
 
 **hook รันไม่ได้ = บล็อกคำสั่ง shell ทั้งหมด** (fail-closed) — คำสั่งใน hooks.json ต่อท้ายด้วย `|| { echo ... >&2; exit 2; }` ถ้า node ไม่มี/เก่า/ไม่อยู่ใน PATH Claude จะได้ข้อความ "gppi: ตัวกันคำสั่ง ... รันไม่ได้" และรัน Bash/PowerShell ไม่ได้จนกว่าจะแก้ — ตั้งใจให้เห็นปัญหาตั้งแต่วันแรก ดีกว่าตัวกันพังเงียบๆ แล้วไปเจอตอนต่อเครื่องจริง
@@ -66,7 +66,7 @@ logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เ�
 - Windows ที่ **ไม่มี Git Bash** — hook รันด้วย PowerShell ซึ่งคำสั่งบล็อกแบบ bash ไม่ทำงาน (อ่านจาก syntax ยังไม่ได้ทดสอบ) → ติดตั้ง Git for Windows ทุกเครื่อง
 - hook ทำงานเกิน timeout 30 วินาที (เช่น antivirus สแกน node ตอนเปิดครั้งแรก) — Claude Code นับเป็น error ที่ไม่บล็อก
 
-[`templates/permissions.json`](../templates/permissions.json) — กฎ `ask` ของ git สำหรับใส่ใน `.claude/settings.json` ของโปรเจกต์ ใช้กับเครื่องที่ยังใช้ gppi ไม่ได้ (plugin ส่ง permission rule ให้ผู้ใช้ไม่ได้)
+[`project-setup/permissions.json`](../project-setup/permissions.json) — กฎ `ask` ของ git สำหรับใส่ใน `.claude/settings.json` ของโปรเจกต์ ใช้กับเครื่องที่ยังใช้ gppi ไม่ได้ (plugin ส่ง permission rule ให้ผู้ใช้ไม่ได้)
 
 กฎใน `rules.md` ส่งเข้า session ผ่าน hook `SessionStart` (`cat rules.md`) เพราะ Claude Code ไม่ให้ plugin แก้ system prompt ตรงๆ — ทดสอบแล้วบน Windows ที่มี Git Bash และ WSL; เครื่องที่ไม่มี Git Bash รันด้วย PowerShell ซึ่ง `cat` เป็น alias ของ `Get-Content` (ยังไม่ได้ทดสอบ)
 
@@ -74,4 +74,4 @@ logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เ�
 - เขียน test ของคำสั่งที่ต้องถาม/ไม่ต้องถามใน [`hooks/gppi.test.ts`](../hooks/gppi.test.ts) **ก่อน** แก้ regex (skill `tdd`) แล้วรัน `claude plugin test .`
 - **regex ที่ช้า = ตัวกันปล่อยผ่าน** — hook ที่เกิน timeout ไม่บล็อก; เคยวัดได้ 17 วินาที (`ssh -pa` ซ้ำ 30 ตัว) และ 194 วินาที (deploy Node-RED พร้อม flow JSON ~400KB) — test เรื่องเวลาใน `gppi.test.ts` ต้องผ่านเสมอ
 - ส่งให้ `gppi:safety-reviewer` ตรวจก่อน commit ทุกครั้ง
-- ผลทดสอบจริงทุก surface/mode: [plugin-evaluation.md](plugin-evaluation.md#ตัวกันคำสั่ง-gppi-010)
+- ผลทดสอบจริงทุก surface/mode: [plugin-evaluation.md](dev/plugin-evaluation.md#ตัวกันคำสั่ง-gppi-010)

@@ -99,7 +99,7 @@ export ROS_DOMAIN_ID=<0-101>     # แยกจากระบบอื่น �
 | [templates/params.yaml](templates/params.yaml) | รูปแบบไฟล์ parameter |
 | [templates/rate_limiter.hpp](templates/rate_limiter.hpp) | ramp (จำกัดความเร่ง) — logic ล้วน ไม่ใช้ rclcpp; NaN/Inf = ชะลอหา 0, กลับทิศหยุดที่ 0 หนึ่งรอบ, จำกัด dt (`max_dt`), ค่า limit ผิด = throw (node ไม่ start) |
 | [templates/command_watchdog.hpp](templates/command_watchdog.hpp) | watchdog ของคำสั่งด้วย steady clock — **ห้ามใช้ `now()` (ROS time) ทำ watchdog**: `use_sim_time:=true` ที่ไม่มี `/clock` ทำให้เวลาหยุดเดินและ watchdog ไม่มีวันตัด |
-| [templates/test_example.cpp](templates/test_example.cpp) | gtest ของ rate_limiter + watchdog (ผ่าน 16/16 — รันใน repo gppi ด้วย `bash tools/test-templates.sh`) |
+| [templates/test_example.cpp](templates/test_example.cpp) | gtest ของ rate_limiter + watchdog (ผ่าน 16/16 — รันใน repo gppi ด้วย `bash dev/test-skill-code.sh`) |
 
 วางไฟล์ใน package ตามนี้: `src/my_node.cpp`, `include/my_pkg/rate_limiter.hpp`, `include/my_pkg/command_watchdog.hpp`, `test/test_example.cpp`, `launch/`, `config/params.yaml` แล้วแทนที่ `my_pkg` / `my_node` ด้วยชื่อจริง
 

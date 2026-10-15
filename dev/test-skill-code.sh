@@ -4,7 +4,7 @@
 #   2) compile node_template.cpp กับ rclcpp จำลอง (ตรวจ type/syntax เท่านั้น — ไม่ใช่การ build กับ ROS2 จริง)
 #   3) modbus_client.hpp กับ libmodbus จริง + Modbus TCP server จำลองบน 127.0.0.1
 # ต้องมี: g++ libgtest-dev libmodbus-dev python3   (Ubuntu: sudo apt-get install -y g++ libgtest-dev libmodbus-dev)
-# รัน: bash tools/test-templates.sh   (ใน WSL หรือ Ubuntu; output ไปที่ไฟล์ชั่วคราว ไม่ลง repo)
+# รัน: bash dev/test-skill-code.sh   (ใน WSL หรือ Ubuntu; output ไปที่ไฟล์ชั่วคราว ไม่ลง repo)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

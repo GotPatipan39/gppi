@@ -103,19 +103,24 @@ claude plugin install gppi@gppi
 | `safety-reviewer` | 1.1.0 | ตรวจ diff ก่อน commit ในโปรเจกต์ที่คุมเครื่องจักร: เกณฑ์ความปลอดภัยที่ถูกลด, ค่า hardware ที่เปลี่ยน, คำสั่งขยับที่ไม่มีเงื่อนไข, ตอนสื่อสารล้มเหลว, test ที่ถูกแก้ให้ผ่าน, โหมดทดสอบที่ค้างในของจริง, การขยับเองหลัง reset — **ไม่มี Bash** (รันคำสั่งไม่ได้เลย อ่าน diff จากไฟล์ที่ผู้เรียกเขียนให้) | skill `git-commit` เรียกให้เอง หรือสั่ง "ให้ safety-reviewer ตรวจ" — ชื่อเต็มคือ `gppi:safety-reviewer` |
 
 ## โครงสร้าง
+แบ่งตามคนที่ใช้ — **plugin ใช้เอง** / **ผู้ใช้ copy ไปใส่โปรเจกต์** / **คนดูแล repo**
+
 ```
 gppi/
-├── .claude-plugin/   ← plugin.json (ชื่อ + เวอร์ชัน) + marketplace.json
-├── skills/<ชื่อ>/    ← skill ทั้งหมด (มีไฟล์ LICENSE = มาจากภายนอก ห้ามแก้เนื้อหา)
-├── agents/           ← subagent
-├── hooks/            ← ตัวกันคำสั่ง + ส่งกฎเข้า session
-├── rules.md          ← กฎการทำงานที่ Claude อ่านทุก session
-├── templates/        ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์ (`mcp/`: MCP แบบอ่านอย่างเดียว — Grafana, PostgreSQL, GitLab, ROS2, Modbus)
-├── docs/             ← INSTALL, GUARD, MAINTAINING, ADR, ผลทดสอบ
-├── evals/            ← eval ว่า Claude เลือก skill ถูกไหม (claude plugin eval)
-├── THIRD_PARTY_NOTICES.md ← license ของส่วนที่ดัดแปลงจากภายนอก
-└── CHANGELOG.md      ← อะไรเปลี่ยนในแต่ละเวอร์ชัน
+├── .claude-plugin/     ← plugin.json (ชื่อ + เวอร์ชัน) + marketplace.json
+│
+├── skills/<ชื่อ>/      ┐ plugin ใช้เอง — ติดตั้ง gppi แล้วได้ทันที
+├── agents/             │  skill ที่มีไฟล์ LICENSE = มาจากภายนอก ห้ามแก้เนื้อหา
+├── hooks/              │  hooks = ตัวกันคำสั่ง + ส่งกฎเข้า session
+├── rules.md            ┘  กฎที่ Claude อ่านทุก session
+│
+├── project-setup/      ← ผู้ใช้ copy ไปใส่โปรเจกต์เอง: mcp/ (MCP แบบอ่านอย่างเดียว), permissions.json
+├── docs/               ← คนใช้อ่าน: INSTALL, GUARD
+│   └── dev/            ← คนดูแลอ่าน: MAINTAINING, adr/, reviews/, plugin-evaluation
+├── dev/                ← เครื่องมือคนดูแล: evals/ (claude plugin eval), test-skill-code.sh
+│
+├── README.md  CHANGELOG.md  THIRD_PARTY_NOTICES.md
 ```
 
 ## ดูแลและพัฒนา
-แก้ skill, ทดสอบ, ออกเวอร์ชัน, รับ skill จากภายนอก และการตัดสินใจที่ผ่านมา: [docs/MAINTAINING.md](docs/MAINTAINING.md)
+แก้ skill, ทดสอบ, ออกเวอร์ชัน, รับ skill จากภายนอก และการตัดสินใจที่ผ่านมา: [docs/dev/MAINTAINING.md](docs/dev/MAINTAINING.md)

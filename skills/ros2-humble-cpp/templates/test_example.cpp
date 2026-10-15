@@ -1,6 +1,6 @@
 // Template: gtest สำหรับ logic ที่ไม่แตะ ROS/hardware
 // รันด้วย: colcon test --packages-select my_pkg && colcon test-result --verbose
-// (ใน repo gppi: bash tools/test-templates.sh — ไม่ต้องมี ROS2)
+// (ใน repo gppi: bash dev/test-skill-code.sh — ไม่ต้องมี ROS2)
 #include <gtest/gtest.h>
 
 #include "my_pkg/rate_limiter.hpp"
