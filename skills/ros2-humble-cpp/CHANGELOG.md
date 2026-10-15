@@ -1,5 +1,9 @@
 # CHANGELOG — ros2-humble-cpp
 
+## 3.4.1 — 2026-10-14
+- SKILL.md: คำสั่งที่ทำให้ hardware ขยับ ทำตาม rules.md (Claude รันได้เมื่อผู้ใช้สั่งชัดเจน) — เดิมเขียนว่า "ผู้ใช้เท่านั้น" ซึ่งเข้มกว่ากฎของทีมโดยไม่มีเหตุผลกำกับ
+- คงความเข้มไว้เฉพาะ **fault injection ทางกายภาพ** (kill/ตัดไฟระหว่างเครื่องเดิน, ดึงสาย, ทดสอบ e-stop/stop path, spoof, วัดระยะหยุด): ผู้ใช้รันเองเท่านั้นแม้สั่งให้ Claude ทำ — ตรงกับ `safety-estop.md` §6 ที่มีอยู่แล้ว (ผู้ใช้ตัดสิน Q28 แบบ a)
+
 ## 3.4.0 — 2026-10-14
 - เพิ่ม `references/odometry.md` (เขียนเอง ไม่ได้มาจาก upstream): ใช้ `diff_drive_controller` ถ้ามี ros2_control, integrate encoder แบบ midpoint, counter wrap 16/32-bit, ปฏิเสธ step ที่เร็วเกินจริง (drive reset) แล้ว re-base, ไม่ integrate ข้ามช่วงที่อ่านไม่ได้, reject ติดกันหลายรอบ = odometry เสีย → ERROR + หยุด publish (ไม่ปล่อย pose ค้างแบบเงียบ), อ่านทุก counter ใน request เดียว, quadrature ×4, `publish_tf` เมื่อมี EKF, calibration ที่ผู้ใช้เป็นคนรัน (แก้ radius ก่อนแล้วค่อยวัด separation) — โค้ดและ gtest 9 ตัวใน reference ผ่านกับ g++ 11.4 + `-Werror` และ mutation 5 แบบถูกจับครบ (`tools/test-templates.sh` ดึงจาก markdown มารันใน CI); `safety-reviewer` พบ 🔴 1 (pose ค้างเงียบเมื่อ reject ต่อเนื่อง) + 🟡 6 แก้ครบแล้ว; parameter ของ `diff_drive_controller` ตรวจกับ yaml ของ branch humble
 - `ParameterDescriptor` สำหรับ parameter ด้านความปลอดภัย: `read_only` + range — ตรวจกับ source ของ rclcpp humble ว่า range ถูกตรวจตอน declare (throw) และตอน set; range ไม่กัน NaN

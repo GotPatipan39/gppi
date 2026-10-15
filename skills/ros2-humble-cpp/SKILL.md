@@ -5,7 +5,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 
 # ROS2 Humble + C++
 
-> เวอร์ชัน 3.4.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 3.4.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ## ก่อนเริ่มทุกงาน
 1. อ่าน `CLAUDE.md` ของโปรเจกต์ที่เปิดอยู่ (ผังระบบ, hardware, address map, กฎเฉพาะเครื่อง) — ถ้าขัดกับ skill นี้ ให้ยึดของโปรเจกต์
@@ -26,7 +26,7 @@ description: ใช้เมื่อเขียน แก้ ออกแบ�
 | Windows + WSL (Ubuntu 22.04) | เขียนโค้ด, build, unit test, simulator | workspace ต้องอยู่ใน filesystem ของ WSL (`~/...`) **ไม่ใช่** `/mnt/c` หรือ `/mnt/d` (build ช้ามาก, permission/symlink เพี้ยน) / USB-serial ต้องส่งเข้า WSL ด้วย `usbipd` / ROS2 ข้ามเครื่องผ่าน LAN อาจต้องตั้ง WSL เป็น mirrored networking |
 | mini PC บนเครื่องจักร (Ubuntu 22.04) | รันจริงกับ hardware | ตั้ง IP คงที่, udev, systemd (ดู references/system-bringup.md) |
 
-คำสั่งที่ทำให้ hardware ขยับ ให้รันบน mini PC โดยผู้ใช้เท่านั้น
+คำสั่งที่ทำให้ hardware ขยับ: Claude รันได้เฉพาะเมื่อผู้ใช้สั่งชัดเจนในข้อความนั้น (rules.md) — ยกเว้น **การทดสอบ fault injection ทางกายภาพ** (ตัดไฟ/kill process ระหว่างเครื่องเดิน, ดึงสาย, ทดสอบ e-stop/stop path, spoof คำสั่ง, วัดระยะหยุด) ผู้ใช้เป็นคนรันเองเท่านั้นแม้จะสั่งให้ Claude ทำ — Claude เตรียมขั้นตอนและอ่านผลได้ (รายละเอียด `references/safety-estop.md` §6) เพราะการทดสอบแบบนี้ตั้งใจทำให้ระบบป้องกันพัง คนที่ยืนอยู่หน้าเครื่องต้องเป็นคนกด
 
 ## ขอบเขต network (ค่าเริ่มต้น: local เท่านั้น)
 งานส่วนใหญ่ต้องเป็น **local เท่านั้น** — ถ้า CLAUDE.md ของโปรเจกต์ไม่ได้บอกเป็นอย่างอื่น ให้ออกแบบตามนี้
