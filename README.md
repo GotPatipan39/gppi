@@ -90,7 +90,7 @@ claude plugin install gppi@gppi
 | `project-readme` | 1.1.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.1.1 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
-| `flowchart` | 1.0.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
+| `flowchart` | 1.1.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
 

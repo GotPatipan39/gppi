@@ -75,6 +75,7 @@ claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-t
 ### ตรวจแล้ว ไม่ใช้ หรือใช้แค่บางส่วน
 | skill | ผล |
 |---|---|
+| Agents365-ai/drawio-skill @ 5727082 (MIT) | บางส่วน — ดัดแปลงเข้า `flowchart` 1.1.0: ตรวจกล่องทับกัน/เส้นวิ่งทับกล่อง/เส้นตัดกันจากพิกัด (เฉพาะเส้นที่มีจุดหัก), ห้ามใช้ id 0/1, เส้นต้องมี mxGeometry, `--layout verticalFlow` และ Mermaid → `.drawio` ของ draw.io ≥ 30, export ไว้ดูเองไม่ใส่ `-e`, ดูรูปแก้ไม่เกิน 2 รอบ — ไม่ copy ทั้งตัว: ใหญ่มาก (script Python ~16,000 บรรทัด + MCP server) ต้องมี python3 ซึ่งเครื่อง Windows ของทีมไม่มี, `allowed-tools: Bash` ไม่จำกัด, `disable-model-invocation` (Claude โหลดเองไม่ได้), เน้น diagram สถาปัตยกรรม/cloud ไม่ใช่ logic ของเครื่อง |
 | mattpocock/skills `grill-me`, `grill-with-docs`, `handoff` | เคย copy มา ถอดออกตอนย้ายเป็น gppi — สองตัวแรกเป็นแค่ตัวเรียก `grilling` / `domain-modeling`, `handoff` ทีมยังไม่ได้ใช้ |
 | omer-metin/skills-for-antigravity `ros2-robotics` | ไม่ใช้ — description เสีย (`Use when ", " mentioned.`), เนื้อหาบางส่วนผิด, น่าจะสร้างอัตโนมัติ |
 | arpitg1304/robotics-agent-skills `docker-ros2-development` | ไม่ใช้ตอนนี้ — เนื้อหาดี แต่ยังไม่ใช้ Docker (WSL + mini PC + PM2 พอ) พิจารณาใหม่เมื่อต้อง deploy หลายเครื่อง/แบบ offline |

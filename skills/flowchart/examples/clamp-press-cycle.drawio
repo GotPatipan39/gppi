@@ -64,11 +64,11 @@
         <mxCell id="e_dstart_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_start" target="d_ready">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_dstart_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="d_start" target="idle">
+        <mxCell id="e_dstart_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.7;" edge="1" parent="1" source="d_start" target="idle">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="220" y="265"/>
-              <mxPoint x="220" y="131"/>
+              <mxPoint x="220" y="159"/>
             </Array>
           </mxGeometry>
         </mxCell>
@@ -119,11 +119,11 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_count_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.7;" edge="1" parent="1" source="count" target="idle">
+        <mxCell id="e_count_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="count" target="idle">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="180" y="1205"/>
-              <mxPoint x="180" y="159"/>
+              <mxPoint x="180" y="131"/>
             </Array>
           </mxGeometry>
         </mxCell>
