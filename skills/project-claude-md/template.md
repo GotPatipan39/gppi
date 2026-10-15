@@ -54,6 +54,11 @@
 | รัน dev บนเครื่อง dev (ไม่ต่ออุปกรณ์จริง) | `<...>` | ถาม |
 | restart บนเครื่องหน้างาน | `<pm2 restart <name>>` | **ไม่** — ผู้ใช้ทำ |
 
+## MCP (ถ้ามี)
+- `.mcp.json`: <server ที่ใช้ เช่น grafana (อ่านอย่างเดียว, `--disable-write`), ros2 (`ROS2_MCP_READONLY=1`)> — deny tool ที่เขียนได้ใน `.claude/settings.json`
+- ตัวแปรที่แต่ละคนต้องตั้งในเครื่อง: <`GRAFANA_URL`, `GRAFANA_TOKEN`, ...> (ไม่ commit)
+- server ไหนแตะเครื่อง: <ros2 (`--read-only` + `ROS2_MCP_READONLY=1`) / modbus (`--read-only` + `raw_writes=false`)>
+
 ## เอกสาร
 - flowchart: `<docs/...>/*.drawio` (skill `flowchart`)
 - การตัดสินใจ: `docs/adr/`

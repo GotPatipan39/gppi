@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "grafana": {
+      "command": "uvx",
+      "args": [
+        "mcp-grafana@2.0.2",
+        "--disable-write"
+      ],
+      "env": {
+        "GRAFANA_URL": "REPLACE_WITH_GRAFANA_URL",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GPPI_GRAFANA_VIEWER_TOKEN}"
+      }
+    }
+  }
+}

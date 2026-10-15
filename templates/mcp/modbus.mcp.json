@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "modbus": {
+      "command": "uvx",
+      "args": [
+        "labmcp-modbus@0.1.3",
+        "--address",
+        "tcp://REPLACE_WITH_PLC_IP:REPLACE_WITH_PLC_PORT",
+        "--option",
+        "unit_id=REPLACE_WITH_UNIT_ID",
+        "--option",
+        "register_map=docs/modbus-map.yaml",
+        "--option",
+        "raw_writes=false",
+        "--read-only"
+      ]
+    }
+  }
+}

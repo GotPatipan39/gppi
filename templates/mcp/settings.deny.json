@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__ros2__ros2_topic_publish",
+      "mcp__ros2__ros2_publish_multiple_topics",
+      "mcp__ros2__ros2_service_call",
+      "mcp__ros2__ros2_send_action_goal",
+      "mcp__ros2__ros2_cancel_action_goal",
+      "mcp__modbus__write_point",
+      "mcp__modbus__write_register",
+      "mcp__modbus__write_registers",
+      "mcp__modbus__write_coil",
+      "mcp__modbus__apply_safe_state"
+    ]
+  }
+}

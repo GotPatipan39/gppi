@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ros2": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "source /opt/ros/humble/setup.bash && exec uvx --python /usr/bin/python3 --from git+https://github.com/wise-vision/ros2_mcp@4f287b046977a86a3862d9840359cd91dca4a1c6 mcp_ros_2_server --read-only"
+      ],
+      "env": {
+        "ROS2_MCP_READONLY": "1",
+        "ROS_LOCALHOST_ONLY": "1",
+        "ROS_DOMAIN_ID": "REPLACE_WITH_ROS_DOMAIN_ID_FROM_CLAUDE_MD"
+      }
+    }
+  }
+}

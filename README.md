@@ -58,7 +58,7 @@ claude plugin install gppi@gppi
 > [!WARNING]
 > ตัวกันเป็นแค่ด่านหนึ่ง — ไม่จับ wrapper script (`./bringup.sh`, `make run`) และโค้ดใน script ที่สั่งเครื่องเอง (`python write_plc.py`) คนต้องอ่านคำสั่งก่อนกดยืนยันเสมอ
 
-ก่อน Claude รันคำสั่งใน Bash หรือ PowerShell ตัวกันจะ **หยุดถาม** ถ้าคำสั่งเข้ากลุ่มเหล่านี้:
+ก่อน Claude รันคำสั่งใน Bash หรือ PowerShell หรือเรียก MCP tool ตัวกันจะ **หยุดถาม** ถ้าเข้ากลุ่มเหล่านี้:
 
 | กลุ่ม | ตัวอย่าง |
 |---|---|
@@ -70,6 +70,7 @@ claude plugin install gppi@gppi
 | หยุด process / ปิดเครื่อง | `pkill`, `reboot`, `shutdown`, `wsl --shutdown`, `taskkill` |
 | COM port ฝั่ง Windows | `usbipd attach`, `mode COM3` |
 | git ที่ย้อนกลับยาก | `git push`, `git reset --hard`, `git clean` |
+| MCP tool ที่ชื่อบอกว่าเขียน/สั่ง | `write_register`, `ros2_topic_publish`, `deploy`, `merge_merge_request` (server ชื่ออะไรก็ได้) |
 
 ตั้งใจให้เป็นแบบนี้:
 - **ถาม ไม่บล็อก** — งานทดสอบหน้างานต้องรันคำสั่งพวกนี้จริง
@@ -88,7 +89,7 @@ claude plugin install gppi@gppi
 | `industrial-ui` | 1.3.0 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.2 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.1.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
-| `project-claude-md` | 1.1.0 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
+| `project-claude-md` | 1.2.0 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.1.1 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `flowchart` | 1.2.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
@@ -109,7 +110,7 @@ gppi/
 ├── agents/           ← subagent
 ├── hooks/            ← ตัวกันคำสั่ง + ส่งกฎเข้า session
 ├── rules.md          ← กฎการทำงานที่ Claude อ่านทุก session
-├── templates/        ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์
+├── templates/        ← ตัวอย่าง config ให้ copy ไปใช้ในโปรเจกต์ (`mcp/`: MCP แบบอ่านอย่างเดียว — Grafana, PostgreSQL, GitLab, ROS2, Modbus)
 ├── docs/             ← INSTALL, GUARD, MAINTAINING, ADR, ผลทดสอบ
 ├── evals/            ← eval ว่า Claude เลือก skill ถูกไหม (claude plugin eval)
 ├── THIRD_PARTY_NOTICES.md ← license ของส่วนที่ดัดแปลงจากภายนอก

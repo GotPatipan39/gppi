@@ -1,0 +1,18 @@
+# register map สำหรับ labmcp-modbus — copy ไปเป็น docs/modbus-map.yaml ของโปรเจกต์
+# ทุกค่า (address, type, scale, word order) มาจาก datasheet / CLAUDE.md ของโปรเจกต์ — ห้ามเดา
+# writable: false ทุกตัว — MCP นี้ใช้อ่านอย่างเดียว; ไม่ใส่หัวข้อ safe_state (apply_safe_state เขียนได้แม้ --read-only)
+device:
+  name: <ชื่ออุปกรณ์ เช่น FX5 สายพาน 1>
+points:
+  scan_trigger:
+    table: holding
+    address: <0-based address จาก datasheet>
+    type: int16
+    description: <ความหมายของค่า เช่น 1 = ชิ้นงานมาถึง>
+    writable: false
+  alarm_code:
+    table: holding
+    address: <0-based address>
+    type: int16
+    description: <ความหมาย>
+    writable: false
