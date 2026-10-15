@@ -1,5 +1,9 @@
 # CHANGELOG — industrial-ui
 
+## 1.3.0 — 2026-10-15
+- แก้ UI/UX ต้องทำ mockup แล้วหยุดรอผู้ใช้ OK ก่อนเขียนโค้ดจริง (กฎใหม่ใน rules.md ตามที่ผู้ใช้กำหนด): ไฟล์ HTML static เดียวใน `mockups/`, ข้อมูลปลอม ไม่ต่อ PLC/ROS2/Node-RED/WebSocket, ขนาดเท่าจอจริง, ปุ่มสลับสถานะ (ปกติ/alarm/หลุด/ข้อมูลเก่า), แก้ของเดิมให้เทียบเก่า-ใหม่ — ยกเว้นแก้คำผิดในข้อความหรือบั๊กที่ไม่เปลี่ยนหน้าตา
+- eval: `ui-mockup-first` (เสนอ mockup และรอ OK) และ `ui-typo-no-mockup` (แก้คำผิดไม่ต้องทำ mockup) ผ่านทั้งคู่ — ตัวหลังกรรมการโหวต 2:1 จึงอาจแกว่ง
+
 ## 1.2.3 — 2026-10-14
 - description: เพิ่ม trigger ให้ตรงกับตาราง "ใช้ skill ตามงาน" ใน rules.md — Claude เลือก skill จาก description ถ้าไม่มีคำเหล่านี้ skill จะไม่ถูกโหลดในงานที่ตารางสั่งไว้ (จากรีวิว กลุ่ม 3): Web UI ↔ ROS2 (rosbridge, roslibjs, teleop), Dashboard 2.0/FlowFuse, alarm
 
