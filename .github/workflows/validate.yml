@@ -33,8 +33,8 @@ jobs:
       # ตัวตรวจ flowchart: ตัวอย่างต้องผ่าน และไฟล์ที่ทางแยกไม่มีป้ายต้องไม่ผ่าน
       - name: flowchart checker
         run: |
+          for f in skills/flowchart/examples/*.drawio; do node skills/flowchart/tools/check_drawio.mjs "$f"; done
           ex=skills/flowchart/examples/clamp-press-cycle.drawio
-          node skills/flowchart/tools/check_drawio.mjs "$ex"
           sed 's/id="e_dclamp_yes" value="ใช่"/id="e_dclamp_yes" value=""/' "$ex" > "$RUNNER_TEMP/bad.drawio"
           ! node skills/flowchart/tools/check_drawio.mjs "$RUNNER_TEMP/bad.drawio"
 

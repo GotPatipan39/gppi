@@ -189,9 +189,13 @@ for (const { name, body } of pages) {
     const sides = k.map((p, i) => [p, k[(i + 1) % 4]]);
     return pts.slice(1).some((b, i) => inside(pts[i], r) || inside(b, r) || sides.some(([c, d]) => cross(pts[i], b, c, d)));
   };
-  const routed = edges.filter((e) => e.points.length && e.source && e.target)
+  // เส้นที่ไม่มีจุดหักแต่ต้นกับปลายอยู่แนวเดียวกัน (นอน/ตั้ง) draw.io วาดเป็นเส้นตรง — รู้ตำแหน่งแน่นอน จึงตรวจด้วย
+  const routed = edges.filter((e) => e.source && e.target)
     .map((e) => ({ e, pts: [endPt(e, 'source'), ...e.points, endPt(e, 'target')] }))
-    .filter((r) => r.pts.every(Boolean));
+    .filter((r) => r.pts.every(Boolean))
+    .filter((r) => r.e.points.length || Math.abs(r.pts[0][0] - r.pts[1][0]) < 1 || Math.abs(r.pts[0][1] - r.pts[1][1]) < 1);
+  // เส้นที่ใส่ jumpStyle (เส้นกระโดดข้ามตรงจุดตัด) = ตั้งใจให้ตัดและอ่านออก ไม่ต้องเตือน
+  const jumps = (e) => /jumpStyle=(arc|gap|sharp|line)/.test(e.style ?? '');
   for (const { e, pts } of routed) {
     for (const { c, r } of leaves) {
       if (c.id !== e.source && c.id !== e.target && hits(pts, r)) warn(`เส้น ${e.id} วิ่งทับกล่อง "${name_(c)}" — เพิ่ม/ย้ายจุดหักให้อ้อม`);
@@ -200,6 +204,7 @@ for (const { name, body } of pages) {
   for (let i = 0; i < routed.length; i++) {
     for (let j = i + 1; j < routed.length; j++) {
       const a = routed[i].pts, b = routed[j].pts;
+      if (jumps(routed[i].e) || jumps(routed[j].e)) continue;
       if (a.slice(1).some((p, x) => b.slice(1).some((q, y) => cross(a[x], p, b[y], q)))) {
         warn(`เส้น ${routed[i].e.id} กับ ${routed[j].e.id} ตัดกัน — ย้ายจุดหัก หรือย้ายจุดเข้า (entryX/entryY)`);
       }

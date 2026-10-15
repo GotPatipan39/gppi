@@ -53,7 +53,8 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 การวาง — เลือกตามขนาด:
 - **ไม่เกิน ~15 กล่อง: กำหนดพิกัดเอง** (อ่านง่ายที่สุด แบบตัวอย่าง)
   - ทางหลักเป็นคอลัมน์เดียวจากบนลงล่าง (กล่องกว้าง 200, ห่างกันในแนวตั้ง ~40 px, พิกัดลงตัวที่ 10)
-  - ทาง error/fault ออกขวา, เส้นวนกลับ (loop) ออกซ้าย — ใส่จุดหักด้วย `<Array as="points">` และจุดเข้า `entryX/entryY` ให้เส้นไม่ทับกล่องและไม่ตัดกัน (ตัวตรวจเช็กให้)
+  - ทาง error/fault ออกขวา, เส้นวนกลับ (loop) ออกซ้าย — ใส่จุดหักด้วย `<Array as="points">` และจุดเข้า `entryX/entryY` ให้เส้นไม่ทับกล่องและไม่ตัดกัน (ตัวตรวจเช็กเส้นที่มีจุดหักและเส้นตรงแนวนอน/ตั้ง)
+  - ถ้าหนีจุดตัดไม่ได้ (เช่น เส้นวนกลับยาวที่ต้องข้ามทางแยกกลางรูป) ใส่ `jumpStyle=arc;jumpSize=12;` ให้เส้นยาวนั้นกระโดดข้าม และย้ายป้ายเส้นที่ถูกข้ามออกจากจุดตัดด้วย `<mxGeometry x="-0.6" relative="1" as="geometry">` (ค่า -1..1 = ตำแหน่งตามเส้นจากต้นไปปลาย)
 - **เกิน ~15 กล่อง: ให้ draw.io จัดวาง** (draw.io desktop ≥ 30 — เช็กด้วย `"<draw.io>" --version`): เขียน XML ตามปกติแต่ใส่ `x="0" y="0"` และไม่ใส่จุดหัก แล้ว
   `"<draw.io>" -x -f xml --layout verticalFlow -o docs/flowcharts/<ชื่อ>.drawio docs/flowcharts/<ชื่อ>.drawio`
   ได้เส้นมุมฉาก, คงสีและรูปทรงไว้ แต่ทางหลักอาจไม่ตรงเป็นแนวเดียว — ตรวจ + ดูรูป แล้วจัดเฉพาะจุดที่อ่านยาก (ห้ามใช้ `--layout` ซ้ำกับไฟล์ที่ผู้ใช้จัดตำแหน่งเองแล้ว เพราะจะทับของผู้ใช้)
@@ -61,7 +62,7 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 - เกิน ~20 กล่อง → แยกเป็นหลายหน้า (`<diagram>` หลายตัวในไฟล์เดียว) หรือย่อเป็นกล่อง sub-process แล้ววาดแยกหน้า
 
 ## โครงไฟล์
-ตัวอย่างเต็ม (ผ่านตัวตรวจ และ export ดูแล้ว): [examples/clamp-press-cycle.drawio](examples/clamp-press-cycle.drawio)
+ตัวอย่างเต็ม (ผ่านตัวตรวจ และ export ดูแล้ว): [examples/clamp-press-cycle.drawio](examples/clamp-press-cycle.drawio) (sequence ของเครื่อง) และ [examples/modbus-poll-loop.drawio](examples/modbus-poll-loop.drawio) (poll loop ของ bridge node: reconnect + backoff, exception ไม่ตัดสาย, ใช้เส้นกระโดดข้าม)
 
 ```xml
 <mxfile host="gppi">
