@@ -3,6 +3,11 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.5 — 2026-10-15
+Tested: eval — แก้ layout แล้ว Claude เสนอ mockup และรอ OK (กรรมการ 3/3), แก้คำผิดไม่ต้องทำ mockup (กรรมการ 2/1); ตัวกัน 23/23 — ยังไม่ได้ลองในโปรเจกต์ UI จริง
+- เพิ่ม (กฎใหม่ใน rules.md): **แก้ UI/UX ต้องทำ mockup เป็นไฟล์ HTML static ให้ผู้ใช้เปิดดูใน browser และรอ OK ก่อนแก้โค้ดจริง** — ข้อมูลปลอม ไม่ต่อเครื่อง; ยกเว้นแก้คำผิดหรือบั๊กที่ไม่เปลี่ยนหน้าตา
+- `industrial-ui` 1.3.0: ขั้นตอนทำ mockup (`mockups/<ชื่อ>.html`, ขนาดจอจริง, ปุ่มสลับสถานะ, เทียบเก่า-ใหม่)
+
 ## v0.1.4 — 2026-10-14
 Tested: unit test — gtest ของ template ROS2 16/16 + odometry 9/9 (g++ 11.4), client Modbus กับ libmodbus 3.1.6 + server จำลอง, ตัวกัน 23/23, eval การเลือก skill 12 case (1 รอบต่อ case) — **ตัวอย่าง C++ ใหม่ใน references ของ ROS2 ยังไม่ได้ build กับ ROS2 Humble จริง และยังไม่ได้ลองกับหุ่น/PLC/drive จริง**
 
