@@ -3,6 +3,13 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.8 — 2026-10-15
+Tested: ตัวกัน 26/26 + end-to-end กับ MCP server ปลอม (bypassPermissions + allow rule: tool เขียนไม่ถูกเรียก — ดูจาก log ของ server), Claude Code อ่าน template MCP ทุกตัวได้, deny rule ซ่อน tool เขียนได้จริง, ลิงก์ทั้ง repo, test โค้ดใน skill (WSL) — ยังไม่ได้ต่อ MCP server จริง (Grafana/PostgreSQL/ROS2/Modbus)
+- เพิ่ม (ตัวกัน): **ถามก่อนเรียก MCP tool ที่ชื่อบอกว่าเขียน/สั่ง** (`write_register`, `ros2_topic_publish`, `deploy`, `merge` ...) ไม่ว่า server จะชื่ออะไร ถามแม้โหมด bypass — ทีมจะเห็นคำถามเพิ่มเมื่อมี MCP ในโปรเจกต์
+- เพิ่ม: `project-setup/mcp/` template MCP แบบอ่านอย่างเดียว (Grafana, PostgreSQL, GitLab, Context7, ROS2, Modbus TCP) ให้ copy ไปใส่โปรเจกต์ + deny rule + วิธีสร้าง DB role อ่านอย่างเดียว — ไม่ใส่ใน plugin เพราะจะเริ่มเองทุกเครื่องโดยไม่ถาม
+- rules.md: MCP tool ที่เขียนค่า/สั่งอุปกรณ์นับเป็นคำสั่งที่ทำให้เครื่องขยับ; `project-claude-md` 1.2.0 เสนอ template เมื่อโปรเจกต์ยังไม่มี `.mcp.json`
+- เปลี่ยน (โครงสร้าง repo): `templates/` → `project-setup/`, เอกสารคนดูแลไป `docs/dev/`, `evals/` + script ทดสอบไป `dev/` — skill/hook/rules อยู่ที่เดิม ทีมไม่ต้องทำอะไร
+
 ## v0.1.7 — 2026-10-15
 Tested: ตัวตรวจ CLAUDE.md กับสำเนาที่ทำให้เก่า 6 แบบ (จับได้ครบ), ตัวตรวจ flowchart กับ flowchart จริง 8 ไฟล์ของ fg-robot-pallet (อ่านอย่างเดียว), eval 17/17 (1 รอบต่อ case), ตัวกัน 23/23 — skill ใหม่ยังไม่ได้ใช้สร้าง CLAUDE.md ในโปรเจกต์จริง
 - เพิ่ม: skill `project-claude-md` 1.1.0 — สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware ชี้ไปไฟล์+key ไม่ copy ตัวเลข, จดสิ่งที่โค้ดไม่บอก (register ใครเขียน, อะไรทำให้เครื่องขยับ, เครื่องหน้างาน), ป้าย ✅/⚠️/❓, ตัวตรวจว่า CLAUDE.md ยังตรงกับโค้ด — **Claude จะถามก่อนสร้างเมื่อเปิดโปรเจกต์คุมเครื่องที่ไม่มี CLAUDE.md**; แนวคิดบางส่วนจาก anthropics/claude-plugins-official `claude-md-improver` (Apache-2.0)
