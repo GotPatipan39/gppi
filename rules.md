@@ -13,6 +13,7 @@
 | กล้อง/งานภาพ: OpenCV, นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, camera calibration | `opencv` |
 | หน้าจอ HMI, dashboard, หน้า config, Node-RED Dashboard, Grafana, Web UI ↔ ROS2 | `industrial-ui` |
 | เขียน/แก้/ตรวจ README, หรือแก้โค้ดที่ทำให้สิ่งที่ README อธิบายไว้เปลี่ยน | `project-readme` |
+| สร้าง/อัปเดต CLAUDE.md ของโปรเจกต์, ตั้งต้นโปรเจกต์ใหม่ — และเมื่อโปรเจกต์คุมเครื่อง (Modbus/PLC/serial/ROS2 driver/Node-RED ที่สั่งอุปกรณ์) ยังไม่มี CLAUDE.md | `project-claude-md` (ถามผู้ใช้ก่อนสร้าง) |
 | commit, release / ออกเวอร์ชัน, tag | `git-commit` |
 | เขียน/แก้ logic ที่มีลำดับหรือเงื่อนไข (state machine, sequence เครื่อง, start/stop/reset, alarm/interlock, retry/timeout), flowchart, draw.io | `flowchart` |
 | เขียน logic ใหม่หรือแก้บั๊กที่ test ได้ (แปลงค่า register/scale, คำนวณ, state machine, parser, alarm/interlock, timeout) | `tdd` (ถามก่อนถ้าไม่แน่ใจว่าคุ้มทำแบบ TDD) |
