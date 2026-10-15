@@ -31,6 +31,9 @@ claude plugin install gppi@gppi
 ```
 แล้วเปิด auto-update (`/plugin` → Marketplaces → `gppi` → Enable auto-update — **ปิดอยู่เป็นค่าเริ่มต้น**) และเปิดแชทใหม่
 
+> [!TIP]
+> **แนะนำ: ตั้งให้ Claude ตอบสั้น** — `/output-style concise` (ตอบผลก่อน ไม่เล่าขั้นตอน; ยังให้รายละเอียดเต็มเมื่อขอ และเรื่อง error/ความปลอดภัยยังเขียนครบ) — เลือกเองได้ ไม่บังคับ; กลับเป็นแบบเดิมด้วย `/output-style default`
+
 ## ใช้งานประจำวัน
 - **สั่งงานตามปกติ** — Claude เลือก skill เองแล้วบอกว่าใช้ตัวไหน; เรียกเองก็ได้ เช่น `/gppi:modbus`, `/gppi:tdd`
 - **เจอ prompt "Do you want to proceed?"** — แปลว่าคำสั่งนั้นอาจแตะเครื่องจริง:

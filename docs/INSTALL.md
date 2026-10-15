@@ -153,6 +153,12 @@ echo 'export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1' >> ~/.bashrc && source ~/.bashrc
 
 ---
 
+## แนะนำ: ให้ Claude ตอบสั้น
+```
+/output-style concise
+```
+พิมพ์ในแชทครั้งเดียว — Claude ตอบผลก่อน ไม่เล่าขั้นตอนหรือสรุปซ้ำ แต่ยังอธิบายเต็มเมื่อขอ และ error/คำเตือนความปลอดภัยยังเขียนครบ — ใช้กับทุกโปรเจกต์: ใส่ `"outputStyle": "Concise"` ใน `~/.claude/settings.json` (ตัวพิมพ์ใหญ่-เล็กต้องตรง) — ไม่บังคับ กลับเป็นแบบเดิมด้วย `/output-style default` (ต้องใช้ Claude Code 2.1.237 ขึ้นไป)
+
 ## เพิ่มเติม (ไม่บังคับ): Context7 — doc ของ library ล่าสุด
 ให้ Claude ดู doc ของ library (rclcpp, OpenCV, pymodbus, Node-RED ...) แทนการจำ — อ่านอย่างเดียว ไม่แตะเครื่องจักร จึงเพิ่มระดับผู้ใช้ครั้งเดียว ใช้ได้ทุกโปรเจกต์ (ทำทั้งใน Windows และ WSL ถ้าใช้ทั้งคู่):
 ```bash
