@@ -18,11 +18,16 @@ MCP server ให้ Claude อ่านข้อมูลจากระบบ�
 | [grafana.mcp.json](grafana.mcp.json) | อ่าน dashboard, query ข้อมูลย้อนหลังมาช่วยหาสาเหตุ | ไม่ | `uv`; token สิทธิ์ Viewer |
 | [postgres.mcp.json](postgres.mcp.json) | อ่าน schema/ข้อมูล, ช่วยเขียน query | ไม่ | `uv`; **ต้องมี** DB role อ่านอย่างเดียว (หัวข้อข้างล่าง) — `execute_sql` ทั้งอ่านและเขียนได้ใน tool เดียว deny ไม่ได้ และโหมด restricted มีช่องหลบตาม README ของมันเอง |
 | [gitlab.mcp.json](gitlab.mcp.json) | อ่าน issue, MR, pipeline | ไม่ | node; PAT scope `read_api` — **ห้ามเพิ่ม toolset `api`** (ข้ามข้อจำกัดทั้งหมด) |
-| [context7.mcp.json](context7.mcp.json) | doc ล่าสุดของ library | ไม่ | ไม่ต้องติดตั้ง — คำถามถูกส่งไปที่ Upstash |
+| [context7.mcp.json](context7.mcp.json) | doc ล่าสุดของ library | ไม่ | ไม่ต้องติดตั้ง — คำถามถูกส่งไปที่ Upstash; **แนะนำเพิ่มระดับผู้ใช้แทน** (ข้างล่าง) |
 | [ros2.mcp.json](ros2.mcp.json) | ดู topic/service/action, subscribe ค่า | อ่านอย่างเดียว | Claude Code รันใน **WSL/Ubuntu ที่มี ROS2 Humble**; `uv` |
 | [modbus.mcp.json](modbus.mcp.json) | อ่าน register ตาม register map | อ่านอย่างเดียว | `uv`; [modbus-map.example.yaml](modbus-map.example.yaml) → `docs/modbus-map.yaml` |
 
 server ที่พิจารณาแล้ว **ไม่แนะนำ**: Node-RED MCP ทุกตัวที่เจอ (deploy/inject ได้ ไม่มีโหมดอ่านอย่างเดียว), serial MCP (สั่ง DTR/RTS จน board reset ได้), `robotmcp/ros-mcp-server` (สั่งหุ่นได้ ไม่มีโหมดอ่านอย่างเดียว), `mcp-snap7` (สั่ง stop CPU ของ PLC ได้), `kukapay/*` (เลิกพัฒนา) — ตรวจเมื่อ 2026-10-15
+
+## Context7: เพิ่มระดับผู้ใช้ ไม่ต้องใส่รายโปรเจกต์
+ตัวนี้ตัวเดียวที่ใช้ระดับผู้ใช้ได้ เพราะไม่แตะเครื่องจักรและไม่ต้องใช้ค่าของโปรเจกต์ — คำสั่งอยู่ใน [docs/INSTALL.md](../docs/INSTALL.md) หัวข้อ "เพิ่มเติม (ไม่บังคับ)"; ส่วนตัวอื่นในโฟลเดอร์นี้ต้องใส่รายโปรเจกต์
+
+doc ที่มี (ตรวจ 2026-10-15): rclcpp และ pymodbus มีแค่ชุดที่ไม่ระบุเวอร์ชัน (= รุ่นล่าสุด ไม่มี Humble / pymodbus รุ่นเก่า), OpenCV มีแยกรุ่น 4.6.0 / 4.13.0 / 5.0 (ไม่มี 4.5.x ของ Ubuntu 22.04) — rules.md จึงให้ยึด header/`--help` ในเครื่องเมื่อ doc ไม่ตรงเวอร์ชัน
 
 ## ใส่ในโปรเจกต์
 1. รวม `mcpServers` จากไฟล์ที่เลือกเป็น `.mcp.json` ที่ root ของโปรเจกต์ แล้ว commit — ทุกคนที่ clone จะได้คำถามอนุมัติเอง ไม่ต้องตั้งซ้ำ

@@ -153,6 +153,16 @@ echo 'export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1' >> ~/.bashrc && source ~/.bashrc
 
 ---
 
+## เพิ่มเติม (ไม่บังคับ): Context7 — doc ของ library ล่าสุด
+ให้ Claude ดู doc ของ library (rclcpp, OpenCV, pymodbus, Node-RED ...) แทนการจำ — อ่านอย่างเดียว ไม่แตะเครื่องจักร จึงเพิ่มระดับผู้ใช้ครั้งเดียว ใช้ได้ทุกโปรเจกต์ (ทำทั้งใน Windows และ WSL ถ้าใช้ทั้งคู่):
+```bash
+claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp
+claude mcp list        # ต้องเห็น context7 ... ✔ Connected
+```
+- คำถามที่ Claude ส่งไปจะไปที่ server ของ Upstash — rules.md กำหนดให้ใส่แค่ชื่อ library + เวอร์ชัน + หัวข้อ ไม่ใส่โค้ดหรือข้อมูลโปรเจกต์
+- doc ส่วนใหญ่เป็นรุ่นล่าสุด (ไม่มี rclcpp Humble) — Claude ยังต้องเทียบกับ header/`--help` ในเครื่อง; ไม่ได้ติดตั้งก็ใช้งานได้ตามปกติ
+- เอาออก: `claude mcp remove context7 -s user`
+
 ## ปัญหาที่เจอบ่อย
 
 | อาการ | สาเหตุ / วิธีแก้ |
