@@ -36,7 +36,7 @@ CLAUDE.md ถูกโหลดเข้าทุก session ของโปร�
    - ค่า: `.env.example`, `config/`, launch/params, `ecosystem.config.*`, systemd unit, docker-compose
    - **`.env` จริงห้ามเปิดอ่านค่า** (อาจมีรหัสผ่าน) — ถ้าไม่มี `.env.example` ให้ดูแค่ชื่อตัวแปร (`grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' .env`) แล้วเสนอให้สร้าง `.env.example`
    - flowchart/เอกสาร (`git ls-files "*.drawio*" "docs/*"`) — แผง REGISTER OWNERSHIP ใน flowchart คือ register map ที่ดีที่สุด
-   - MCP: มี `.mcp.json` / `.claude/settings.json` ไหม — ถ้าโปรเจกต์ใช้ระบบที่มี template ใน gppi (`project-setup/mcp/`: Grafana, PostgreSQL, GitLab, ROS2, Modbus TCP) แต่ยังไม่มี `.mcp.json` → **เสนอ** ให้ใช้ template ในข้อ 3 (ไม่สร้างเอง) — ผู้ใช้มักลืมตั้ง; MCP ที่มีอยู่ต้องอ่านอย่างเดียว และ deny tool ที่เขียนได้ ถ้าไม่ใช่ ให้บอกผู้ใช้
+   - MCP: มี `.mcp.json` / `.claude/settings.json` ไหม — ถ้าโปรเจกต์ใช้ระบบที่มี template ใน gppi (`mcp/`: Grafana, PostgreSQL, GitLab, ROS2, Modbus TCP) แต่ยังไม่มี `.mcp.json` → **เสนอ** ให้ใช้ template ในข้อ 3 (ไม่สร้างเอง) — ผู้ใช้มักลืมตั้ง; MCP ที่มีอยู่ต้องอ่านอย่างเดียว และ deny tool ที่เขียนได้ ถ้าไม่ใช่ ให้บอกผู้ใช้
    - ไฟล์คำสั่งของ agent ตัวอื่นที่มีอยู่ (`AGENTS.md`, `SKILL.md` ที่ root, `.cursorrules`, `.agent/`) — **ไม่ copy เนื้อหา** ใช้ `@ชื่อไฟล์` import ใน CLAUDE.md แทน (Claude Code อ่านไฟล์ที่ import ให้เอง)
    - `git log --oneline -30` — รูปแบบ commit, ภาษา, เรื่องที่แก้บ่อย
 2. **ร่างตาม [template.md](template.md)** — ทุกข้อมีที่มา (path:key) และป้ายสถานะ; หัวข้อที่โปรเจกต์ไม่มี (เช่น ไม่มี ROS2) ตัดทิ้ง

@@ -126,7 +126,7 @@ export const askReason = (command: string): string | undefined =>
 
 // MCP tool (`mcp__<server>__<tool>`) ที่เขียนค่า/สั่งอุปกรณ์ — ตัดสินจากชื่อ tool ไม่ใช่ชื่อ server
 // (deny rule ใน settings ผูกชื่อ server ซึ่งโปรเจกต์ตั้งต่างกันได้) — ชื่อที่ขึ้นต้นด้วยคำอ่าน (get_merge_request) ไม่ถาม
-// ถามเกินได้ (เช่น ros2_stream_start) ดีกว่าปล่อยผ่าน; execute_sql ไม่ถาม — ป้องกันด้วย DB role อ่านอย่างเดียว (templates/mcp)
+// ถามเกินได้ (เช่น ros2_stream_start) ดีกว่าปล่อยผ่าน; execute_sql ไม่ถาม — ป้องกันด้วย DB role อ่านอย่างเดียว (mcp/README.md)
 const MCP_READ_VERB = /^(?:get|list|read|search|query|find|describe|show|fetch|resolve|subscribe|view|count|check|explain|analyze|inspect)$/i
 const MCP_WRITE_WORD = /^(?:write|publish|call|send|goal|cancel|safe|deploy|inject|merge|push|create|update|delete|remove|set|start|stop|restart|play|retry|trigger|run|reset|install|upload|move|jog|enable|disable)$/i
 export const isMcpWriteTool = (toolName: string): boolean => {

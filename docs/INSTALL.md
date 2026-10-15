@@ -163,7 +163,7 @@ echo 'export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1' >> ~/.bashrc && source ~/.bashrc
 | `marketplace add` ขึ้น error เรื่อง authentication / clone ไม่ได้ | git ยังเข้า repo private ไม่ได้ (Windows ขั้น 4 / WSL ขั้น 3) หรือยังไม่ได้เป็น collaborator |
 | สั่ง `ros2 topic pub` แล้ว **รันเลยไม่ถาม** | หยุดใช้กับเครื่องจริงก่อน — เช็กว่าเปิด **แชทใหม่** หลังติดตั้งแล้ว, `claude plugin list` เห็น gppi enabled, และ `node --version` ผ่าน; ถ้ายังไม่ถาม แจ้งเจ้าของ repo |
 | skill ทำงานไม่ตรงกับเนื้อหาใน repo gppi / เห็น skill ชื่อสั้น (`modbus`) ซ้ำกับ `gppi:modbus` | มี skill ชื่อเดียวกันวางไว้เองใน `~/.claude/skills/` ซึ่ง **บังตัวใน plugin โดยไม่มีคำเตือน** — ย้ายออก (อย่าแตะ `~/.claude/skills/synced/`) แล้วเปิดแชทใหม่ |
-| โปรเจกต์มี `.mcp.json` แต่ Claude ไม่ใช้ / ไม่เคยถามอนุมัติ | พิมพ์ `/mcp` ดูสถานะ; เคยกดปฏิเสธ → `claude mcp reset-project-choices` แล้วเปิดใหม่; server failed → ตั้งตัวแปรในเครื่องยังไม่ครบ หรือไม่มี `uv` — ดู [templates/mcp/README.md](../project-setup/mcp/README.md) |
+| โปรเจกต์มี `.mcp.json` แต่ Claude ไม่ใช้ / ไม่เคยถามอนุมัติ | พิมพ์ `/mcp` ดูสถานะ; เคยกดปฏิเสธ → `claude mcp reset-project-choices` แล้วเปิดใหม่; server failed → ตั้งตัวแปรในเครื่องยังไม่ครบ หรือไม่มี `uv` — ดู [templates/mcp/README.md](../mcp/README.md) |
 | ไม่ได้รุ่นใหม่ทั้งที่เจ้าของออกเวอร์ชันแล้ว | ยังไม่ได้เปิด auto-update (Windows ขั้น 6) — หรืออัปเดตเองด้วย `claude plugin marketplace update gppi` แล้ว `claude plugin update gppi@gppi` แล้วเปิดแชทใหม่ |
 
 ## ถอนการติดตั้ง

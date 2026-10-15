@@ -114,7 +114,7 @@ gppi/
 ├── hooks/              │  hooks = ตัวกันคำสั่ง + ส่งกฎเข้า session
 ├── rules.md            ┘  กฎที่ Claude อ่านทุก session
 │
-├── project-setup/      ← ผู้ใช้ copy ไปใส่โปรเจกต์เอง: mcp/ (MCP แบบอ่านอย่างเดียว), permissions.json
+├── mcp/                ← template MCP แบบอ่านอย่างเดียว ให้ผู้ใช้ copy ไปใส่ `.mcp.json` ของโปรเจกต์เอง (plugin ไม่เปิดให้)
 ├── docs/               ← คนใช้อ่าน: INSTALL, GUARD
 │   └── dev/            ← คนดูแลอ่าน: MAINTAINING, adr/, reviews/, plugin-evaluation
 ├── dev/                ← เครื่องมือคนดูแล: evals/ (claude plugin eval), test-skill-code.sh

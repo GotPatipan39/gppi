@@ -49,7 +49,7 @@
 > - wrapper script: `./bringup.sh`, `make run`
 > - โค้ดที่สั่งเครื่องจากข้างใน script ที่เป็นไฟล์: `python write_plc.py`, node ที่เขียน register เอง
 > - `kill <pid>`, alias/function ของ shell, การเรียกผ่าน `$(which ros2)`, การแยกคำด้วย quote (`ros2 "launch"`)
-> - MCP tool ที่ชื่อไม่บอกว่าเขียน (`execute_sql` เขียนได้แต่ไม่ถาม) — ป้องกันด้วยโหมดอ่านอย่างเดียวของ server + deny rule + สิทธิ์ฝั่งระบบ ([templates/mcp](../project-setup/mcp/README.md))
+> - MCP tool ที่ชื่อไม่บอกว่าเขียน (`execute_sql` เขียนได้แต่ไม่ถาม) — ป้องกันด้วยโหมดอ่านอย่างเดียวของ server + deny rule + สิทธิ์ฝั่งระบบ ([templates/mcp](../mcp/README.md))
 > - `bash -c reboot` ที่ไม่มี quote, `doas -u x ...`, docker ที่มี global option ซึ่งไม่อยู่ในรายการ (`--tlscacert ca.pem run`), `nerdctl compose`
 >
 > กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
@@ -66,7 +66,39 @@ logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เ�
 - Windows ที่ **ไม่มี Git Bash** — hook รันด้วย PowerShell ซึ่งคำสั่งบล็อกแบบ bash ไม่ทำงาน (อ่านจาก syntax ยังไม่ได้ทดสอบ) → ติดตั้ง Git for Windows ทุกเครื่อง
 - hook ทำงานเกิน timeout 30 วินาที (เช่น antivirus สแกน node ตอนเปิดครั้งแรก) — Claude Code นับเป็น error ที่ไม่บล็อก
 
-[`project-setup/permissions.json`](../project-setup/permissions.json) — กฎ `ask` ของ git สำหรับใส่ใน `.claude/settings.json` ของโปรเจกต์ ใช้กับเครื่องที่ยังใช้ gppi ไม่ได้ (plugin ส่ง permission rule ให้ผู้ใช้ไม่ได้)
+เครื่องที่ยังใช้ gppi ไม่ได้: ใส่กฎ `ask` ของ git นี้ใน `.claude/settings.json` ของโปรเจกต์แทน (plugin ส่ง permission rule ให้ผู้ใช้ไม่ได้) — กันได้แค่ git ไม่ได้กันคำสั่งเครื่องจักร
+```json
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git branch -D *)",
+      "Bash(git checkout -- *)",
+      "Bash(git checkout . *)",
+      "Bash(git restore *)",
+      "Bash(git -C * push *)",
+      "Bash(git -C * reset --hard *)",
+      "Bash(git -C * clean *)",
+      "Bash(git -C * branch -D *)",
+      "Bash(git -C * restore *)",
+      "PowerShell(git push *)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git branch -D *)",
+      "PowerShell(git checkout -- *)",
+      "PowerShell(git checkout . *)",
+      "PowerShell(git restore *)",
+      "PowerShell(git -C * push *)",
+      "PowerShell(git -C * reset --hard *)",
+      "PowerShell(git -C * clean *)",
+      "PowerShell(git -C * branch -D *)",
+      "PowerShell(git -C * restore *)"
+    ]
+  }
+}
+```
 
 กฎใน `rules.md` ส่งเข้า session ผ่าน hook `SessionStart` (`cat rules.md`) เพราะ Claude Code ไม่ให้ plugin แก้ system prompt ตรงๆ — ทดสอบแล้วบน Windows ที่มี Git Bash และ WSL; เครื่องที่ไม่มี Git Bash รันด้วย PowerShell ซึ่ง `cat` เป็น alias ของ `Get-Content` (ยังไม่ได้ทดสอบ)
 
