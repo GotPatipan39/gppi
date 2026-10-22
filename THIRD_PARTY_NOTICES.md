@@ -6,6 +6,7 @@
 | ส่วนใน gppi | ต้นฉบับ | license | notice |
 |---|---|---|---|
 | `skills/grilling/`, `skills/domain-modeling/` | [mattpocock/skills](https://github.com/mattpocock/skills) (copy ทั้งไฟล์ ไม่แก้) | MIT | `LICENSE` ในโฟลเดอร์ของแต่ละตัว |
+| `skills/spec-tickets/` | mattpocock/skills `to-spec`, `to-tickets` @ 5beb35b (ดัดแปลง) | MIT | [ข้างล่าง](#mit--matt-pocock) |
 | `skills/tdd/` | mattpocock/skills `tdd` @ 3f59913 (ดัดแปลง) | MIT | [ข้างล่าง](#mit--matt-pocock) |
 | `skills/git-commit/` | [github/awesome-copilot](https://github.com/github/awesome-copilot) `git-commit` @ 143a3d9 (ดัดแปลง) | MIT | [ข้างล่าง](#mit--github-inc) |
 | `skills/project-readme/` (แนวคิดบางส่วน) | github/awesome-copilot `create-readme` | MIT | [ข้างล่าง](#mit--github-inc) |

@@ -7,7 +7,7 @@
 > - ตัวกันไม่ได้จับได้ทุกคำสั่ง — **อ่านคำสั่งก่อนกด Yes ทุกครั้ง** ([สิ่งที่ไม่จับ](docs/GUARD.md#สิ่งที่ไม่จับ))
 
 ## ได้อะไรบ้าง
-- **skill 11 ตัว** — ความรู้งานของทีม Claude โหลดเองเมื่องานตรง (ดู [ตาราง skill](#skill-และ-subagent))
+- **skill 12 ตัว** — ความรู้งานของทีม Claude โหลดเองเมื่องานตรง (ดู [ตาราง skill](#skill-และ-subagent))
 - **กฎการทำงาน** — ส่งเข้าทุก session อัตโนมัติ: ห้ามเดาค่า hardware, ROS2 แบบ local เท่านั้น, ห้ามสั่งเครื่องขยับถ้าไม่ได้สั่งชัด, ห้ามลดเกณฑ์ความปลอดภัยเพื่อให้ test ผ่าน, รายงานให้ชัดว่าทดสอบถึงระดับไหน — อ่านทั้งหมดใน [`rules.md`](rules.md)
 - **ตัวกันคำสั่ง** — หยุดให้คนยืนยันก่อนรันคำสั่ง ROS2 ที่สั่ง driver, restart service, เปิด Modbus/serial, deploy Node-RED, ปิดเครื่อง, git push ฯลฯ (ดู [ความปลอดภัย](#ความปลอดภัย))
 - **ตัวตรวจก่อน commit** — `gppi:safety-reviewer` อ่าน diff แบบคนนอก หาเกณฑ์ความปลอดภัยที่ถูกลดและค่า hardware ที่เปลี่ยน
@@ -96,6 +96,7 @@ claude plugin install gppi@gppi
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.1.3 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `flowchart` | 1.2.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
+| `spec-tickets` | 1.0.0 | สรุปแผนเป็น spec (`docs/specs/`) และแตกเป็น ticket ที่ทำจบได้ทีละชิ้นพร้อมลำดับการรอ (`docs/tickets/`) — มีหัวข้อความปลอดภัย ค่า hardware ที่ยังไม่รู้ และระดับการทดสอบ |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
 

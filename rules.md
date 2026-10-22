@@ -18,6 +18,7 @@
 | เขียน/แก้ logic ที่มีลำดับหรือเงื่อนไข (state machine, sequence เครื่อง, start/stop/reset, alarm/interlock, retry/timeout), flowchart, draw.io | `flowchart` |
 | เขียน logic ใหม่หรือแก้บั๊กที่ test ได้ (แปลงค่า register/scale, คำนวณ, state machine, parser, alarm/interlock, timeout) | `tdd` (ถามก่อนถ้าไม่แน่ใจว่าคุ้มทำแบบ TDD) |
 | วางแผน/ออกแบบสิ่งใหม่ที่ยังมีเรื่องต้องตัดสินใจหลายข้อ | `grilling` (ถามผู้ใช้ก่อนว่าจะให้ grill ไหม) |
+| สรุปแผนที่คุยจบแล้วเป็น spec, แตกงานใหญ่เป็น ticket/ลำดับงาน (หลัง grill) | `spec-tickets` |
 | การตัดสินใจที่ย้อนกลับยาก + คนอ่านทีหลังจะสงสัย + มีทางเลือกจริง | `domain-modeling` (เสนอจด ADR) |
 
 งานหนึ่งอาจใช้หลาย skill พร้อมกัน (เช่น bridge ROS2 → PLC = `ros2-humble-cpp` + `modbus`; แก้ฟังก์ชันแปลงค่า register = `modbus` + `tdd`; sequence ของเครื่อง = `flowchart` ก่อน แล้ว `tdd`) — skill ความรู้ของอุปกรณ์/งานไม่แทน `tdd` ให้โหลดครบทุกตัวที่ตรงก่อนเริ่ม
