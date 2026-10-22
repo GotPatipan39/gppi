@@ -3,6 +3,11 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.12 — 2026-10-22
+Tested: eval 19/19 (1 รอบต่อ case รวม case ใหม่ 2 ตัว), validate, ลิงก์, ตัวกัน 26/26 — ยังไม่ได้ใช้ spec-tickets กับโปรเจกต์จริง
+- เพิ่ม: skill `spec-tickets` 1.0.0 — สรุปแผนที่คุยจบเป็น spec (`docs/specs/`) และแตกเป็น ticket ทำทีละชิ้นพร้อมลำดับการรอ (`docs/tickets/`) มีหัวข้อความปลอดภัย ค่า hardware ที่ยังไม่รู้ และระดับการทดสอบ; งานที่ทำให้เครื่องขยับจบที่ simulator ก่อน การลองเครื่องจริงผู้ใช้รัน — ดัดแปลงจาก mattpocock/skills `to-spec`/`to-tickets` (MIT)
+- เพิ่ม (rules.md): **งานใหญ่เดินตามลำดับ grill → spec → ticket → ทำทีละ ticket → ผู้ใช้ลองเครื่องจริง และ Claude เสนอขั้นถัดไปเองแล้วรอตอบ** — งานเล็กเริ่มที่ขั้นเขียนโค้ดได้
+
 ## v0.1.11 — 2026-10-15
 Tested: ลิงก์ทั้ง repo, validate, ตัวกัน 26/26 — แก้เอกสาร/comment เท่านั้น; ข้อ controller `init()` เทียบกับ header จริงของ ros2_control ทุก branch
 - แก้ (ข้อที่เหลือจากการตรวจด้วย Context7): `ros2-humble-cpp` 3.4.3 ตาราง controller `init()` ตาม header จริง; `tdd` 1.1.3 Node ≥ 22; `industrial-ui` 1.3.2 rosbridge `topics_sub_glob`; `modbus` 1.2.2 pin pymodbus `<4` พอ; `opencv` 1.0.3 ชนิดที่ `detectAndDecodeWithType` คืน
