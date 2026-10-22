@@ -1,6 +1,6 @@
 {
   "name": "gppi",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Skills, rules and a safety guard for machine, robot and IoT work: ROS2 Humble, Modbus, OpenCV, industrial UI, TDD, commits",
   "author": {
     "name": "GotPatipan39"
