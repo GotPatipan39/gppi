@@ -16,3 +16,6 @@ desktop.ini
 
 # ผลของ claude plugin eval
 dev/evals/results/
+
+# ค่าในเครื่องของแต่ละคน
+.claude/settings.local.json

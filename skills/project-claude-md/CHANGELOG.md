@@ -1,5 +1,9 @@
 # CHANGELOG — project-claude-md
 
+## 1.2.1 — 2026-11-04
+- ❓ ที่ผู้ใช้ไม่รู้และต้องถามคนอื่น → เสนอ `/gppi:to-questionnaire`
+- ตัวตรวจรองรับ `.claude/CLAUDE.md`: path ใน backtick นับจาก root ของโปรเจกต์, ลิงก์และ `@import` นับจากโฟลเดอร์ของไฟล์ (เดิมนับทุกอย่างจาก `.claude/` จึงเตือนผิด — เจอตอนลองกับ gppi)
+
 ## 1.2.0 — 2026-10-15
 - ตอนสำรวจโปรเจกต์ เช็ก MCP: ใช้ Grafana/PostgreSQL/GitLab/ROS2/Modbus TCP แต่ไม่มี `.mcp.json` → เสนอ template จาก `templates/mcp/` ของ gppi (ผู้ใช้มักลืมตั้ง); MCP ที่มีอยู่ต้องอ่านอย่างเดียว + deny tool ที่เขียนได้
 - template มีหัวข้อ MCP: server ที่ใช้, ตัวแปรที่ต้องตั้งในเครื่อง, server ไหนแตะเครื่อง

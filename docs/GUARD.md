@@ -26,7 +26,7 @@
 | หยุด process / ปิดเครื่อง | `pkill`, `killall`, `reboot`, `shutdown`, `poweroff`, `halt`, `init 0/6`, `systemctl reboot/poweroff`, `wsl --shutdown/-t`; Windows: `taskkill`, `Stop-Process`, `Start/Stop/Restart-Service`, `sc`/`nssm stop/start/restart`, `Restart/Stop-Computer` |
 | COM port ฝั่ง Windows | `usbipd attach/detach` (ดึง USB-RS485 ไป/กลับ WSL), `mode COM<n>` |
 | git ที่ย้อนกลับยาก | `push`, `reset --hard`, `clean`, `branch -D`, `checkout -- / .`, `restore` |
-| MCP tool (ตั้งแต่ v0.1.8) | tool ใดก็ได้ของ MCP server ใดก็ได้ ที่ชื่อมีคำว่า `write`, `publish`, `call`, `send`, `goal`, `cancel`, `safe`, `deploy`, `inject`, `merge`, `push`, `create`, `update`, `delete`, `remove`, `set`, `start`, `stop`, `restart`, `play`, `retry`, `trigger`, `run`, `reset`, `install`, `upload`, `move`, `jog`, `enable`, `disable` — ยกเว้นชื่อที่ขึ้นต้นด้วยคำอ่าน (`get_`, `list_`, `read_`, `search_`, `query_` ...) |
+| MCP tool (ตั้งแต่ v0.1.8) | tool ใดก็ได้ของ MCP server ใดก็ได้ ที่ชื่อมีคำว่า `write`, `publish`, `call`, `send`, `goal`, `cancel`, `safe`, `deploy`, `inject`, `merge`, `push`, `create`, `update`, `delete`, `remove`, `set`, `start`, `stop`, `restart`, `play`, `retry`, `trigger`, `run`, `reset`, `install`, `upload`, `move`, `jog`, `enable`, `disable`, `pub`, `force`, `toggle`, `home` (คำในชื่อแยกด้วย `_`, `-` หรือ camelCase) — ยกเว้นชื่อที่ขึ้นต้นด้วยคำอ่าน (`get_`, `list_`, `read_`, `search_`, `query_` ...) |
 
 ## ตั้งใจให้เป็นแบบนี้
 - **ถาม ไม่บล็อก** — งานทดสอบเครื่องหน้างานต้องรันคำสั่งพวกนี้จริง
@@ -55,7 +55,7 @@
 > กฎใน `rules.md` จึงยังใช้เต็มที่ และคนต้องอ่านคำสั่งก่อนกดยืนยันทุกครั้ง
 
 ## ทำงานอย่างไร (ข้างใน)
-logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เดียว ถูกเรียกผ่านสองทาง:
+logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เดียว ถูกเรียกผ่านสองทาง — ลำดับการตัดสินดูเป็นรูปได้ที่ [flowcharts/guard-decision.drawio](flowcharts/guard-decision.drawio):
 
 1. **PreToolUse hook** — `node hooks/pretooluse.ts` (ตั้งใน [`hooks/hooks.json`](../hooks/hooks.json)) ตอบ `ask` — เป็นทางเดียวที่ docs ของ Claude Code รับประกันว่าบังคับถามคนได้แม้ใน auto mode ([ADR-0003](dev/adr/0003-guard-hook-plus-mod.md))
 2. **mod** (`tool.check`) — สำรองไว้ตอน hook ไม่ได้ทำงาน; ถ้า hook ตอบ ask ไปแล้ว mod ไม่แตะ (Claude Code ไม่ยอมให้ plugin เขียนทับ ask ของ hook)
@@ -103,6 +103,7 @@ logic อยู่ที่ [`hooks/gppi.ts`](../hooks/gppi.ts) ไฟล์เ�
 กฎใน `rules.md` ส่งเข้า session ผ่าน hook `SessionStart` (`cat rules.md`) เพราะ Claude Code ไม่ให้ plugin แก้ system prompt ตรงๆ — ทดสอบแล้วบน Windows ที่มี Git Bash และ WSL; เครื่องที่ไม่มี Git Bash รันด้วย PowerShell ซึ่ง `cat` เป็น alias ของ `Get-Content` (ยังไม่ได้ทดสอบ)
 
 ## แก้ตัวกัน
+- เปลี่ยนลำดับการตัดสิน (เพิ่มทางแยก, tool ใหม่ใน matcher) → แก้ [guard-decision.drawio](flowcharts/guard-decision.drawio) ใน commit เดียวกัน (skill `flowchart`)
 - เขียน test ของคำสั่งที่ต้องถาม/ไม่ต้องถามใน [`hooks/gppi.test.ts`](../hooks/gppi.test.ts) **ก่อน** แก้ regex (skill `tdd`) แล้วรัน `claude plugin test .`
 - **regex ที่ช้า = ตัวกันปล่อยผ่าน** — hook ที่เกิน timeout ไม่บล็อก; เคยวัดได้ 17 วินาที (`ssh -pa` ซ้ำ 30 ตัว) และ 194 วินาที (deploy Node-RED พร้อม flow JSON ~400KB) — test เรื่องเวลาใน `gppi.test.ts` ต้องผ่านเสมอ
 - ส่งให้ `gppi:safety-reviewer` ตรวจก่อน commit ทุกครั้ง

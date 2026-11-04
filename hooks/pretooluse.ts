@@ -1,6 +1,6 @@
 // PreToolUse hook: อ่าน JSON จาก stdin แล้วตอบ ask ตาม logic ใน gppi.ts (ตัวเดียวกับ mod)
 // รันด้วย node ≥ 22.18 (รัน .ts ได้เองโดยไม่ต้อง build)
-// อ่าน input ไม่ออก → ถาม แทนการปล่อยผ่าน (matcher ใน hooks.json จำกัดไว้แค่ Bash|PowerShell)
+// อ่าน input ไม่ออก → ถาม แทนการปล่อยผ่าน (matcher ใน hooks.json จำกัดไว้แค่ Bash|PowerShell และ mcp__.*)
 // node รันไฟล์นี้ไม่ได้เลย (ไม่มี/เก่า/import ล้ม) → exit ≠ 0 → คำสั่งใน hooks.json ต่อด้วย `|| exit 2` บล็อกไว้ (fail-closed)
 import { preToolUseDecision } from './gppi.ts'
 

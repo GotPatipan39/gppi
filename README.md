@@ -92,11 +92,11 @@ claude plugin install gppi@gppi
 | `industrial-ui` | 1.3.2 | UI/UX งานอุตสาหกรรม: HMI, dashboard, หน้า config (Web, Node-RED Dashboard, Grafana) |
 | `opencv` | 1.0.3 | machine vision ด้วย OpenCV (Python/C++, ROS2 node หรือโปรแกรมแยก): นับ/ตรวจชิ้นงาน, วัดขนาด, หาตำแหน่งให้ robot, QR/barcode, กล้อง UVC/industrial/depth/RTSP |
 | `project-readme` | 1.1.0 | เขียน/ปรับ README ของโปรเจกต์ให้ทีมอ่านเข้าใจ |
-| `project-claude-md` | 1.2.0 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
+| `project-claude-md` | 1.2.1 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.1.3 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
 | `flowchart` | 1.2.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
-| `spec-tickets` | 1.1.0 | สรุปแผนเป็น spec (`docs/specs/`) และแตกเป็น ticket ที่ทำจบได้ทีละชิ้นพร้อมลำดับการรอ (`docs/tickets/`) — มีหัวข้อความปลอดภัย ค่า hardware ที่ยังไม่รู้ และระดับการทดสอบ |
+| `spec-tickets` | 1.1.1 | สรุปแผนเป็น spec (`docs/specs/`) และแตกเป็น ticket ที่ทำจบได้ทีละชิ้นพร้อมลำดับการรอ (`docs/tickets/`) — มีหัวข้อความปลอดภัย ค่า hardware ที่ยังไม่รู้ และระดับการทดสอบ |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `to-questionnaire` | ภายนอก | ทำแบบสอบถามส่งให้คนที่รู้คำตอบกรอก (ค่า ❓ ที่ต้องถามทีม PLC/ลูกค้า) — เรียกเอง `/gppi:to-questionnaire` |
 | `handoff` | ภายนอก | สรุปแชทเป็นเอกสารให้ session ใหม่/เครื่องอื่นทำต่อ — เรียกเอง `/gppi:handoff` |
@@ -114,6 +114,7 @@ claude plugin install gppi@gppi
 ```
 gppi/
 ├── .claude-plugin/     ← plugin.json (ชื่อ + เวอร์ชัน) + marketplace.json
+├── .claude/CLAUDE.md   ← สำหรับ Claude ที่แก้ repo นี้ (ไม่ถูกโหลดในเครื่องทีม)
 │
 ├── skills/<ชื่อ>/      ┐ plugin ใช้เอง — ติดตั้ง gppi แล้วได้ทันที
 ├── agents/             │  skill ที่มีไฟล์ LICENSE = มาจากภายนอก ห้ามแก้เนื้อหา
@@ -121,7 +122,7 @@ gppi/
 ├── rules.md            ┘  กฎที่ Claude อ่านทุก session
 │
 ├── mcp/                ← template MCP แบบอ่านอย่างเดียว ให้ผู้ใช้ copy ไปใส่ `.mcp.json` ของโปรเจกต์เอง (plugin ไม่เปิดให้)
-├── docs/               ← คนใช้อ่าน: INSTALL, GUARD
+├── docs/               ← คนใช้อ่าน: INSTALL, GUARD (+ flowcharts/ ลำดับการตัดสินของตัวกัน)
 │   └── dev/            ← คนดูแลอ่าน: MAINTAINING, adr/, reviews/, plugin-evaluation
 ├── dev/                ← เครื่องมือคนดูแล: evals/ (claude plugin eval), test-skill-code.sh
 │

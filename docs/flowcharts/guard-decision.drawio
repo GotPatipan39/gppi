@@ -1,0 +1,94 @@
+<mxfile host="gppi">
+  <diagram id="main" name="ตัวกันคำสั่ง (PreToolUse)">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="900" pageHeight="1400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="&lt;b&gt;ตัวกันคำสั่งของ gppi — PreToolUse hook&lt;/b&gt;&lt;br&gt;hooks/hooks.json · hooks/pretooluse.ts · hooks/gppi.ts (preToolUseDecision)" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="20" y="10" width="860" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="start" value="Claude จะเรียก tool" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="320" y="70" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_matcher" value="ชื่อ tool ตรง matcher?&lt;br&gt;Bash|PowerShell หรือ mcp__.*" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="160" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_node" value="node ≥ 22.18&lt;br&gt;รัน pretooluse.ts ได้?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="300" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_parse" value="อ่าน JSON จาก stdin&lt;br&gt;และตัดสินได้ไม่ error?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="440" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_mcp" value="isMcpWriteTool?&lt;br&gt;คำแรกไม่ใช่คำอ่าน&lt;br&gt;และมีคำเขียน (write, call...)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="580" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_shell" value="tool = Bash/PowerShell&lt;br&gt;และมี command?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="730" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_machine" value="isMachineCommand?&lt;br&gt;(Modbus, ros2 pub, deploy,&lt;br&gt;เปิด /dev/ttyUSB*, pm2 ...)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="870" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_git" value="isRiskyGit?&lt;br&gt;(push, reset --hard ...)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1010" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="blocked" value="&lt;b&gt;exit 2 — บล็อก tool&lt;/b&gt;&lt;br&gt;พร้อมข้อความให้ติดตั้ง node" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="620" y="315" width="240" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ask" value="&lt;b&gt;ask&lt;/b&gt;&lt;br&gt;ผู้ใช้ต้องกดยืนยันเอง&lt;br&gt;แม้อยู่ใน auto / bypass mode&lt;br&gt;(bypass: ยืนยันจากการทดสอบ 2026-10-14 ไม่ใช่ docs)&lt;br&gt;&lt;br&gt;เหตุผลที่แสดง: แยกตามทาง&lt;br&gt;(ตัวตรวจ error / MCP /&lt;br&gt;เครื่องจักร / git)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="620" y="440" width="240" height="670" as="geometry"/>
+        </mxCell>
+        <mxCell id="pass" value="&lt;b&gt;ไม่ตัดสิน&lt;/b&gt;&lt;br&gt;ใช้ระบบ permission ปกติ&lt;br&gt;&lt;br&gt;ไม่ตอบ allow เด็ดขาด&lt;br&gt;เพราะ allow ข้าม prompt" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="160" width="220" height="950" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="start" target="d_matcher">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_matcher_yes" value="ตรง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_matcher" target="d_node">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_matcher_no" value="ไม่ตรง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.0526;" edge="1" parent="1" source="d_matcher" target="pass">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_node_yes" value="ได้" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_node" target="d_parse">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_node_no" value="ไม่ได้ (|| exit 2)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="d_node" target="blocked">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_parse_yes" value="ได้" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_parse" target="d_mcp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_parse_no" value="ไม่ได้ (FALLBACK)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.0746;" edge="1" parent="1" source="d_parse" target="ask">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mcp_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.291;" edge="1" parent="1" source="d_mcp" target="ask">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mcp_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_mcp" target="d_shell">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_shell_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_shell" target="d_machine">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_shell_no" value="ไม่ใช่ (MCP อ่าน)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.6526;" edge="1" parent="1" source="d_shell" target="pass">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_machine_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.716;" edge="1" parent="1" source="d_machine" target="ask">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_machine_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="d_machine" target="d_git">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_git_yes" value="ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.925;" edge="1" parent="1" source="d_git" target="ask">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_git_no" value="ไม่ใช่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.947;" edge="1" parent="1" source="d_git" target="pass">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="&lt;b&gt;หมายเหตุ&lt;/b&gt;&lt;br&gt;• hook ช้าเกิน timeout 30 s = Claude Code ปล่อยผ่านเงียบๆ — regex ทุกตัวต้องผ่าน test จับเวลาใน hooks/gppi.test.ts&lt;br&gt;• mod (tool.check ใน gppi.ts) ใช้ isMachineCommand / isRiskyGit ชุดเดียวกัน เติม ask เฉพาะตอนที่ระบบจะ allow (hook ไม่ทำงาน) — ไม่ดู MCP&lt;br&gt;• MCP ตัดสินจากชื่อ tool อย่างเดียว: execute_sql และชื่อที่ไม่บอกว่าเขียนจะผ่าน → ต้องกันด้วย DB role / deny rule ของโปรเจกต์ (mcp/README.md)&lt;br&gt;• ตัวกันไม่เห็นโค้ดใน script (python/node ที่เขียน register) — rules.md ยังห้าม Claude รันเองโดยผู้ใช้ไม่ได้สั่ง" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1140" width="840" height="110" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -471,11 +471,22 @@ const MCP_ASK = [
   'mcp__robot__set_parameter',
   'mcp__serial__serial_write',
   'mcp__grafana__update_dashboard',
+  // คำเขียนที่ safety-reviewer เจอว่าหลุด (2026-11-04)
+  'mcp__ros2__topic_pub',
+  'mcp__plc__force_output',
+  'mcp__modbus__toggle_coil',
+  'mcp__robot__home_axis',
+  'mcp__modbus__writeRegister',
+  'mcp__plc__setOutput',
 ]
 const MCP_SAFE = [
   'mcp__ros2__ros2_topic_subscribe',
   'mcp__ros2__ros2_topic_list',
   'mcp__ros2__ros2_action_request_result',
+  'mcp__robot__get_home_position',
+  'mcp__ros2__list_publishers',
+  'mcp__modbus__readHoldingRegisters',
+  'mcp__plc__getWriteLog',
   'mcp__modbus__read_registers',
   'mcp__modbus__read_points',
   'mcp__modbus__list_points',

@@ -5,7 +5,7 @@ description: ใช้เมื่อคุย/ซักถามแผนงา
 
 # Spec และ ticket
 
-> เวอร์ชัน 1.1.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.1.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ลำดับงานใหญ่: ซักถามแผน (skill `grilling` + จด ADR ด้วย `domain-modeling`) → **spec** → **ticket** → ทำทีละ ticket (`flowchart` → `tdd` → `git-commit`)
 skill นี้ทำ 2 ขั้นกลาง — **ไม่ซักถามเพิ่ม** สรุปจากสิ่งที่คุยกันแล้วและจากโค้ด ถ้าข้อมูลยังไม่พอให้บอกผู้ใช้ว่าควร grill ต่อเรื่องไหน
@@ -15,7 +15,7 @@ skill นี้ทำ 2 ขั้นกลาง — **ไม่ซักถา�
 ## Spec — `docs/specs/<YYYY-MM-DD>-<slug>.md`
 1. อ่านโค้ด, `CLAUDE.md`, `GLOSSARY.md`, ADR ใน `docs/adr/` และ flowchart ที่มีอยู่ — ใช้ศัพท์ของโปรเจกต์ เคารพ ADR
 2. ร่าง **seam ที่จะ test** (ใช้ seam เดิมก่อน, seam สูงสุดที่ทำได้, ยิ่งน้อยยิ่งดี) แล้วถามผู้ใช้ว่าตรงกับที่คิดไหม
-3. เขียนตาม template ข้างล่าง แสดงให้ผู้ใช้ แล้ว**รอ OK** ก่อนแตก ticket
+3. เขียนตาม template ข้างล่าง แสดงให้ผู้ใช้ แล้ว**รอ OK** ก่อนแตก ticket — มี ❓ ที่ผู้ใช้ต้องไปถามคนอื่น → เสนอ `/gppi:to-questionnaire` (ส่งไปกรอกระหว่างที่ทำ ticket ที่ไม่ต้องใช้ค่านั้น)
 4. commit เมื่อผู้ใช้สั่ง (skill `git-commit`)
 
 ```markdown
@@ -43,7 +43,7 @@ skill นี้ทำ 2 ขั้นกลาง — **ไม่ซักถา�
 
 ## ค่า hardware
 - ที่รู้แล้ว: ชี้ไปไฟล์+key หรือ CLAUDE.md (ไม่ copy ตัวเลข)
-- ❓ ที่ยังไม่รู้: <รายการ — ห้ามเดา ต้องได้ก่อนถึง ticket ที่ใช้>
+- ❓ ที่ยังไม่รู้: <รายการ — ห้ามเดา ต้องได้ก่อนถึง ticket ที่ใช้ — บอกด้วยว่าใครน่าจะรู้ (ทีม PLC, ลูกค้า, ผู้ผลิต)>
 
 ## Flowchart ที่ต้องมี
 - <logic ที่มีลำดับ/เงื่อนไข เช่น sequence ภารกิจ, การรับ-ส่งของ, recovery> → `docs/flowcharts/<ชื่อ>.drawio` (skill `flowchart`)

@@ -5,14 +5,17 @@
 //       ความยาว, TODO ที่ค้าง, ข้อความที่หน้าตาเหมือนรหัสผ่าน — error = exit 1
 // แนวคิด "ตรวจว่ายังตรงกับโค้ด (currency)" จาก anthropics/claude-plugins-official claude-md-improver (Apache-2.0)
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 
 const file = process.argv[2] ?? 'CLAUDE.md';
 if (!existsSync(file)) {
   console.error(`ERROR ไม่มีไฟล์ ${file}`);
   process.exit(1);
 }
-const root = dirname(resolve(file));
+// ลิงก์ markdown และ @import นับจากโฟลเดอร์ของไฟล์; path ใน backtick นับจาก root ของโปรเจกต์
+// (`.claude/CLAUDE.md` ก็เป็นที่ที่ Claude Code โหลด — root คือโฟลเดอร์แม่ของ .claude)
+const fileDir = dirname(resolve(file));
+const root = basename(fileDir) === '.claude' ? dirname(fileDir) : fileDir;
 const lines = readFileSync(file, 'utf8').split(/\r?\n/);
 let errors = 0;
 let warnings = 0;
@@ -23,7 +26,7 @@ const warn = (n, msg) => { warnings++; console.log(`WARN  ${file}:${n} ${msg}`);
 const isPathLike = (s) =>
   !/[\s<>*{}|$]/.test(s) && !/^[a-z]+:\/\//i.test(s) && !s.startsWith('-') && !s.startsWith('@') &&
   (/\//.test(s) || /^\.?[\w.-]+\.(md|ya?ml|json|jsonc|js|cjs|mjs|ts|py|cpp|hpp|h|xml|launch\.py|drawio|toml|ini|cfg|conf|service|env|example|txt|sh|ps1)$/i.test(s));
-const exists = (p) => existsSync(resolve(root, p.replace(/^\.\//, '').replace(/#.*$/, '')));
+const exists = (p, base = root) => existsSync(resolve(base, p.replace(/^\.\//, '').replace(/#.*$/, '')));
 const keyIn = (p, key) => {
   const full = resolve(root, p);
   if (!existsSync(full) || statSync(full).isDirectory()) return false;
@@ -65,11 +68,11 @@ lines.forEach((line, i) => {
   for (const m of line.matchAll(/\]\(([^)\s]+)\)/g)) {
     const p = m[1];
     if (/^([a-z]+:|#)/i.test(p)) continue;
-    if (!exists(p)) err(n, `ลิงก์เสีย: ${p}`);
+    if (!exists(p, fileDir)) err(n, `ลิงก์เสีย: ${p}`);
   }
   // @import ของ Claude Code
   for (const m of line.matchAll(/(?:^|\s)@([\w./-]+\.\w+)/g)) {
-    if (!exists(m[1])) err(n, `import @${m[1]} ชี้ไปไฟล์ที่ไม่มี`);
+    if (!exists(m[1], fileDir)) err(n, `import @${m[1]} ชี้ไปไฟล์ที่ไม่มี`);
   }
   if (/\b(TODO|FIXME|XXX)\b/.test(line)) warn(n, 'มี TODO ค้าง — ทำให้เสร็จ หรือย้ายไปไว้ใน ❓ ถ้าเป็นสิ่งที่ยังไม่รู้');
   if (/(password|passwd|secret|token|api[_-]?key)\s*[:=]\s*\S{4,}/i.test(line)) {

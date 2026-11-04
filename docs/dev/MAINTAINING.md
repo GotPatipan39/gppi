@@ -8,7 +8,7 @@
 - **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules.md`](../../rules.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
 - **agent**: เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตาราง README และเขียนเหตุผลใน commit message
 - `safety-reviewer` **ไม่มี Bash** (ตั้งแต่ 1.1.0) — plugin subagent ใช้ `permissionMode`/`hooks` ใน frontmatter ไม่ได้ การห้ามในข้อความจึงบังคับไม่ได้จริง ทางเดียวที่บังคับได้คือไม่ให้ tool นั้น; ผู้เรียกเขียน diff ไว้ที่ `.git/gppi-review.diff` ให้แทน — ห้ามเพิ่ม Bash กลับโดยไม่มีทางจำกัดที่ระบบบังคับ
-- skill ที่มีไฟล์ `LICENSE` ของตัวเอง (`grilling`, `domain-modeling`) มาจากภายนอก — **ห้ามแก้เนื้อหา** อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์
+- skill ที่มีไฟล์ `LICENSE` ของตัวเอง (`grilling`, `domain-modeling`, `to-questionnaire`, `handoff`) มาจากภายนอก — **ห้ามแก้เนื้อหา** อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์
 - แก้ตัวกันคำสั่ง: ดู [GUARD.md](../GUARD.md#แก้ตัวกัน)
 
 ## ทดสอบ
@@ -29,7 +29,7 @@ claude plugin eval . --ablation none --disallow-tools Agent --no-publish --runs 
 claude plugin eval . --case modbus-and-tdd --runs 1 --ablation none --disallow-tools Agent --no-publish   # case เดียว
 ```
 - `--ablation none` จำเป็น: ค่าเริ่มต้นรันแบบไม่มี plugin เทียบด้วย และในโหมดนั้นตัวตรวจ `tool: Skill` ไม่ถูกนับคะแนน
-- ใช้ credential ของคนรัน — 16 case × 1 รอบ ≈ $3.2 (วัด 2026-10-15 ผ่าน 16/16 กับ Claude Code 2.1.299) — ถ้าชน usage limit case จะได้ 0 พร้อม error "session limit" ไม่ใช่เลือก skill ผิด ให้ดู `error` ใน JSON ก่อน; `--runs 3` ราว 3 เท่า ใส่ `--max-cost-usd` ถ้าต้องการเพดาน
+- ใช้ credential ของคนรัน — 21 case × 1 รอบ ≈ $3.6 (วัด 2026-11-04 กับ Claude Code 2.1.310) — ถ้าชน usage limit case จะได้ 0 พร้อม error "session limit" ไม่ใช่เลือก skill ผิด ให้ดู `error` ใน JSON ก่อน; `--runs 3` ราว 3 เท่า ใส่ `--max-cost-usd` ถ้าต้องการเพดาน
 - case ใช้ได้แค่ `Read, Glob, Grep, Skill` (ไม่มี Bash/Write) และ `--disallow-tools Agent` กัน subagent — eval จึงสั่งอะไรไม่ได้ แต่ hook ของ plugin ทำงานจริง (นอก sandbox) ห้ามเพิ่ม `--allow-tools Bash` และ**ห้ามรันบนเครื่องที่ต่อ PLC/serial**
 - `--no-publish` กันไม่ให้ report ขึ้น claude.ai; ผลอยู่ใน `dev/evals/results/` (อยู่ใน `.gitignore`)
 - ยังไม่อยู่ใน CI เพราะต้องมี API key และมีค่าใช้จ่ายทุกครั้ง
