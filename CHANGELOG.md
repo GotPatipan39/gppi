@@ -3,6 +3,14 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.14 — 2026-11-04
+Tested: ตัวกัน 26/26 (test MCP ใหม่แดงก่อนแก้), eval พฤติกรรม suggest-questionnaire 3/3, validate, ลิงก์, ตัวตรวจ flowchart/CLAUDE.md, safety-reviewer 2 รอบ — ยังไม่ได้รัน eval ทั้งชุดหลังแก้ rules.md รอบนี้
+- เพิ่ม: skill `to-questionnaire` (ทำแบบสอบถามส่งให้คนที่รู้คำตอบกรอก เช่น ค่า ❓ ที่ทีม PLC/ลูกค้ารู้) และ `handoff` (สรุปแชทให้ session ใหม่/เครื่องอื่นทำต่อ) จาก mattpocock/skills — ผู้ใช้ต้องพิมพ์ `/gppi:to-questionnaire`, `/gppi:handoff` เอง Claude จะเสนอเมื่อถึงจังหวะ
+- แก้ตัวกัน: MCP tool ชื่อ `*_pub`, `force_*`, `toggle_*`, `home_*` และชื่อแบบ camelCase (`writeRegister`) เดิมผ่านโดยไม่ถาม — ตอนนี้ถาม
+- แก้ rules.md: ข้อ MCP เดิมบอกว่าตัวกันไม่เห็น MCP (ผิดตั้งแต่ v0.1.8) — ตอนนี้บอกว่าดูแค่คำในชื่อ tool ห้ามพึ่ง
+- `spec-tickets` 1.1.1, `project-claude-md` 1.2.1: ค่า ❓ ที่ต้องถามคนอื่นเสนอ `/gppi:to-questionnaire`; ตัวตรวจ CLAUDE.md รองรับ `.claude/CLAUDE.md`
+- `grilling` ตามต้นทาง @4ae2317; เพิ่ม flowchart ของตัวกัน (`docs/flowcharts/guard-decision.drawio`)
+
 ## v0.1.13 — 2026-10-22
 Tested: eval พฤติกรรม (แตกงาน AGV → ticket 00 ระบบตรวจมาก่อน, กรรมการ 3/3), validate, ลิงก์, ตัวกัน 26/26
 - เพิ่ม: `spec-tickets` 1.1.0 — **ticket 00 = ระบบตรวจ** (simulator, PLC/Modbus จำลอง, fake อุปกรณ์, ข้อมูลกล้อง/rosbag + คำสั่งเดียวที่รันตรวจ) ก่อน ticket อื่น ถ้าโปรเจกต์ยังไม่มี — ให้ Claude ตรวจงานเองได้ คนลงมือเฉพาะตอนลองกับเครื่องจริง
