@@ -478,6 +478,12 @@ const MCP_ASK = [
   'mcp__robot__home_axis',
   'mcp__modbus__writeRegister',
   'mcp__plc__setOutput',
+  // รันโค้ด/คำสั่งใดก็ได้ (mcp-for-blender 2.2.7, server ทั่วไป)
+  'mcp__blender__execute_blender_code',
+  'mcp__shell__execute_command',
+  'mcp__term__run_bash',
+  'mcp__jupyter__run_python',
+  'mcp__x__eval_script',
 ]
 const MCP_SAFE = [
   'mcp__ros2__ros2_topic_subscribe',
@@ -487,6 +493,13 @@ const MCP_SAFE = [
   'mcp__ros2__list_publishers',
   'mcp__modbus__readHoldingRegisters',
   'mcp__plc__getWriteLog',
+  'mcp__blender__get_scene_info',
+  'mcp__blender__search_assets',
+  'mcp__blender__viewport_capture',
+  'mcp__blender__look',
+  'mcp__github__search_code',
+  'mcp__grafana__generate_deeplink',
+  'mcp__blender__generate_3d',
   'mcp__modbus__read_registers',
   'mcp__modbus__read_points',
   'mcp__modbus__list_points',

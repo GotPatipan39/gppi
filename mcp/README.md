@@ -21,6 +21,7 @@ MCP server ให้ Claude อ่านข้อมูลจากระบบ�
 | [context7.mcp.json](context7.mcp.json) | doc ล่าสุดของ library | ไม่ | ไม่ต้องติดตั้ง — คำถามถูกส่งไปที่ Upstash; **แนะนำเพิ่มระดับผู้ใช้แทน** (ข้างล่าง) |
 | [ros2.mcp.json](ros2.mcp.json) | ดู topic/service/action, subscribe ค่า | อ่านอย่างเดียว | Claude Code รันใน **WSL/Ubuntu ที่มี ROS2 Humble**; `uv` |
 | [modbus.mcp.json](modbus.mcp.json) | อ่าน register ตาม register map | อ่านอย่างเดียว | `uv`; [modbus-map.example.yaml](modbus-map.example.yaml) → `docs/modbus-map.yaml` |
+| [blender.mcp.json](blender.mcp.json) | สร้าง/แก้โมเดล 3D ใน Blender (ชิ้นงาน, jig, mesh ของหุ่น/AGV สำหรับ URDF) | ไม่ — แต่**รันโค้ดใน Blender ได้** | Blender 3.0+, `uv`; **แนะนำเพิ่มระดับผู้ใช้** (หัวข้อข้างล่าง) |
 
 server ที่พิจารณาแล้ว **ไม่แนะนำ**: Node-RED MCP ทุกตัวที่เจอ (deploy/inject ได้ ไม่มีโหมดอ่านอย่างเดียว), serial MCP (สั่ง DTR/RTS จน board reset ได้), `robotmcp/ros-mcp-server` (สั่งหุ่นได้ ไม่มีโหมดอ่านอย่างเดียว), `mcp-snap7` (สั่ง stop CPU ของ PLC ได้), `kukapay/*` (เลิกพัฒนา) — ตรวจเมื่อ 2026-10-15
 
@@ -28,6 +29,31 @@ server ที่พิจารณาแล้ว **ไม่แนะนำ**: 
 ตัวนี้ตัวเดียวที่ใช้ระดับผู้ใช้ได้ เพราะไม่แตะเครื่องจักรและไม่ต้องใช้ค่าของโปรเจกต์ — คำสั่งอยู่ใน [docs/INSTALL.md](../docs/INSTALL.md) หัวข้อ "เพิ่มเติม (ไม่บังคับ)"; ส่วนตัวอื่นในโฟลเดอร์นี้ต้องใส่รายโปรเจกต์
 
 doc ที่มี (ตรวจ 2026-10-15): rclcpp และ pymodbus มีแค่ชุดที่ไม่ระบุเวอร์ชัน (= รุ่นล่าสุด ไม่มี Humble / pymodbus รุ่นเก่า), OpenCV มีแยกรุ่น 4.6.0 / 4.13.0 / 5.0 (ไม่มี 4.5.x ของ Ubuntu 22.04) — rules.md จึงให้ยึด header/`--help` ในเครื่องเมื่อ doc ไม่ตรงเวอร์ชัน
+
+## Blender: เพิ่มระดับผู้ใช้ บนเครื่องที่ทำ 3D
+`mcp-for-blender` (เดิมชื่อ `blender-mcp`, MIT) ให้ Claude สร้างและแก้โมเดลใน Blender ที่เปิดอยู่ ไม่แตะเครื่องจักร และไม่ใช้ค่าของโปรเจกต์ จึงเพิ่มระดับผู้ใช้ได้ แต่**ห้ามติดตั้งบนเครื่องที่ต่อ PLC/เครื่องจักร**
+
+ติดตั้งบน Windows (Claude Code ฝั่ง Windows เพราะ Blender รันบน Windows — Claude Code ใน WSL ต่อ localhost ของ Windows ไม่ได้ถ้าไม่ได้เปิด mirrored networking):
+```bash
+claude mcp add --scope user blender -e BLENDER_MCP_SAFE_MODE=1 -e DISABLE_TELEMETRY=true -- uvx mcp-for-blender@2.2.7
+uvx mcp-for-blender@2.2.7 install-addon
+```
+แล้วใน Blender: Edit → Preferences → Add-ons → เปิด "MCP for Blender" → กด N ใน 3D viewport → แท็บ MCP for Blender → **Start MCP Server** (ต้องกดเองทุกครั้งที่เปิด Blender — ไม่กด Claude ก็ทำอะไรใน Blender ไม่ได้) — เอาออก: `claude mcp remove blender -s user`
+ไม่ใช้สคริปต์ติดตั้งแบบ `irm ... | iex` / `curl ... | sh` ใน README ของมัน (โหลดโค้ดจากเน็ตมารันทันที)
+
+สิ่งที่ต้องรู้ (ตรวจกับโค้ดของ 2.2.7 เมื่อ 2026-11-20):
+- **`execute_blender_code` รัน Python อะไรก็ได้ใน Blender** — ไม่เปิด safe mode = อ่าน/เขียนไฟล์ทั้งเครื่อง เรียกเน็ต รันโปรแกรมอื่นได้; `BLENDER_MCP_SAFE_MODE=1` (ใส่ไว้แล้ว) ตรวจโค้ดก่อนรัน: import ได้แค่ `bpy`/`bmesh`/`mathutils`/stdlib, ห้าม `os`/`subprocess`/เน็ต/`eval`/`open` — เป็นการตรวจ ไม่ใช่ sandbox; render, save, import/export ยังทำได้
+- ตัวกันของ gppi ถามทุกครั้งที่เรียก `execute_blender_code` — **อย่ากด "allow always"** ให้ tool นี้; `generate_3d` และ `import_asset` ไม่ถาม (ไม่รันโค้ด) แต่ส่ง/โหลดข้อมูลข้ามเน็ต ตามข้อข้างล่าง
+- **port 9876 ไม่มีรหัสผ่าน** — ใครต่อถึงก็รัน Python ใน Blender ได้; add-on ฟังแค่ localhost อยู่แล้ว อย่าเปิด Allow Remote Connections
+- **ส่งข้อมูลออกนอกเครื่อง**: `generate_3d` ส่ง prompt/รูปไป Tripo, Hunyuan3D (Tencent Cloud), Hyper3D Rodin, Meshy; `search_assets`/`import_asset` โหลดจาก Poly Haven, Sketchfab, Poly Pizza — **ห้ามส่งแบบหรือรูปงานของลูกค้า**; telemetry พื้นฐาน (ชื่อ tool, เวลา, OS) ส่งตั้งแต่ต้น — `DISABLE_TELEMETRY=true` (ใส่ไว้แล้ว) ปิดหมด รวม `record_trajectory_feedback` ที่ส่ง prompt/โค้ด/ข้อมูล scene ไป Supabase ของผู้พัฒนาเมื่อติ๊กยินยอมใน add-on — **อย่าติ๊กช่อง telemetry consent ใน Blender**
+- save งานก่อนให้ Claude แก้ — สคริปต์ที่ผิดแก้ scene ได้ทั้งหมด
+
+**mesh สำหรับ URDF** (ใช้คู่กับ skill `ros2-humble-cpp`):
+- **ขนาดจากแบบจริง** (drawing/CAD/ที่วัด) — ห้ามเดาขนาดหุ่น ระยะล้อ หรือตำแหน่ง sensor; ไม่มีให้ถาม — ค่าที่ใช้ใน kinematics (wheelbase, รัศมีล้อ) อยู่ใน config/URDF ไม่ใช่วัดจาก mesh
+- หน่วยเมตร, แกนตาม REP-103 (X หน้า, Y ซ้าย, Z ขึ้น) — Blender ตั้งต้นเป็นเมตรและ Z ขึ้นอยู่แล้ว; ตอน export เช็ก scale = 1 และแกน forward/up
+- origin ของแต่ละ mesh อยู่ที่ตำแหน่ง joint/frame ของ link นั้น — แยก mesh ต่อ link; หุ่นล้อตาม REP-105: `base_link` ที่จุดหมุน (กึ่งกลางเพลาล้อขับ), `base_footprint` คือจุดที่ฉายลงพื้น — ยึดตาม URDF ที่โปรเจกต์มีอยู่แล้ว (`references/tf2-urdf.md` ของ skill)
+- visual ใช้ `.dae`/`.stl` ละเอียดได้; collision ใช้รูปง่าย (box/cylinder หรือ mesh ลดรูป) เพื่อให้ sim และ planner ไม่ช้า
+- เก็บใน `<proj>_description/meshes/` และ commit ไฟล์ `.blend` ต้นฉบับไว้ด้วยถ้าทีมตกลง (ไฟล์ใหญ่ — พิจารณา Git LFS)
 
 ## ใส่ในโปรเจกต์
 1. รวม `mcpServers` จากไฟล์ที่เลือกเป็น `.mcp.json` ที่ root ของโปรเจกต์ แล้ว commit — ทุกคนที่ clone จะได้คำถามอนุมัติเอง ไม่ต้องตั้งซ้ำ
@@ -74,4 +100,4 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO claude_ro;
 | ros2 มองไม่เห็น topic | `ROS_DOMAIN_ID`/`ROS_LOCALHOST_ONLY` ไม่ตรงกับ node ที่รันอยู่ |
 | `claude -p` / งานอัตโนมัติ ใช้ server โดยไม่ถาม | ปกติของ Claude Code (โหมด non-interactive ไม่ถาม) — ชั้นอ่านอย่างเดียว + deny rule จึงสำคัญ |
 
-เวอร์ชันที่ pin (2026-10-15): mcp-grafana 2.0.2, postgres-mcp 0.3.0, @zereight/mcp-gitlab 2.2.6, labmcp-modbus 0.1.3, wise-vision/ros2_mcp @ 4f287b0 — อัปเดตเมื่อจำเป็น และอ่าน changelog ของมันก่อนขยับเลข
+เวอร์ชันที่ pin (2026-10-15): mcp-grafana 2.0.2, postgres-mcp 0.3.0, @zereight/mcp-gitlab 2.2.6, labmcp-modbus 0.1.3, wise-vision/ros2_mcp @ 4f287b0, mcp-for-blender 2.2.7 (2026-11-20) — อัปเดตเมื่อจำเป็น และอ่าน changelog ของมันก่อนขยับเลข
