@@ -38,6 +38,15 @@ doc ที่มี (ตรวจ 2026-10-15): rclcpp และ pymodbus มี�
 claude mcp add --scope user blender -e BLENDER_MCP_SAFE_MODE=1 -e DISABLE_TELEMETRY=true -- uvx mcp-for-blender@2.2.7
 uvx mcp-for-blender@2.2.7 install-addon
 ```
+ยังไม่มี `uv`: `winget install --id astral-sh.uv -e` — **winget อาจไม่เพิ่ม uv เข้า PATH** (เจอ 2026-11-20: `uvx` not recognized และ MCP ขึ้น Failed / Connection closed) → ใช้ path เต็มแทน `uvx` ทั้งสองคำสั่ง:
+```powershell
+$uvx = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uvx.exe"
+claude mcp add --scope user blender -e BLENDER_MCP_SAFE_MODE=1 -e DISABLE_TELEMETRY=true -- $uvx mcp-for-blender@2.2.7
+& $uvx mcp-for-blender@2.2.7 install-addon
+```
+เช็กด้วย `claude mcp get blender` (ต้องเห็น ✔ Connected) แล้ว**เปิดแชทใหม่** — แชทที่เปิดไว้ตอน MCP ยัง Failed จะไม่มี tool ของ Blender
+ใน Blender ไม่ต้องติ๊ก Asset Libraries / AI Model Generation และ**ไม่กด Update addon** (server pin ไว้ — อัปเดตต้องขยับทั้งคู่พร้อมกัน)
+
 แล้วใน Blender: Edit → Preferences → Add-ons → เปิด "MCP for Blender" → กด N ใน 3D viewport → แท็บ MCP for Blender → **Start MCP Server** (ต้องกดเองทุกครั้งที่เปิด Blender — ไม่กด Claude ก็ทำอะไรใน Blender ไม่ได้) — เอาออก: `claude mcp remove blender -s user`
 ไม่ใช้สคริปต์ติดตั้งแบบ `irm ... | iex` / `curl ... | sh` ใน README ของมัน (โหลดโค้ดจากเน็ตมารันทันที)
 
