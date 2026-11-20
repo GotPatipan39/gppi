@@ -3,6 +3,11 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.15 — 2026-11-20
+Tested: ตัวกัน 26/26 (test MCP ใหม่), validate, ลิงก์, safety-reviewer; ลอง MCP Blender จริงบนเครื่อง dev (Blender 5.3, mcp-for-blender 2.2.7): ต่อได้, safe mode + ปิด telemetry ทำงาน, สร้าง jig 100×60×20 mm รู Ø6 ×2 ได้ขนาดตรง — ยังไม่ได้รัน eval (rules.md ไม่เปลี่ยน)
+- เพิ่ม: template `mcp/blender.mcp.json` + คู่มือใน `mcp/README.md` — ให้ Claude ทำโมเดล 3D (ชิ้นงาน, jig, mesh สำหรับ URDF) ใน Blender; ติดตั้งระดับผู้ใช้เฉพาะเครื่องที่ทำ 3D ไม่ใช่เครื่องที่ต่อ PLC; มีวิธีแก้เมื่อ winget ไม่เพิ่ม uv เข้า PATH
+- แก้ตัวกัน: MCP tool ที่รันโค้ด/คำสั่งได้ (`execute_blender_code`, `execute_command`, `run_bash` ...) ถามทุกครั้ง — เดิมผ่านเพราะชื่อไม่มีคำเขียน
+
 ## v0.1.14 — 2026-11-04
 Tested: ตัวกัน 26/26 (test MCP ใหม่แดงก่อนแก้), eval พฤติกรรม suggest-questionnaire 3/3, validate, ลิงก์, ตัวตรวจ flowchart/CLAUDE.md, safety-reviewer 2 รอบ — ยังไม่ได้รัน eval ทั้งชุดหลังแก้ rules.md รอบนี้
 - เพิ่ม: skill `to-questionnaire` (ทำแบบสอบถามส่งให้คนที่รู้คำตอบกรอก เช่น ค่า ❓ ที่ทีม PLC/ลูกค้ารู้) และ `handoff` (สรุปแชทให้ session ใหม่/เครื่องอื่นทำต่อ) จาก mattpocock/skills — ผู้ใช้ต้องพิมพ์ `/gppi:to-questionnaire`, `/gppi:handoff` เอง Claude จะเสนอเมื่อถึงจังหวะ
