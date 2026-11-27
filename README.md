@@ -7,7 +7,7 @@
 > - ตัวกันไม่ได้จับได้ทุกคำสั่ง — **อ่านคำสั่งก่อนกด Yes ทุกครั้ง** ([สิ่งที่ไม่จับ](docs/GUARD.md#สิ่งที่ไม่จับ))
 
 ## ได้อะไรบ้าง
-- **skill 14 ตัว** — ความรู้งานของทีม Claude โหลดเองเมื่องานตรง (ดู [ตาราง skill](#skill-และ-subagent))
+- **skill 16 ตัว** — ความรู้งานของทีม Claude โหลดเองเมื่องานตรง (ดู [ตาราง skill](#skill-และ-subagent))
 - **กฎการทำงาน** — ส่งเข้าทุก session อัตโนมัติ: ห้ามเดาค่า hardware, ROS2 แบบ local เท่านั้น, ห้ามสั่งเครื่องขยับถ้าไม่ได้สั่งชัด, ห้ามลดเกณฑ์ความปลอดภัยเพื่อให้ test ผ่าน, รายงานให้ชัดว่าทดสอบถึงระดับไหน — อ่านทั้งหมดใน [`rules.md`](rules.md)
 - **ตัวกันคำสั่ง** — หยุดให้คนยืนยันก่อนรันคำสั่ง ROS2 ที่สั่ง driver, restart service, เปิด Modbus/serial, deploy Node-RED, ปิดเครื่อง, git push ฯลฯ (ดู [ความปลอดภัย](#ความปลอดภัย))
 - **ตัวตรวจก่อน commit** — `gppi:safety-reviewer` อ่าน diff แบบคนนอก หาเกณฑ์ความปลอดภัยที่ถูกลดและค่า hardware ที่เปลี่ยน
@@ -101,8 +101,10 @@ claude plugin install gppi@gppi
 | `to-questionnaire` | ภายนอก | ทำแบบสอบถามส่งให้คนที่รู้คำตอบกรอก (ค่า ❓ ที่ต้องถามทีม PLC/ลูกค้า) — เรียกเอง `/gppi:to-questionnaire` |
 | `handoff` | ภายนอก | สรุปแชทเป็นเอกสารให้ session ใหม่/เครื่องอื่นทำต่อ — เรียกเอง `/gppi:handoff` |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
+| `diagnosing-bugs` | ภายนอก | ไล่หาสาเหตุบั๊กยาก: สร้างคำสั่งที่ทำให้บั๊กโผล่ทุกครั้งก่อนเดา → ย่อ → ตั้งสมมติฐาน → test แดงก่อนแก้ — rules.md จำกัดให้ลูปรันกับ simulator/ข้อมูลที่บันทึกไว้เท่านั้น |
+| `research` | ภายนอก | ให้ agent ค้นจากแหล่งต้นทางแล้วจดผลพร้อมที่มาเป็นไฟล์ (`docs/research/`) |
 
-`grilling`, `domain-modeling`, `to-questionnaire`, `handoff` มาจาก mattpocock/skills (MIT) @ 6f7f783 (2026-11-25) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว ส่วนที่ดัดแปลงจากภายนอก (`tdd`, `git-commit`, reference บางส่วนของ ROS2 และ industrial-ui) ดู [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+`grilling`, `domain-modeling`, `to-questionnaire`, `handoff`, `diagnosing-bugs`, `research` มาจาก mattpocock/skills (MIT) @ 6f7f783 (2026-11-25) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว ส่วนที่ดัดแปลงจากภายนอก (`tdd`, `git-commit`, reference บางส่วนของ ROS2 และ industrial-ui) ดู [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 | subagent | เวอร์ชัน | ใช้กับ | เรียกอย่างไร |
 |---|---|---|---|
