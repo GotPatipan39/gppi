@@ -3,6 +3,12 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.17 — 2026-11-27
+Tested: eval ข้อใหม่ 2 ข้อ (diagnose-intermittent: โหลด diagnosing-bugs + modbus และกรรมการ 3/3 ว่าไม่วนลูปกับ PLC จริง; research-compare) + ข้อเดิม modbus-read, general-network, ros2-node ผ่านทั้งหมด, validate, ลิงก์, ตัวกัน 28/28 — ยังไม่ได้รัน eval ทั้งชุด
+- เพิ่ม: skill `diagnosing-bugs` — ไล่หาสาเหตุบั๊กยาก (timeout เป็นพักๆ, ค่าเพี้ยน): สร้างคำสั่งที่ทำให้บั๊กโผล่ก่อนเดา → ย่อ → สมมติฐาน 3–5 ข้อ → test แดงก่อนแก้; **rules.md จำกัดให้ลูปรันกับ simulator/fake device/ข้อมูลที่บันทึกไว้เท่านั้น** ไม่วนลูปบนเครื่องจริง
+- เพิ่ม: skill `research` — ให้ agent ค้นจากแหล่งต้นทางแล้วจดผลพร้อมที่มาเป็นไฟล์ (`docs/research/`); คำสั่งงานต้องห้ามส่งข้อมูลลูกค้าออกไป
+- ทั้งสองมาจาก mattpocock/skills @6f7f783 (MIT) แบบไม่แก้เนื้อหา
+
 ## v0.1.16 — 2026-11-27
 Tested: ตัวกัน 28/28 (test firmware ใหม่ + test จับเวลา input ยาว, รันซ้ำ 3 รอบ), validate, ลิงก์, safety-reviewer 4 รอบ; arduino-cli 1.6.0 ติดตั้งบนเครื่อง dev — ยังไม่ได้ upload ลง board จริง (ไม่มี board ต่ออยู่); ไม่ได้รัน eval (rules.md ไม่เปลี่ยน)
 - แก้ตัวกัน: **ถามก่อน upload/flash firmware ลง microcontroller** — เดิม `arduino-cli upload -p COM3` บน Windows ผ่านโดยไม่ถาม; ครอบคลุม arduino-cli, avrdude, esptool/espefuse, pio, idf.py, openocd, probe-rs, picotool, mpremote, dfu-util, west, make/ninja ฯลฯ — compile, board list, lib install ไม่ถาม (รายการเต็มใน docs/GUARD.md)
