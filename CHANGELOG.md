@@ -3,6 +3,13 @@
 เวอร์ชันของทั้ง plugin (เลขใน `.claude-plugin/plugin.json`) — ทีมได้ของใหม่เมื่อเลขนี้เปลี่ยนเท่านั้น
 การเปลี่ยนของ skill แต่ละตัวอยู่ใน `skills/<ชื่อ>/CHANGELOG.md`
 
+## v0.1.16 — 2026-11-27
+Tested: ตัวกัน 28/28 (test firmware ใหม่ + test จับเวลา input ยาว, รันซ้ำ 3 รอบ), validate, ลิงก์, safety-reviewer 4 รอบ; arduino-cli 1.6.0 ติดตั้งบนเครื่อง dev — ยังไม่ได้ upload ลง board จริง (ไม่มี board ต่ออยู่); ไม่ได้รัน eval (rules.md ไม่เปลี่ยน)
+- แก้ตัวกัน: **ถามก่อน upload/flash firmware ลง microcontroller** — เดิม `arduino-cli upload -p COM3` บน Windows ผ่านโดยไม่ถาม; ครอบคลุม arduino-cli, avrdude, esptool/espefuse, pio, idf.py, openocd, probe-rs, picotool, mpremote, dfu-util, west, make/ninja ฯลฯ — compile, board list, lib install ไม่ถาม (รายการเต็มใน docs/GUARD.md)
+- แก้ตัวกัน: regex ที่หาตำแหน่งคำสั่งช้ากับ path ยาวมาก (เสี่ยง hook timeout แล้วปล่อยผ่าน) — จำกัดความลึก path ไว้ 40 ชั้น
+- เพิ่ม: INSTALL.md ขั้นตอนติดตั้ง `arduino-cli` (ไม่บังคับ) — ไม่ใช้ MCP ของ Arduino เพราะไม่มีตัวที่ปลอดภัยพอ
+- `domain-modeling` ตามต้นทาง @6f7f783
+
 ## v0.1.15 — 2026-11-20
 Tested: ตัวกัน 26/26 (test MCP ใหม่), validate, ลิงก์, safety-reviewer; ลอง MCP Blender จริงบนเครื่อง dev (Blender 5.3, mcp-for-blender 2.2.7): ต่อได้, safe mode + ปิด telemetry ทำงาน, สร้าง jig 100×60×20 mm รู Ø6 ×2 ได้ขนาดตรง — ยังไม่ได้รัน eval (rules.md ไม่เปลี่ยน)
 - เพิ่ม: template `mcp/blender.mcp.json` + คู่มือใน `mcp/README.md` — ให้ Claude ทำโมเดล 3D (ชิ้นงาน, jig, mesh สำหรับ URDF) ใน Blender; ติดตั้งระดับผู้ใช้เฉพาะเครื่องที่ทำ 3D ไม่ใช่เครื่องที่ต่อ PLC; มีวิธีแก้เมื่อ winget ไม่เพิ่ม uv เข้า PATH
