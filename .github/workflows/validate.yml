@@ -23,6 +23,7 @@ jobs:
       - run: claude plugin validate . --strict
       - run: claude plugin test .
       - run: node dev/check-links.mjs   # ลิงก์ในเอกสารยังชี้ไฟล์ที่มีอยู่
+      - run: node dev/check-rules-size.mjs   # rules เกิน 10,000 ตัวอักษร = Claude Code ส่งแค่ 2KB แรก กฎความปลอดภัยหาย
       # PreToolUse hook รันด้วย node จริง (ไม่ใช่ runtime ของ claude plugin test) — ตรวจว่า node รุ่นขั้นต่ำรัน .ts ได้และตอบ ask
       - name: PreToolUse hook answers ask under node
         run: |

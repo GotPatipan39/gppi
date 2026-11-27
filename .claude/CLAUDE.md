@@ -8,6 +8,7 @@ repo นี้คือ plugin ของทีม (skill, กฎ, ตัวก�
 claude plugin validate . --strict
 claude plugin test .          # test ของตัวกัน รวม test จับเวลา — regex ช้า = hook timeout = ปล่อยผ่านเงียบๆ
 node dev/check-links.mjs
+node dev/check-rules-size.mjs   # rules.md / rules-skills.md < 9,000 ตัวอักษร — hook เกิน 10,000 = ส่งแค่ 2KB แรก กฎหายเงียบๆ
 ```
 - แก้ skill → ขึ้น `> เวอร์ชัน` ใน SKILL.md + `CHANGELOG.md` ของ skill + ตาราง skill ใน [README.md](../README.md)
 - แก้โค้ดใน skill ที่คุม hardware → `bash dev/test-skill-code.sh` ใน WSL

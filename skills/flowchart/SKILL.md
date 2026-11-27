@@ -5,7 +5,7 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 
 # Flowchart (draw.io) ก่อนเขียน logic
 
-> เวอร์ชัน 1.2.0 — ดู [CHANGELOG.md](CHANGELOG.md)
+> เวอร์ชัน 1.2.1 — ดู [CHANGELOG.md](CHANGELOG.md)
 
 ผู้ใช้สรุป logic เป็น flowchart ใน draw.io ก่อนเขียนโค้ดเสมอ — ให้ทั้งผู้ใช้และ Claude เห็นภาพเดียวกัน และคุยกันผ่านรูปได้
 ไฟล์ `.drawio` เป็น XML: Claude เขียนเองได้ และอ่านไฟล์ที่ผู้ใช้แก้ใน draw.io กลับมาได้
@@ -18,6 +18,8 @@ description: ใช้ก่อนเขียนหรือแก้ logic ท
 ## ขั้นตอน
 1. **อ่านก่อน**: `CLAUDE.md` ของโปรเจกต์ (address, timeout, ชื่อ state) และหา flowchart เดิม (`git ls-files "*.drawio*"`) — โปรเจกต์มีที่เก็บอยู่แล้ว (เช่น `docs/api/`) ให้ใช้ที่เดิมและสไตล์เดิม; ไม่มีให้ใช้ `docs/flowcharts/`; flow นี้มีไฟล์อยู่แล้วให้แก้ไฟล์เดิม ไม่สร้างซ้ำ
 2. **เขียน** `<ที่เก็บ flowchart>/<ชื่อ logic>.drawio` (ไม่บีบอัด) — ข้างล่างเขียนเป็น `docs/flowcharts/` เพื่อย่อ ตามหัวข้อ "เนื้อหา" และ "รูปแบบ" ข้างล่าง
+   - **ยังไม่รู้ค่า hardware (address, timeout) ก็ทำไฟล์ `.drawio` ได้เลย** ใส่ชื่อตัวแปร + `❓` แล้วถามพร้อมกับส่งรูป — ไม่วาด flow เป็น ASCII ในแชทแทนไฟล์ และไม่รอคำตอบครบก่อนค่อยวาด
+   - เขียนไฟล์ไม่ได้ (ไม่มีสิทธิ์ Write) → บอกว่าจะสร้าง `docs/flowcharts/<ชื่อ>.drawio` ให้ผู้ใช้ดูและรอ OK ก่อนเขียนโค้ด
 3. **ตรวจ**: `node <skill นี้>/tools/check_drawio.mjs docs/flowcharts/<ชื่อ>.drawio` — error ต้องเป็น 0; warning (กล่องทับกัน, เส้นวิ่งทับกล่อง, เส้นตัดกัน, กล่องค้าง) ให้แก้ หรืออธิบายได้ว่าตั้งใจ — ตัวตรวจดูจากพิกัดจริง แม่นกว่าการดูรูปด้วยตาซึ่งทั้งพลาดและเห็นปัญหาที่ไม่มี
 4. **ดูรูปเอง** ถ้าเครื่องมี draw.io desktop (Windows: `C:\Program Files\draw.io\draw.io.exe`, Linux: `drawio`):
    `"<draw.io>" -x -f png -o <scratchpad>/<ชื่อ>.png docs/flowcharts/<ชื่อ>.drawio` แล้วเปิดรูปดู — ป้ายทับเส้น, ข้อความล้นกล่อง, อ่านยาก ให้แก้แล้ว export ใหม่ **ไม่เกิน 2 รอบ** ที่เหลือให้ผู้ใช้จัดใน draw.io

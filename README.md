@@ -95,7 +95,7 @@ claude plugin install gppi@gppi
 | `project-claude-md` | 1.2.1 | สร้าง/ตรวจ/อัปเดต CLAUDE.md ของโปรเจกต์คุมเครื่อง: ค่า hardware อยู่ไฟล์ไหน, register map, อะไรทำให้เครื่องขยับ, ป้าย ✅/⚠️/❓ — เสนอเองเมื่อโปรเจกต์คุมเครื่องไม่มี CLAUDE.md |
 | `git-commit` | 1.3.1 | commit message (Conventional Commits + body อธิบายเหตุผล), ตรวจของที่ห้าม commit, release + CHANGELOG + tag |
 | `tdd` | 1.1.3 | เขียน logic/แก้บั๊กแบบ test ก่อน (red → green → refactor) ทุกภาษา, mock ที่ขอบ hardware |
-| `flowchart` | 1.2.0 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
+| `flowchart` | 1.2.1 | flowchart draw.io (`.drawio`) ของ logic ที่มีลำดับ/เงื่อนไข ให้ผู้ใช้ OK ก่อนเขียนโค้ด + ตัวตรวจไฟล์ |
 | `spec-tickets` | 1.1.1 | สรุปแผนเป็น spec (`docs/specs/`) และแตกเป็น ticket ที่ทำจบได้ทีละชิ้นพร้อมลำดับการรอ (`docs/tickets/`) — มีหัวข้อความปลอดภัย ค่า hardware ที่ยังไม่รู้ และระดับการทดสอบ |
 | `grilling` | ภายนอก | ซักถามแผนงาน/การออกแบบทีละรอบจนไม่มีอะไรค้าง |
 | `to-questionnaire` | ภายนอก | ทำแบบสอบถามส่งให้คนที่รู้คำตอบกรอก (ค่า ❓ ที่ต้องถามทีม PLC/ลูกค้า) — เรียกเอง `/gppi:to-questionnaire` |
@@ -121,7 +121,8 @@ gppi/
 ├── skills/<ชื่อ>/      ┐ plugin ใช้เอง — ติดตั้ง gppi แล้วได้ทันที
 ├── agents/             │  skill ที่มีไฟล์ LICENSE = มาจากภายนอก ห้ามแก้เนื้อหา
 ├── hooks/              │  hooks = ตัวกันคำสั่ง + ส่งกฎเข้า session
-├── rules.md            ┘  กฎที่ Claude อ่านทุก session
+├── rules.md            │  กฎที่ Claude อ่านทุก session (ภาษา, ความปลอดภัย)
+├── rules-skills.md     ┘  ใช้ skill ไหนเมื่อไหร่ — แยกไฟล์เพราะ hook ส่งได้ไม่เกิน 10,000 ตัวอักษรต่อไฟล์
 │
 ├── mcp/                ← template MCP แบบอ่านอย่างเดียว ให้ผู้ใช้ copy ไปใส่ `.mcp.json` ของโปรเจกต์เอง (plugin ไม่เปิดให้)
 ├── docs/               ← คนใช้อ่าน: INSTALL, GUARD (+ flowcharts/ ลำดับการตัดสินของตัวกัน)

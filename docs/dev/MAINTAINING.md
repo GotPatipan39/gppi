@@ -5,7 +5,7 @@
 
 ## แก้ skill หรือ agent
 - **skill**: แก้ใน `skills/<ชื่อ>/` แล้วขึ้นเวอร์ชันในบรรทัด `> เวอร์ชัน` ของ `SKILL.md` + `CHANGELOG.md` ของ skill นั้น + ตาราง skill ใน [README](../../README.md#skill-และ-subagent) — commit แบบ `<skill> vX.Y.Z: <สรุป>`
-- **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules.md`](../../rules.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
+- **skill ใหม่**: เพิ่มแถวในตาราง "ใช้ skill ตามงาน" ของ [`rules-skills.md`](../../rules-skills.md) ด้วย ไม่อย่างนั้น Claude ไม่รู้ว่าต้องโหลดเมื่อไหร่
 - **agent**: เวอร์ชันอยู่ในบรรทัด `> เวอร์ชัน` ของไฟล์ agent; แก้แล้วขึ้นเลขในตาราง README และเขียนเหตุผลใน commit message
 - `safety-reviewer` **ไม่มี Bash** (ตั้งแต่ 1.1.0) — plugin subagent ใช้ `permissionMode`/`hooks` ใน frontmatter ไม่ได้ การห้ามในข้อความจึงบังคับไม่ได้จริง ทางเดียวที่บังคับได้คือไม่ให้ tool นั้น; ผู้เรียกเขียน diff ไว้ที่ `.git/gppi-review.diff` ให้แทน — ห้ามเพิ่ม Bash กลับโดยไม่มีทางจำกัดที่ระบบบังคับ
 - skill ที่มีไฟล์ `LICENSE` ของตัวเอง (`grilling`, `domain-modeling`, `to-questionnaire`, `handoff`, `diagnosing-bugs`, `research`) มาจากภายนอก — **ห้ามแก้เนื้อหา** อัปเดตด้วยการ copy จากต้นทางใหม่ทั้งไฟล์
@@ -18,6 +18,7 @@ claude plugin test .                 # test ของตัวกันคำส
 claude --plugin-dir .                # ลองของที่แก้แต่ยังไม่ release — ปิด gppi ที่ติดตั้งไว้ก่อน ไม่อย่างนั้นจะโหลดซ้ำ
 bash dev/test-skill-code.sh         # โค้ด template ที่คุม hardware ใน skill (ramp, watchdog, Modbus client) — รันใน WSL/Ubuntu
 node dev/check-links.mjs             # ลิงก์ในเอกสารทั้ง repo — ย้าย/เปลี่ยนชื่อไฟล์แล้วต้องรัน
+node dev/check-rules-size.mjs        # rules.md, rules-skills.md < 9,000 ตัวอักษร — hook ส่งได้ไม่เกิน 10,000 เกินแล้ว Claude Code ส่งแค่ 2KB แรก
 ```
 `dev/test-skill-code.sh` ต้องมี `g++ libgtest-dev libmodbus-dev` (Ubuntu: `sudo apt-get install -y g++ libgtest-dev libmodbus-dev`) — ไม่ต้องมี ROS2 และไม่แตะอุปกรณ์จริง (Modbus server จำลองบน 127.0.0.1); แก้ template ที่คุม hardware ต้องเพิ่ม test ที่แดงก่อนแก้ (skill `tdd`)
 CI ([`.github/workflows/validate.yml`](../../.github/workflows/validate.yml)) รัน validate + test + hook ใต้ node 22.18.0 ทุก PR และทุก push ขึ้น main — ถ้า Claude Code รุ่นใหม่ทำให้ตัวกันพัง ควรแดงที่นี่ก่อนถึงเครื่องทีม
