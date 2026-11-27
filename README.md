@@ -102,7 +102,7 @@ claude plugin install gppi@gppi
 | `handoff` | ภายนอก | สรุปแชทเป็นเอกสารให้ session ใหม่/เครื่องอื่นทำต่อ — เรียกเอง `/gppi:handoff` |
 | `domain-modeling` | ภายนอก | จดศัพท์โปรเจกต์ (`GLOSSARY.md`) และการตัดสินใจสำคัญ (`docs/adr/`) |
 
-`grilling`, `domain-modeling`, `to-questionnaire`, `handoff` มาจาก mattpocock/skills (MIT) @ 4ae2317 (2026-10-31) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว ส่วนที่ดัดแปลงจากภายนอก (`tdd`, `git-commit`, reference บางส่วนของ ROS2 และ industrial-ui) ดู [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+`grilling`, `domain-modeling`, `to-questionnaire`, `handoff` มาจาก mattpocock/skills (MIT) @ 6f7f783 (2026-11-25) แบบไม่แก้เนื้อหา — ไฟล์ `LICENSE` อยู่ในโฟลเดอร์ของแต่ละตัว ส่วนที่ดัดแปลงจากภายนอก (`tdd`, `git-commit`, reference บางส่วนของ ROS2 และ industrial-ui) ดู [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 | subagent | เวอร์ชัน | ใช้กับ | เรียกอย่างไร |
 |---|---|---|---|
