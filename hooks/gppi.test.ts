@@ -327,10 +327,24 @@ test('ไม่ช้าผิดปกติกับ option ซ้ำๆ (ช�
     '"' + 'a/'.repeat(25000),
     '\\'.repeat(50000),
     'echo "' + 'QUJD/+'.repeat(20000) + '" | base64 -d',
+    // จุดเริ่มคำสั่งซ้ำหลายพันครั้งใน segment เดียว — แต่ละจุดเคย scan ไปจนท้าย segment = O(n²) (รีวิวรอบสี่)
+    '"make a '.repeat(20000),
+    '(pio test -e native '.repeat(5000),
+    '"arduino-cli '.repeat(20000),
+    'systemctl '.repeat(20000),
+    '"idf.py '.repeat(20000),
+    'Start-Process '.repeat(20000),
+    'git '.repeat(20000),
+    '(git push '.repeat(5000),
+    'docker rm '.repeat(20000),
+    '"pio run '.repeat(20000),
+    '"cmake '.repeat(20000),
+    '"arduino-cli compile '.repeat(10000),
   ]
   for (const c of inputs) {
     const t = performance.now()
     isMachineCommand(c)
+    isRiskyGit(c)
     expect([c.slice(0, 12), performance.now() - t < 200]).toEqual([c.slice(0, 12), true])
   }
 })
@@ -509,6 +523,14 @@ const FIRMWARE_FLASH = [
   'pio test -e native,esp32dev',
   'probe-rs info',
   'picotool info',
+  // option ยาวก่อนคำสั่งย่อย — ระยะ scan ที่จำกัดต้องยังครอบคลุม
+  'arduino-cli compile --fqbn esp32:esp32:esp32:PartitionScheme=huge_app,PSRAM=enabled --build-property "compiler.cpp.extra_flags=-DCORE_DEBUG_LEVEL=5 -DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -DCONFIG_ASYNC_TCP_RUNNING_CORE=1" --build-path build/esp32 --output-dir dist --warnings all --verbose -u -p COM3 .',
+  // ESP32-S3 บน Windows: option รวมเกิน 400 ตัวอักษร (รีวิวรอบห้า) — arduino-cli ใช้เพดาน 1500
+  String.raw`arduino-cli compile --fqbn esp32:esp32:esp32s3:PartitionScheme=huge_app,PSRAM=opi,USBMode=hwcdc,CDCOnBoot=cdc --build-property "compiler.cpp.extra_flags=-DCORE_DEBUG_LEVEL=5 -DBOARD_HAS_PSRAM -DCONFIG_ASYNC_TCP_RUNNING_CORE=1 -DCONFIG_ASYNC_TCP_USE_WDT=0" --build-property "build.extra_flags=-DARDUINO_USB_CDC_ON_BOOT=1 -DARDUINO_USB_MODE=1" --libraries "C:\Users\Got Automation\Documents\Arduino\libraries" --build-path build/esp32s3 --output-dir dist --warnings all --verbose -u -p COM3 .`,
+  // path ใน quote ที่มี & (รีวิวรอบห้า)
+  String.raw`& "D:\R & D Lab\tools\avrdude.exe" -p m328p -U flash:w:fw.hex`,
+  String.raw`&"C:\Program Files\Arduino CLI\arduino-cli.exe" upload -p COM3 .`,
+  ';"/opt/my tools/avrdude" -U flash:w:fw.hex',
 ]
 const FIRMWARE_SAFE = [
   'arduino-cli compile --fqbn arduino:avr:uno sketch',
@@ -548,6 +570,9 @@ const FIRMWARE_SAFE = [
   'pio run -e test',
   'west build -b nrf52dk -p',
   'cmake --build build',
+  // quote ปิดของคำสั่งก่อนหน้าไม่ใช่จุดเริ่ม path (รีวิวรอบสี่)
+  'echo "x"; ls /usr/bin/avrdude',
+  String.raw`cd "C:\p" && ls tools/openocd`,
 ]
 
 test('firmware: ถาม upload/flash/monitor ของ microcontroller ทั้ง Windows และ Linux', () => {

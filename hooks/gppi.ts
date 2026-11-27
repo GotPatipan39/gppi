@@ -1,9 +1,15 @@
 import type { Register } from 'claude-code'
 
+// ระยะที่ regex scan หาคำสั่งย่อยในคำสั่งเดียวกัน — จำกัดไว้: ถ้าไม่จำกัด input ที่มีจุดเริ่มคำสั่งซ้ำหลายพันจุดใน segment เดียว
+// ("make a "make a ...) ทุกจุด scan ไปถึงท้าย = O(n²) (วัดได้ systemctl ×20000 = 3.6 s บน node) → hook timeout = ปล่อยผ่าน
+// 400 ตัวอักษรพอสำหรับคำสั่งทั่วไป; arduino-cli ใช้ SCAN_LONG เพราะ --build-property/--libraries บน Windows ยาวเกิน 400 ได้จริง
+const SCAN = String.raw`[^;&|\n]{0,400}?`
+const SCAN_LONG = String.raw`[^;&|\n]{0,1500}?`
+
 // คำสั่ง git ที่ย้อนกลับยาก — ให้ผู้ใช้ยืนยันก่อน (แทนกฎ ask ใน settings.json ที่ plugin ส่งไม่ได้)
 // จับทั้ง `git push` และ `git -C <path> push`; เจอคำว่า push ในข้อความอื่นที่ขึ้นต้นด้วย git แล้วถามเกิน ยังปลอดภัยกว่าหลุด
 // กฎ (rules.md) ส่งผ่าน SessionStart ใน hooks.json แทน prompt.compose — Claude Code 2.1.296 ไม่ให้ plugin ของผู้ใช้แก้ system prompt
-const GIT = String.raw`(?:^|[;&|\n(]\s*)git\b[^;&|\n]*?\s`
+const GIT = String.raw`(?:^|[;&|\n(]\s*)git\b` + SCAN + String.raw`\s`
 const RISKY_GIT: readonly RegExp[] = [
   new RegExp(GIT + String.raw`push\b`),
   new RegExp(GIT + String.raw`reset\s+--hard\b`),
@@ -54,9 +60,10 @@ const CMD_END = String.raw`(?:\.exe)?(?=[\s;&|'")\x60]|$)`
 // หรืออยู่ท้าย path ใน quote ที่ไหนก็ได้ (& "C:\Program Files\Arduino CLI\arduino-cli.exe", python "C:\...\idf.py", cmd /c "C:\...\avrdude.exe")
 // — ถามเกินกับข้อความใน quote ที่จบด้วยชื่อเครื่องมือ (แบบเดียวกับ grep "avrdude")
 // match ไปข้างหน้าจาก quote ทีละ segment ({1,40}) ไม่ใช้ lookbehind: lookbehind ถูกลองที่ทุกตำแหน่งหลัง / = O(n²) กับ base64/path ยาว
+// quote ต้องอยู่หลังช่องว่าง/ต้นบรรทัด/( = ; & | { = quote เปิด (&"C:\Program Files\...\x.exe" ของ PowerShell ด้วย) — quote ปิด ("x"; ls /usr/bin/avrdude) ติดกับตัวอักษรจึงไม่นับ; path มี & ได้ ("D:\R & D Lab\...")
 // option ของ python จำกัด {0,4} และมีค่าได้ (-X utf8); -m ติดชื่อ module ได้ (-mesptool)
 // ตัวรัน python ต่อท้ายได้ทั้งสองทาง: & "C:\Users\Got Automation\.platformio\penv\Scripts\python.exe" -m esptool
-const FW_AT = String.raw`(?:` + AT_CMD + String.raw`|['"](?:[^'"\n/\\]*[/\\]){1,40})(?:(?:python[\d.]*|py|uvx|call|(?:uv|pipx|poetry)\s+run)(?:\.exe)?['"]?(?:\s+-[^m\s]\S*(?:\s+[^-\s]\S*)?){0,4}(?:\s+-m\s*|\s+)(?:[^\s/\\'"]*[/\\]){0,40})?`
+const FW_AT = String.raw`(?:` + AT_CMD + String.raw`|(?:^|[\s(=;&|{])['"](?:[^'"\n/\\]*[/\\]){1,40})(?:(?:python[\d.]*|py|uvx|call|(?:uv|pipx|poetry)\s+run)(?:\.exe)?['"]?(?:\s+-[^m\s]\S*(?:\s+[^-\s]\S*)?){0,4}(?:\s+-m\s*|\s+)(?:[^\s/\\'"]*[/\\]){0,40})?`
 // ข้ามได้เฉพาะคำสั่งที่ไม่แตะ board: ดูเวอร์ชัน/help/รายชื่ออุปกรณ์ "เป็น arg ตัวเดียว" (openocd -l log จึงถาม)
 // ไม่ยกเว้น info: probe-rs info ต่อ SWD เข้า target (core อาจหยุด output ค้าง), picotool info -F = reboot
 // หรือแปลงไฟล์ firmware อย่างเดียว — ไม่ยกเว้น -l / -V ตัวเดียว: bossac -l = lock flash (หา port เอง), avrdude -V = ไม่ verify
@@ -68,8 +75,8 @@ const PIO = String.raw`(?:pio|platformio)` + CMD_END + String.raw`['"]?(?:\s+-\S
 const MACHINE: readonly RegExp[] = [
   new RegExp(CMD + String.raw`ros2\s+(?:topic\s+pub|service\s+call|action\s+send_goal|launch|run|param\s+(?:set|load)|lifecycle\s+set|control\s+(?:switch_controllers|set_controller_state|load_controller)|bag\s+play|component\s+load)\b`),
   // service ที่คุมเครื่อง: reload/kill/isolate ถามด้วย เพราะมีผลเท่ากับ restart/stop; ข้าม option ที่มีค่า (-H host) ด้วยการหาคำสั่งในส่วนเดียวกัน
-  new RegExp(CMD + String.raw`systemctl\b[^;&|\n]*?\s(?:start|stop|restart|try-restart|reload|reload-or-restart|try-reload-or-restart|kill|isolate)\b`),
-  new RegExp(CMD + String.raw`systemctl\b(?=[^;&|\n]*\s--now\b)[^;&|\n]*?\s(?:enable|disable|mask)\b`),
+  new RegExp(CMD + String.raw`systemctl\b` + SCAN + String.raw`\s(?:start|stop|restart|try-restart|reload|reload-or-restart|try-reload-or-restart|kill|isolate)\b`),
+  new RegExp(CMD + String.raw`systemctl\b(?=` + SCAN + String.raw`\s--now\b)` + SCAN + String.raw`\s(?:enable|disable|mask)\b`),
   new RegExp(CMD + String.raw`service\s+\S+\s+(?:start|stop|restart|reload)\b`),
   new RegExp(CMD + String.raw`pm2\s+(?:-\S+\s+)*(?:start\w*|stop|restart|reload|delete|kill|resurrect|scale)\b`),
   new RegExp(CMD + String.raw`pm2-runtime\b`),
@@ -83,13 +90,13 @@ const MACHINE: readonly RegExp[] = [
   new RegExp(CMD + String.raw`(?:docker|podman)` + DOCKER_OPTS + String.raw`\s+compose` + COMPOSE_OPTS + String.raw`\s+(?:up|start|restart|stop|down|kill|run|pause|unpause|rm)\b`),
   new RegExp(CMD + String.raw`(?:docker|podman)-compose` + COMPOSE_OPTS + String.raw`\s+(?:up|start|restart|stop|down|kill|run|pause|unpause|rm)\b`),
   new RegExp(CMD + String.raw`(?:docker|podman|nerdctl)` + DOCKER_OPTS + String.raw`\s+(?:container\s+)?(?:run|start|restart|stop|kill|pause|unpause)\b`),
-  new RegExp(CMD + String.raw`(?:docker|podman|nerdctl)` + DOCKER_OPTS + String.raw`\s+(?:container\s+)?rm\b[^;&|\n]*?\s-\w*f`),
+  new RegExp(CMD + String.raw`(?:docker|podman|nerdctl)` + DOCKER_OPTS + String.raw`\s+(?:container\s+)?rm\b` + SCAN + String.raw`\s-\w*f`),
   // เปิด Node-RED runtime = flow ที่ต่อ PLC เริ่มทำงาน (ไม่ใช่ `pm2 logs node-red`, node-red-admin, node-red-contrib-*)
   new RegExp(AT_CMD + String.raw`node-red(?:-start|-restart|-stop)?` + CMD_END),
   // หยุด driver กลางคำสั่ง / ปิดเครื่อง — ถ้าไม่มี watchdog เครื่องค้างค่าสุดท้าย; `kill <pid>` ไม่รวม (Claude ใช้หยุด process ที่ตัวเองเปิด)
   new RegExp(AT_CMD + String.raw`(?:pkill|killall|reboot|shutdown|poweroff|halt)` + CMD_END),
   new RegExp(AT_CMD + String.raw`(?:tel)?init\s+[06]\b`),
-  /\bStart-Process\b[^;|\n]*?\b(?:shutdown|reboot|node-red|taskkill|pkill)\b/i,
+  /\bStart-Process\b[^;|\n]{0,400}?\b(?:shutdown|reboot|node-red|taskkill|pkill)\b/i,
   new RegExp(CMD + String.raw`systemctl\s+(?:-\S+\s+)*(?:reboot|poweroff|halt|kexec)\b`),
   new RegExp(CMD + String.raw`wsl(?:\.exe)?\s+(?:-\S+\s+)*?(?:--shutdown|--terminate|-t)\b`, 'i'),
   // ฝั่ง Windows: หยุด process/service ที่อาจเป็น Node-RED/KEPServer/driver, ปิดเครื่อง
@@ -103,17 +110,17 @@ const MACHINE: readonly RegExp[] = [
   // อยู่ "ตำแหน่งคำสั่ง" (FW_AT) เท่านั้น: ไม่ถาม apt install avrdude / avrdude.conf / ls /usr/bin/avrdude
   // เครื่องมือ flash ไม่ scan ต่อ (openocd -c "init; program" มี ; ใน quote) — ตัวที่ scan หาคำสั่งย่อยหยุดที่ ; & | (เร็ว และไม่ถาม `board list | sort -u`)
   new RegExp(FW_AT + String.raw`(?:avrdude|bossac|teensy_loader_cli|stm32flash|openocd|nrfjprog|nrfutil|adafruit-nrfutil|pymcuprog|tycmd|espflash|espota(?:\.py)?|probe-rs|pyocd|JLinkExe|JLink|JLinkGDBServer(?:CL)?|STM32_Programmer_CLI|st-util|ampy|rshell|dfu-util|st-flash|picotool|mpremote|esptool(?:\.py)?|espefuse(?:\.py)?)` + CMD_END + FLASH_SAFE),
-  new RegExp(FW_AT + String.raw`arduino-cli` + CMD_END + String.raw`[^;&|\n]*?\s(?:upload|monitor|burn-bootloader|debug|--upload|-[a-zA-Z]*u[a-zA-Z]*)(?=[\s=;&|)'"\x60]|$)`),
-  new RegExp(FW_AT + PIO + String.raw`run\b[^;&|\n]*?\s(?:-t\s*|--target[\s=]+)(?:upload\w*|program|monitor|erase|fuses|bootloader)\b`),
+  new RegExp(FW_AT + String.raw`arduino-cli` + CMD_END + SCAN_LONG + String.raw`\s(?:upload|monitor|burn-bootloader|debug|--upload|-[a-zA-Z]*u[a-zA-Z]*)(?=[\s=;&|)'"\x60]|$)`),
+  new RegExp(FW_AT + PIO + String.raw`run\b` + SCAN + String.raw`\s(?:-t\s*|--target[\s=]+)(?:upload\w*|program|monitor|erase|fuses|bootloader)\b`),
   new RegExp(FW_AT + PIO + String.raw`(?:debug|device\s+monitor)\b`),
   // pio test upload firmware ทดสอบลง board และเปิด serial อ่านผล (board reset) — ยกเว้นเฉพาะเมื่อ env ทุกตัวเป็น native (รันบนเครื่อง)
-  new RegExp(FW_AT + PIO + String.raw`test\b(?!(?=[^;&|\n]*?\s(?:-e\s*|--environment[\s=]+)native(?=[\s;&|)'"\x60]|$))(?![^;&|\n]*?\s(?:-e\s*|--environment[\s=]+)(?!native(?=[\s;&|)'"\x60]|$))\S))`),
-  new RegExp(FW_AT + String.raw`idf(?:\.py)?` + CMD_END + String.raw`[^;&|\n]*?\s(?:(?:[\w-]+-)?flash|erase[-_]otadata|monitor|openocd|efuse-[\w-]+)\b`),
+  new RegExp(FW_AT + PIO + String.raw`test\b(?!(?=` + SCAN + String.raw`\s(?:-e\s*|--environment[\s=]+)native(?=[\s;&|)'"\x60]|$))(?!` + SCAN + String.raw`\s(?:-e\s*|--environment[\s=]+)(?!native(?=[\s;&|)'"\x60]|$))\S))`),
+  new RegExp(FW_AT + String.raw`idf(?:\.py)?` + CMD_END + SCAN + String.raw`\s(?:(?:[\w-]+-)?flash|erase[-_]otadata|monitor|openocd|efuse-[\w-]+)\b`),
   new RegExp(FW_AT + String.raw`west` + CMD_END + String.raw`['"]?(?:\s+-\S+){0,6}\s+(?:flash|debug|debugserver|attach)\b`),
   new RegExp(FW_AT + String.raw`cargo` + CMD_END + String.raw`['"]?(?:\s+\+\S+)?\s+(?:espflash|flash|embed)\b`),
   // target ของ Arduino-Makefile ด้วย (raw_upload, burn_bootloader, set_fuses)
-  new RegExp(FW_AT + String.raw`(?:make|ninja)` + CMD_END + String.raw`[^;&|\n]*?\s(?:upload|raw_upload|flash|program|erase|monitor|ispload|burn|burn_bootloader|set_fuses|eeprom|dfu)\b`),
-  new RegExp(FW_AT + String.raw`(?:west|cmake)` + CMD_END + String.raw`[^;&|\n]*?\s(?:-t\s*|--target[\s=]+)(?:flash|upload|program|debug|debugserver|attach)\b`),
+  new RegExp(FW_AT + String.raw`(?:make|ninja)` + CMD_END + SCAN + String.raw`\s(?:upload|raw_upload|flash|program|erase|monitor|ispload|burn|burn_bootloader|set_fuses|eeprom|dfu)\b`),
+  new RegExp(FW_AT + String.raw`(?:west|cmake)` + CMD_END + SCAN + String.raw`\s(?:-t\s*|--target[\s=]+)(?:flash|upload|program|debug|debugserver|attach)\b`),
 ]
 
 // python ที่มีโค้ดสั่ง bus อยู่ในบรรทัดคำสั่งเอง (-c, heredoc, pipe) — script ในไฟล์ไม่จับ (ชื่อไฟล์ไม่มีคำเหล่านี้แบบเต็มคำ)
