@@ -41,13 +41,30 @@ const PREFIX = [
 ].join('|')
 // path หน้าชื่อคำสั่งหยุดที่ quote — ถ้าใช้ `\S*` ทุก quote จะวิ่งไปถึงท้าย token = O(n²)
 // (วัดได้ 194 วินาทีกับ curl ที่ส่ง flow JSON ~400KB → เกิน timeout → ปล่อยผ่าน deploy จริง)
-const AT_CMD = String.raw`(?:^|[;&|\n(]|['"])\s*(?:(?:` + PREFIX + String.raw`)\s+)*(?:[^\s/\\'"]*[/\\])*`
+// จำนวน segment จำกัด {0,40}: `*` กับ "a/a/a/..." ยาวต้อง backtrack ทุก segment ใน regex ทุกตัวที่ใช้ AT_CMD (~60 ms ต่อตัวใน runtime ของ test)
+const AT_CMD = String.raw`(?:^|[;&|\n(]|['"])\s*(?:(?:` + PREFIX + String.raw`)\s+)*(?:[^\s/\\'"]*[/\\]){0,40}`
 // global option ของ docker และ option ของ compose ที่มีค่า (-H host, --context x, -f file, -p name) — ข้ามไปถึงคำสั่งย่อย
 // รูป --opt=val ให้ `\s+-\S+` จับ — ถ้ามี `=\S+` อีกทาง token เดียว parse ได้สองแบบ = exponential
 const DOCKER_OPTS = String.raw`(?:\.exe)?(?:\s+(?:-H|--host|-c|--context|--config|-l|--log-level)` + VAL + String.raw`|\s+-\S+)*`
 const COMPOSE_OPTS = String.raw`(?:\.exe)?(?:\s+(?:-f|--file|-p|--project-name|--project-directory|--env-file|--profile|--ansi|--progress|--parallel)` + VAL + String.raw`|\s+-\S+)*`
 // ชื่อคำสั่งจบแล้ว (รวม .exe บน Windows)
 const CMD_END = String.raw`(?:\.exe)?(?=[\s;&|'")\x60]|$)`
+// ตำแหน่งคำสั่งของเครื่องมือ flash = AT_CMD (prefix ครบ: sudo -E, VAR=x, env, timeout, ssh, do/then, pwsh -c ...)
+// + ตัวรัน python/uv (python -m esptool, python C:\x\esptool.py, uvx, uv run, pipx run, call)
+// หรืออยู่ท้าย path ใน quote ที่ไหนก็ได้ (& "C:\Program Files\Arduino CLI\arduino-cli.exe", python "C:\...\idf.py", cmd /c "C:\...\avrdude.exe")
+// — ถามเกินกับข้อความใน quote ที่จบด้วยชื่อเครื่องมือ (แบบเดียวกับ grep "avrdude")
+// match ไปข้างหน้าจาก quote ทีละ segment ({1,40}) ไม่ใช้ lookbehind: lookbehind ถูกลองที่ทุกตำแหน่งหลัง / = O(n²) กับ base64/path ยาว
+// option ของ python จำกัด {0,4} และมีค่าได้ (-X utf8); -m ติดชื่อ module ได้ (-mesptool)
+// ตัวรัน python ต่อท้ายได้ทั้งสองทาง: & "C:\Users\Got Automation\.platformio\penv\Scripts\python.exe" -m esptool
+const FW_AT = String.raw`(?:` + AT_CMD + String.raw`|['"](?:[^'"\n/\\]*[/\\]){1,40})(?:(?:python[\d.]*|py|uvx|call|(?:uv|pipx|poetry)\s+run)(?:\.exe)?['"]?(?:\s+-[^m\s]\S*(?:\s+[^-\s]\S*)?){0,4}(?:\s+-m\s*|\s+)(?:[^\s/\\'"]*[/\\]){0,40})?`
+// ข้ามได้เฉพาะคำสั่งที่ไม่แตะ board: ดูเวอร์ชัน/help/รายชื่ออุปกรณ์ "เป็น arg ตัวเดียว" (openocd -l log จึงถาม)
+// ไม่ยกเว้น info: probe-rs info ต่อ SWD เข้า target (core อาจหยุด output ค้าง), picotool info -F = reboot
+// หรือแปลงไฟล์ firmware อย่างเดียว — ไม่ยกเว้น -l / -V ตัวเดียว: bossac -l = lock flash (หา port เอง), avrdude -V = ไม่ verify
+const FLASH_SAFE = String.raw`(?!\s+(?:--version|--help|-h|help|version|list|devs|--list|--ids)\s*(?:[;&|\n)'"\x60]|$))(?!\s+(?:elf2image|merge[_-]bin|image[_-]info)\b)`
+// pio/platformio + global option ก่อนคำสั่งย่อย (pio --no-ansi run, pio remote run); quote ปิดหลังชื่อ (& "C:\...\platformio.exe" run)
+// จำนวน option จำกัด ({0,6}) — `*` กับ input ที่มี option ซ้ำหลายหมื่นตัวช้าเกิน timeout ใน runtime ของ test
+const PIO = String.raw`(?:pio|platformio)` + CMD_END + String.raw`['"]?(?:\s+-\S+){0,6}\s+(?:remote\s+)?`
+
 const MACHINE: readonly RegExp[] = [
   new RegExp(CMD + String.raw`ros2\s+(?:topic\s+pub|service\s+call|action\s+send_goal|launch|run|param\s+(?:set|load)|lifecycle\s+set|control\s+(?:switch_controllers|set_controller_state|load_controller)|bag\s+play|component\s+load)\b`),
   // service ที่คุมเครื่อง: reload/kill/isolate ถามด้วย เพราะมีผลเท่ากับ restart/stop; ข้าม option ที่มีค่า (-H host) ด้วยการหาคำสั่งในส่วนเดียวกัน
@@ -81,6 +98,22 @@ const MACHINE: readonly RegExp[] = [
   // แย่ง COM port ฝั่ง Windows (ดึง USB-RS485 ไป WSL / ตั้งค่า port ที่ HMI/SCADA ใช้อยู่)
   new RegExp(CMD + String.raw`usbipd(?:\.exe)?\s+(?:wsl\s+)?(?:attach|detach)\b`, 'i'),
   new RegExp(CMD + String.raw`mode\s+COM\d+`, 'i'),
+  // firmware ลง microcontroller — board reset และ output (รีเลย์/มอเตอร์) เปลี่ยนทันที; monitor เปิด serial port
+  // ต้องจับเองเพราะ -p COM3 บน Windows ไม่ผ่าน opensBusDevice; เครื่องมือ flash ถามทุกครั้ง ยกเว้นคำสั่งดูข้อมูล/แปลงไฟล์ (FLASH_SAFE)
+  // อยู่ "ตำแหน่งคำสั่ง" (FW_AT) เท่านั้น: ไม่ถาม apt install avrdude / avrdude.conf / ls /usr/bin/avrdude
+  // เครื่องมือ flash ไม่ scan ต่อ (openocd -c "init; program" มี ; ใน quote) — ตัวที่ scan หาคำสั่งย่อยหยุดที่ ; & | (เร็ว และไม่ถาม `board list | sort -u`)
+  new RegExp(FW_AT + String.raw`(?:avrdude|bossac|teensy_loader_cli|stm32flash|openocd|nrfjprog|nrfutil|adafruit-nrfutil|pymcuprog|tycmd|espflash|espota(?:\.py)?|probe-rs|pyocd|JLinkExe|JLink|JLinkGDBServer(?:CL)?|STM32_Programmer_CLI|st-util|ampy|rshell|dfu-util|st-flash|picotool|mpremote|esptool(?:\.py)?|espefuse(?:\.py)?)` + CMD_END + FLASH_SAFE),
+  new RegExp(FW_AT + String.raw`arduino-cli` + CMD_END + String.raw`[^;&|\n]*?\s(?:upload|monitor|burn-bootloader|debug|--upload|-[a-zA-Z]*u[a-zA-Z]*)(?=[\s=;&|)'"\x60]|$)`),
+  new RegExp(FW_AT + PIO + String.raw`run\b[^;&|\n]*?\s(?:-t\s*|--target[\s=]+)(?:upload\w*|program|monitor|erase|fuses|bootloader)\b`),
+  new RegExp(FW_AT + PIO + String.raw`(?:debug|device\s+monitor)\b`),
+  // pio test upload firmware ทดสอบลง board และเปิด serial อ่านผล (board reset) — ยกเว้นเฉพาะเมื่อ env ทุกตัวเป็น native (รันบนเครื่อง)
+  new RegExp(FW_AT + PIO + String.raw`test\b(?!(?=[^;&|\n]*?\s(?:-e\s*|--environment[\s=]+)native(?=[\s;&|)'"\x60]|$))(?![^;&|\n]*?\s(?:-e\s*|--environment[\s=]+)(?!native(?=[\s;&|)'"\x60]|$))\S))`),
+  new RegExp(FW_AT + String.raw`idf(?:\.py)?` + CMD_END + String.raw`[^;&|\n]*?\s(?:(?:[\w-]+-)?flash|erase[-_]otadata|monitor|openocd|efuse-[\w-]+)\b`),
+  new RegExp(FW_AT + String.raw`west` + CMD_END + String.raw`['"]?(?:\s+-\S+){0,6}\s+(?:flash|debug|debugserver|attach)\b`),
+  new RegExp(FW_AT + String.raw`cargo` + CMD_END + String.raw`['"]?(?:\s+\+\S+)?\s+(?:espflash|flash|embed)\b`),
+  // target ของ Arduino-Makefile ด้วย (raw_upload, burn_bootloader, set_fuses)
+  new RegExp(FW_AT + String.raw`(?:make|ninja)` + CMD_END + String.raw`[^;&|\n]*?\s(?:upload|raw_upload|flash|program|erase|monitor|ispload|burn|burn_bootloader|set_fuses|eeprom|dfu)\b`),
+  new RegExp(FW_AT + String.raw`(?:west|cmake)` + CMD_END + String.raw`[^;&|\n]*?\s(?:-t\s*|--target[\s=]+)(?:flash|upload|program|debug|debugserver|attach)\b`),
 ]
 
 // python ที่มีโค้ดสั่ง bus อยู่ในบรรทัดคำสั่งเอง (-c, heredoc, pipe) — script ในไฟล์ไม่จับ (ชื่อไฟล์ไม่มีคำเหล่านี้แบบเต็มคำ)

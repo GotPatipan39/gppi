@@ -172,6 +172,18 @@ claude mcp list        # ต้องเห็น context7 ... ✔ Connected
 ## เพิ่มเติม (ไม่บังคับ): Blender — ให้ Claude ทำโมเดล 3D
 เฉพาะเครื่องที่ทำงาน 3D (ชิ้นงาน, jig, mesh ของหุ่น/AGV สำหรับ URDF) และไม่ได้ต่อเครื่องจักร — คำสั่งติดตั้งและสิ่งที่ต้องระวัง (รันโค้ดใน Blender ได้, ส่งข้อมูลออกนอกเครื่อง) อยู่ใน [mcp/README.md](../mcp/README.md#blender-เพิ่มระดับผู้ใช้-บนเครื่องที่ทำ-3d)
 
+## เพิ่มเติม (ไม่บังคับ): Arduino / ESP32 — `arduino-cli`
+ให้ Claude compile, ติดตั้ง board และ library ได้เหมือน Arduino IDE ส่วน upload ต้องให้คุณยืนยันทุกครั้ง — ใช้ `arduino-cli` ของ Arduino เอง **ไม่ใช้ MCP** (ตรวจ 2026-11-20: Arduino ไม่มี MCP ของตัวเอง ตัวที่คนทำมีแต่แบบสั่งรีเลย์/มอเตอร์ตรงๆ ไม่มีโหมดอ่านอย่างเดียว — และตัวกันเห็นคำสั่ง `arduino-cli` ทั้งบรรทัด แต่เห็น MCP แค่ชื่อ tool)
+```powershell
+winget install --id ArduinoSA.CLI -e      # Windows — ลงที่ C:\Program Files\Arduino CLI\ และเพิ่ม PATH ให้
+arduino-cli version                       # เปิด terminal/VS Code ใหม่ก่อนถ้าไม่เจอ
+arduino-cli core update-index
+arduino-cli core install arduino:avr      # หรือ esp32:esp32 (ต้องเพิ่ม board URL ของ Espressif ก่อน)
+```
+WSL/Ubuntu: `curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=~/.local/bin sh` หรือโหลด release จาก GitHub — board ที่ต่อ USB อยู่ฝั่ง Windows ใช้จาก Windows ง่ายกว่า (WSL ต้อง `usbipd attach` ซึ่งตัวกันถามก่อน)
+- ตัวกันถามก่อน **upload, `compile -u`, monitor, burn-bootloader** (รวม `avrdude`, `esptool`, `pio`, `mpremote` ...) — board reset และ output เปลี่ยนทันทีที่ firmware ใหม่ลง; `compile`, `board list`, `lib install` ไม่ถาม
+- board ที่คุมรีเลย์/มอเตอร์/valve ของเครื่องจริง: upload = ทำให้เครื่องขยับได้ ตามกฎข้อ "ห้ามรันคำสั่งที่อาจทำให้เครื่องจักรขยับ" — บอก Claude ชัดๆ ทุกครั้งว่าให้ upload
+
 ## ปัญหาที่เจอบ่อย
 
 | อาการ | สาเหตุ / วิธีแก้ |
